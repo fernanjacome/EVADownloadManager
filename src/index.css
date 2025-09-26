@@ -1,0 +1,76 @@
+/* Reset general */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+:root {
+  --c-principal: #00c896;
+  --c-fondo: #121212;
+  --c-fondo-secundario: #1e1e1e;
+}
+body,
+html,
+#root {
+  height: 100%;
+  width: 100%;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--c-fondo);
+  color: #f0f0f0;
+}
+
+/* Contenedor principal */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Zona sin archivo cargado */
+.no-file {
+  margin: 20px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+/* Vista del XML crudo */
+.xml-preview {
+  flex: 1;
+  margin: 20px;
+  padding: 15px;
+  background: var(--c-fondo-secundario);
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 13px;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: auto;
+}
+
+/* ===== Scrollbar global ===== */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #00c896 var(--c-fondo-secundario); /* thumb y track */
+}
+
+/* Chrome, Edge, Safari */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--c-fondo-secundario); /* fondo */
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #00c896; /* color de la barra */
+  border-radius: 6px;
+  border: 2px solid var(--c-fondo-secundario); /* borde para dar efecto de espacio */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #00e0aa; /* hover más brillante */
+}

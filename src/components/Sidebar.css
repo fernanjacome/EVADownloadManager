@@ -1,0 +1,126 @@
+.sidebar {
+  width: 240px;
+  background: #181818;
+  border-right: 1px solid #2a2a2a;
+  overflow-y: auto;
+  padding: 10px;
+  color: #ccc;
+  font-family: "Segoe UI", "Roboto", sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Grupo */
+.sidebar-group {
+  margin-bottom: 8px;
+}
+
+/* Título de sección */
+.sidebar-title {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 4px;
+  user-select: none;
+  color: #eee;
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #202020;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-icon {
+  color: #00c896; /* mismo verde que usas en tu UI */
+  font-size: 14px;
+}
+.sidebar-title:hover {
+  background: #262626;
+  color: var(--c-principal);
+}
+
+/* Lista de hijos */
+.sidebar-list {
+  list-style: none;
+  padding-left: 12px;
+  margin: 4px 0 0;
+  border-left: 1px dashed #333;
+}
+
+/* Item */
+.sidebar-item {
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 12.5px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  border-radius: 3px;
+  color: #bbb;
+}
+
+.sidebar-item:hover {
+  background: rgba(0, 200, 150, 0.08);
+  color: var(--c-principal);
+  padding-left: 6px; /* sutil indentación al hover */
+}
+/* 🔹 Contenedor del buscador */
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 4px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+}
+
+/* 🔹 Caja del input */
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #202020;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.search-icon {
+  color: #666;
+  margin-right: 6px;
+  font-size: 13px;
+}
+
+.search-box input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #eee;
+  font-size: 13px;
+}
+
+.search-box input::placeholder {
+  color: #555;
+  font-style: italic;
+}
+
+/* 🔹 Select */
+.search-select {
+  background: #202020;
+  color: #ccc;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border 0.2s, color 0.2s;
+}
+
+.search-select:hover {
+  border-color: #00c896;
+  color: #00c896;
+}

@@ -1,0 +1,95 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--c-fondo-secundario);
+  padding: 10px 20px;
+  color: var(--c-principal);
+  border-bottom: 1px solid #333;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+}
+
+.title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.filename {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn {
+  background: #333;
+  color: #ddd;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  width: 32px;
+  height: 16px;
+  background: #555;
+  border-radius: 20px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.slider::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  top: 1px;
+  left: 2px;
+  transition: all 0.3s;
+}
+
+input:checked + .slider::after {
+  transform: translateX(16px);
+}
+
+.label {
+  color: #ddd;
+  font-size: 13px;
+}
+.file-info {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.file-info span {
+  margin-right: 10px;
+}

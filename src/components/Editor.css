@@ -1,0 +1,119 @@
+.editor-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 690px;
+  overflow: auto;
+  flex: 1;
+  border-radius: 6px;
+}
+
+.cm-editor {
+  flex: 1;
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  height: 100% !important;
+  overflow: auto !important;
+  background: #202020 !important; /* fondo diferente */
+  color: #e0e0e0 !important;
+  line-height: 1.5;
+  padding: 8px;
+  border-top: 1px solid #333;
+}
+.ͼo .cm-gutters {
+  background: #202020 !important; /* fondo diferente */
+}
+
+/* Mini barra sticky */
+.editor-toolbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  gap: 8px;
+  background: #161616;
+
+  padding: 6px 10px;
+  z-index: 10;
+}
+
+.editor-toolbar button,
+.editor-toolbar .toggle-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #2a2a2a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.editor-toolbar button:hover:not(:disabled),
+.editor-toolbar .toggle-edit:hover {
+  background: #3a3a3a;
+}
+
+/* Estado disabled */
+.editor-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-save {
+  background: #2e7d32;
+}
+.btn-save:hover:not(:disabled) {
+  background: #388e3c;
+}
+
+.btn-restore {
+  background: #c62828;
+}
+.btn-restore:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.editor-dirty {
+  margin-left: auto;
+  background: #f39c12;
+  color: var(--c-fondo-secundario);
+  padding: 2px 8px;
+  border-radius: 999px; /* forma de píldora */
+  font-size: 12px;
+  font-weight: 600;
+  align-self: center;
+}
+
+/* Estilo normal */
+.editor-code {
+  transition: all 0.2s ease;
+}
+
+/* Modo lectura */
+.editor-code.read-only {
+  opacity: 0.7; /* más tenue */
+  filter: grayscale(0.5); /* ligero gris */
+  cursor: not-allowed; /* cursor bloqueado */
+  background: #111 !important; /* fondo un poco más oscuro */
+}
+
+/* Opcional: muestra un "watermark" */
+.editor-code.read-only::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.1);
+  font-size: 48px;
+  font-weight: bold;
+  pointer-events: none; /* no bloquea clics */
+}
+
+.ͼo .cm-panels.cm-panels-bottom {
+  display: none !important;
+}

@@ -1,0 +1,57 @@
+.notification {
+  position: fixed;
+  bottom: 2%;
+  right: 1%;
+  min-width: 250px;
+  max-width: 350px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.3s ease;
+}
+
+.notification.info {
+  background: #2d3e50;
+  color: #e0f7fa;
+}
+
+.notification.success {
+  background: #1b5e20;
+  color: #c8e6c9;
+}
+
+.notification.error {
+  background: #b71c1c;
+  color: #ffcdd2;
+}
+
+.notification.warning {
+  background: #ff6f00;
+  color: #fff3e0;
+}
+
+.notification .close-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  margin-left: 12px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
