@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Editor from "./components/Editor";
 import Notification from "./components/Notification";
+import EmptyState from "./components/EmptyState";
 import "./App.css";
 
 export default function App() {
@@ -12,10 +13,26 @@ export default function App() {
   const [notification, setNotification] = useState(null);
 
   const [code, setCode] = useState("");
-  const [originalCode, setOriginalCode] = useState(""); // archivo cargado
-  const [savedCode, setSavedCode] = useState(""); // último guardado
+  const [originalCode, setOriginalCode] = useState("");
+  const [savedCode, setSavedCode] = useState("");
+
+  const fileInputRef = useRef(null); // 🔹 referencia compartida al input
 
   const dirty = useMemo(() => code !== savedCode, [code, savedCode]);
+
+  // 🔹 Cargar archivo XML
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(reader.result, "text/xml");
+      handleLoadXml(doc);
+    };
+    reader.readAsText(file);
+  };
 
   const handleLoadXml = (doc) => {
     const serialized = new XMLSerializer().serializeToString(doc);
@@ -44,7 +61,7 @@ export default function App() {
       setXmlDoc(newDoc);
       setSavedCode(code);
       setNotification({ type: "success", message: "Cambios guardados." });
-    } catch (e) {
+    } catch {
       setNotification({
         type: "error",
         message: "Error inesperado al guardar.",
@@ -71,9 +88,7 @@ export default function App() {
   return (
     <div className="app">
       <Header
-        onXmlLoaded={handleLoadXml}
-        editMode={editMode}
-        setEditMode={setEditMode}
+        onLoadClick={() => fileInputRef.current?.click()} // 🔹 sincronizado
       />
 
       <div className="workspace">
@@ -85,21 +100,36 @@ export default function App() {
           }}
         />
 
-        <Editor
-          code={code}
-          onChange={setCode}
-          highlightId={highlightId}
-          editMode={editMode}
-          setEditMode={setEditMode}
-          onSave={handleSave}
-          onRestoreSaved={handleRestoreSaved}
-          onRestoreOriginal={handleRestoreOriginal}
-          canSave={editMode && dirty}
-          canRestoreSaved={editMode && dirty}
-          canRestoreOriginal={editMode && code !== originalCode}
-          dirty={dirty}
-        />
+        {!xmlDoc ? (
+          <EmptyState
+            onLoadClick={() => fileInputRef.current?.click()} // 🔹 sincronizado
+          />
+        ) : (
+          <Editor
+            code={code}
+            onChange={setCode}
+            highlightId={highlightId}
+            editMode={editMode}
+            setEditMode={setEditMode}
+            onSave={handleSave}
+            onRestoreSaved={handleRestoreSaved}
+            onRestoreOriginal={handleRestoreOriginal}
+            canSave={editMode && dirty}
+            canRestoreSaved={editMode && dirty}
+            canRestoreOriginal={editMode && code !== originalCode}
+            dirty={dirty}
+          />
+        )}
       </div>
+
+      {/* 🔹 input compartido para ambos botones */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xml"
+        hidden
+        onChange={handleFileUpload}
+      />
 
       {notification && (
         <Notification
