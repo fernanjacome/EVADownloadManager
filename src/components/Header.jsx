@@ -1,15 +1,28 @@
-import React, { useState } from "react";
+import React from "react";
+import {
+  FaUpload,
+  FaFileExport,
+  FaTrash,
+  FaCode,
+  FaThLarge,
+} from "react-icons/fa";
 import "./Header.css";
 
-export default function Header({ onLoadClick }) {
-  const [fileInfo, setFileInfo] = useState(null);
-
+export default function Header({
+  fileInfo,
+  onLoadClick,
+  onDeleteXml,
+  hasXml,
+  onExport,
+  viewMode,
+  setViewMode,
+}) {
   return (
-    <header className="header">
-      <div className="title">
-        <h2>EVA XML Manager</h2>
+    <header className="header-bar">
+      <div className="header-title">
+        <h2 className="header-title-text">EVA XML Manager</h2>
         {fileInfo ? (
-          <div className="file-info">
+          <div className="header-file-info">
             <span>
               <strong>Archivo:</strong> {fileInfo.name}
             </span>{" "}
@@ -23,22 +36,39 @@ export default function Header({ onLoadClick }) {
             </span>
           </div>
         ) : (
-          <span className="filename">Ningún archivo cargado</span>
+          <span className="header-filename">Ningún archivo cargado</span>
         )}
       </div>
 
-      <div className="actions">
-        <button className="btn" onClick={onLoadClick}>
-          Cargar XML
+      <div className="header-actions">
+        <button className="header-btn" onClick={onLoadClick}>
+          <FaUpload /> Cargar
         </button>
-        <button className="btn" disabled>
-          Exportar
+        <button className="header-btn" disabled={!hasXml} onClick={onExport}>
+          <FaFileExport /> Exportar
         </button>
-        <label className="switch">
-          <input type="checkbox" />
-          <span className="slider"></span>
-          <span className="label">Modo Texto</span>
-        </label>
+        <button
+          className="header-btn header-btn-danger"
+          onClick={onDeleteXml}
+          disabled={!hasXml}
+        >
+          <FaTrash /> Eliminar
+        </button>
+
+        {/* 🔹 Toggle de vista */}
+        {hasXml && (
+          <div
+            className={`header-toggle ${viewMode}`}
+            onClick={() => setViewMode(viewMode === "code" ? "cards" : "code")}
+          >
+            <div className="header-toggle-thumb">
+              {viewMode === "code" ? <FaCode /> : <FaThLarge />}
+            </div>
+            <span className="header-toggle-label">
+              {viewMode === "code" ? "Código" : "Cards"}
+            </span>
+          </div>
+        )}
       </div>
     </header>
   );

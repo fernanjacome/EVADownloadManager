@@ -34,8 +34,6 @@ const groupIcons = {
 };
 
 export default function Sidebar({ xmlDoc, onSelect }) {
-  if (!xmlDoc) return <aside className="sidebar">Sin XML cargado</aside>;
-
   const [collapsed, setCollapsed] = useState(
     Object.fromEntries(groupOrder.map((g) => [g, true]))
   );
@@ -60,10 +58,12 @@ export default function Sidebar({ xmlDoc, onSelect }) {
 
   // --- Expandir/cerrar según búsqueda ---
   useEffect(() => {
+    if (!xmlDoc) return; // evitar errores cuando no hay XML
+
     setCollapsed((prev) => {
       const newState = { ...prev };
       if (!searchTerm) {
-        groupOrder.forEach((g) => (newState[g] = true)); // todos cerrados si no hay búsqueda
+        groupOrder.forEach((g) => (newState[g] = true));
         return newState;
       }
       const term = searchTerm.toLowerCase();
@@ -88,7 +88,7 @@ export default function Sidebar({ xmlDoc, onSelect }) {
             text.toLowerCase().includes(term)
           );
         });
-        newState[group] = !hasMatch; // expandir si hay match
+        newState[group] = !hasMatch;
       });
       return newState;
     });
@@ -96,90 +96,107 @@ export default function Sidebar({ xmlDoc, onSelect }) {
 
   return (
     <aside className="sidebar">
-      {/* 🔹 Buscador */}
-      <div className="sidebar-search">
-        <div className="search-box">
-          <FaSearch className="search-icon" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Buscar en todo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-          />
+      {!xmlDoc ? (
+        // 🔹 Estado vacío cuando no hay XML
+        <div className="empty-state">
+          <h2 style={{ width: "60%" }}>No hay XML cargado</h2>
         </div>
-      </div>
-
-      {/* 🔹 Grupos */}
-      {groupOrder.map((group) => {
-        const config = sidebarConfig[group];
-        const section = xmlDoc.querySelector(group);
-        if (!section) return null;
-
-        let children = Array.from(section.children).filter(
-          (child) => child.tagName === config.childTag
-        );
-
-        if (searchTerm) {
-          const term = searchTerm.toLowerCase();
-          children = children.filter((child) => {
-            const idVal = child.getAttribute(config.idAttr) || "";
-            const comment = child.getAttribute("Comment") || "";
-            const key = child.getAttribute("Key") || "";
-            const code = child.getAttribute("Code") || "";
-            const text = child.textContent || "";
-            return (
-              idVal.toLowerCase().includes(term) ||
-              comment.toLowerCase().includes(term) ||
-              key.toLowerCase().includes(term) ||
-              code.toLowerCase().includes(term) ||
-              text.toLowerCase().includes(term)
-            );
-          });
-        }
-
-        if (children.length === 0) return null;
-
-        return (
-          <div key={group} className="sidebar-group">
-            <div className="sidebar-title" onClick={() => toggleGroup(group)}>
-              <span className="sidebar-icon">{groupIcons[group]}</span>
-              {config.label} ({children.length})
+      ) : (
+        <>
+          {/* 🔹 Buscador */}
+          <div className="sidebar-search">
+            <div className="search-box">
+              <FaSearch className="search-icon" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Buscar"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+              />
             </div>
-            {!collapsed[group] && (
-              <ul className="sidebar-list">
-                {children.map((child, idx) => {
-                  if (group === "General") {
-                    const key = child.getAttribute("Key");
-                    return (
-                      <li
-                        key={idx}
-                        className="sidebar-item"
-                        onClick={() => onSelect(`General-${key}`)}
-                      >
-                        {key}
-                      </li>
-                    );
-                  }
-                  const idVal = child.getAttribute(config.idAttr);
-                  const comment = child.getAttribute("Comment") || "No Comment";
-                  return (
-                    <li
-                      key={idx}
-                      className="sidebar-item"
-                      onClick={() =>
-                        onSelect(`${config.childTag}-${idVal || `idx${idx}`}`)
-                      }
-                    >
-                      [{config.childTag}] {idVal} - {comment}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
           </div>
-        );
-      })}
+
+          {/* 🔹 Grupos */}
+          {groupOrder.map((group) => {
+            const config = sidebarConfig[group];
+            const section = xmlDoc.querySelector(group);
+            if (!section) return null;
+
+            let children = Array.from(section.children).filter(
+              (child) => child.tagName === config.childTag
+            );
+
+            if (searchTerm) {
+              const term = searchTerm.toLowerCase();
+              children = children.filter((child) => {
+                const idVal = child.getAttribute(config.idAttr) || "";
+                const comment = child.getAttribute("Comment") || "";
+                const key = child.getAttribute("Key") || "";
+                const code = child.getAttribute("Code") || "";
+                const type = child.getAttribute("Type") || "";
+                const text = child.textContent || "";
+                return (
+                  idVal.toLowerCase().includes(term) ||
+                  comment.toLowerCase().includes(term) ||
+                  key.toLowerCase().includes(term) ||
+                  code.toLowerCase().includes(term) ||
+                  type.toLowerCase().includes(term) ||
+                  text.toLowerCase().includes(term)
+                );
+              });
+            }
+
+            if (children.length === 0) return null;
+
+            return (
+              <div key={group} className="sidebar-group">
+                <div
+                  className="sidebar-title"
+                  onClick={() => toggleGroup(group)}
+                >
+                  <span className="sidebar-icon">{groupIcons[group]}</span>
+                  {config.label} ({children.length})
+                </div>
+                {!collapsed[group] && (
+                  <ul className="sidebar-list">
+                    {children.map((child, idx) => {
+                      if (group === "General") {
+                        const key = child.getAttribute("Key");
+                        return (
+                          <li
+                            key={`${group}-${key}-${idx}`}
+                            className="sidebar-item"
+                            onClick={() => onSelect(`General-${key}`)}
+                          >
+                            {key}
+                          </li>
+                        );
+                      }
+                      const idVal = child.getAttribute(config.idAttr);
+                      const comment =
+                        child.getAttribute("Comment") || "No Comment";
+                      return (
+                        <li
+                          key={`${group}-${idVal || `idx${idx}`}`}
+                          className="sidebar-item"
+                          onClick={() =>
+                            onSelect(
+                              `${config.childTag}-${idVal || `idx${idx}`}`
+                            )
+                          }
+                        >
+                          [{config.childTag}] {idVal} - {comment}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
     </aside>
   );
 }

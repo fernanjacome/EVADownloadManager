@@ -1,4 +1,5 @@
-.header {
+/* ====== Header Container ====== */
+.header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -8,28 +9,35 @@
   border-bottom: 1px solid #333;
 }
 
-.title {
+/* ====== Title ====== */
+.header-title {
   display: flex;
   flex-direction: column;
 }
-
-.title h2 {
+.header-title-text {
   margin: 0;
   font-size: 18px;
 }
-
-.filename {
+.header-filename {
   color: #aaa;
   font-size: 13px;
 }
+.header-file-info {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #ccc;
+}
+.header-file-info span {
+  margin-right: 10px;
+}
 
-.actions {
+/* ====== Actions ====== */
+.header-actions {
   display: flex;
   gap: 10px;
   align-items: center;
 }
-
-.btn {
+.header-btn {
   background: #333;
   color: #ddd;
   padding: 6px 14px;
@@ -37,59 +45,58 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
 }
-
-.btn:disabled {
+.header-btn:hover:not(:disabled) {
+  background: #4cafef;
+  color: #fff;
+}
+.header-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+.header-btn-danger {
+  background: #8b2c2c;
+}
+.header-btn-danger:hover:not(:disabled) {
+  background: #e74c3c;
+}
 
-.switch {
+/* ====== Toggle (Code ↔ Cards) ====== */
+.header-toggle {
   display: flex;
   align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.switch input {
-  display: none;
-}
-
-.slider {
-  width: 32px;
-  height: 16px;
-  background: #555;
+  background: #3a3a3a;
   border-radius: 20px;
-  position: relative;
-  transition: all 0.3s;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  user-select: none;
+}
+.header-toggle:hover {
+  background: #1e1e1e;
+  color: #fff;
 }
 
-.slider::after {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  background: white;
+.header-toggle:hover .header-toggle-thumb {
+  background: var(--c-principal);
+}
+
+.header-toggle-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
   border-radius: 50%;
-  top: 1px;
-  left: 2px;
-  transition: all 0.3s;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  font-size: 12px;
 }
-
-input:checked + .slider::after {
-  transform: translateX(16px);
-}
-
-.label {
+.header-toggle-label {
+  font-size: 13px;
   color: #ddd;
-  font-size: 13px;
-}
-.file-info {
-  margin-top: 4px;
-  font-size: 13px;
-  color: #ccc;
-}
-
-.file-info span {
-  margin-right: 10px;
 }

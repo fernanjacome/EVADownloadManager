@@ -26,32 +26,8 @@ html,
   height: 100%;
 }
 
-/* Zona sin archivo cargado */
-.no-file {
-  margin: 20px;
-  font-size: 14px;
-  color: #aaa;
-}
-
-/* Vista del XML crudo */
-.xml-preview {
-  flex: 1;
-  margin: 20px;
-  padding: 15px;
-  background: var(--c-fondo-secundario);
-  border: 1px solid #333;
-  border-radius: 8px;
-  font-family: "Consolas", "Courier New", monospace;
-  font-size: 13px;
-  color: #d4d4d4;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow: auto;
-}
-
 /* ===== Scrollbar global ===== */
 * {
-  scrollbar-width: thin; /* Firefox */
   scrollbar-color: #00c896 var(--c-fondo-secundario); /* thumb y track */
 }
 
