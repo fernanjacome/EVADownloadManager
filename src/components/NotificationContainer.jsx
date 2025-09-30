@@ -1,6 +1,4 @@
-import React from "react";
-import Notification from "./Notification";
-import "./Notification.css";
+import NotificationCustom from "./Notification";
 
 export default function NotificationContainer({
   notifications,
@@ -8,8 +6,8 @@ export default function NotificationContainer({
 }) {
   return (
     <div className="notification-container">
-      {notifications.map((n) => (
-        <Notification
+      {[...notifications].reverse().map((n) => (
+        <NotificationCustom
           key={n.id}
           type={n.type}
           message={n.message}

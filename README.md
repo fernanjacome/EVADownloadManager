@@ -52,7 +52,7 @@
 - Usa **CodeMirror** para edición del XML.
 - Funcionalidades:
   - **Guardar (`Ctrl+S`)** → valida y guarda cambios en `App`.
-  - **Buscar (`Ctrl+F`)** → enfoca buscador de `Sidebar`.
+  - **Buscar (`Ctrl+B`)** → enfoca buscador de `Sidebar`.
   - **Formatear XML** → usa `formatXml` (indentación estándar).
   - **Restaurar archivo original**.
   - **Restaurar última versión guardada**.

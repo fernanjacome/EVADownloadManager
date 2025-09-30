@@ -44,10 +44,9 @@ export default function Sidebar({ xmlDoc, onSelect }) {
     setCollapsed((prev) => ({ ...prev, [group]: !prev[group] }));
   };
 
-  // --- Atajo Ctrl+F ---
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
         e.preventDefault();
         searchInputRef.current?.focus();
       }

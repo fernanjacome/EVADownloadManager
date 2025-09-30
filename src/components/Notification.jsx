@@ -1,7 +1,11 @@
 import React, { useEffect } from "react";
 import "./Notification.css";
 
-export default function Notification({ type = "info", message, onClose }) {
+export default function NotificationCustom({
+  type = "info",
+  message,
+  onClose,
+}) {
   // useEffect(() => {
   //   const timer = setTimeout(() => {
   //     onClose();
