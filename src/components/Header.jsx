@@ -20,7 +20,7 @@ export default function Header({
   return (
     <header className="header-bar">
       <div className="header-title">
-        <h2 className="header-title-text">EVA XML Manager</h2>
+        <h2 className="header-title-text">EVA Download Manager</h2>
         {fileInfo ? (
           <div className="header-file-info">
             <span>

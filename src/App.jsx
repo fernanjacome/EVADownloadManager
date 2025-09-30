@@ -8,13 +8,14 @@ import Notification from "./components/Notification";
 import EmptyState from "./components/EmptyState";
 import "./App.css";
 import { serializeXML, formatXml, validateUniqueIds } from "./utils/xmlUtils";
+import NotificationContainer from "./components/NotificationContainer";
 
 export default function App() {
   const [xmlDoc, setXmlDoc] = useState(null);
   const [fileInfo, setFileInfo] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [notification, setNotification] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [code, setCode] = useState("");
   const [originalCode, setOriginalCode] = useState("");
   const [savedCode, setSavedCode] = useState("");
@@ -49,10 +50,10 @@ export default function App() {
   const handleLoadXml = (doc) => {
     const errors = validateUniqueIds(doc);
     if (errors.length > 0) {
-      setNotification({
-        type: "error",
-        message: "Se encontraron IDs duplicados:\n" + errors.join("\n"),
-      });
+      addNotification(
+        "error",
+        "Se encontraron IDs duplicados:\n" + errors.join("\n")
+      );
       return;
     }
 
@@ -63,7 +64,7 @@ export default function App() {
     setSavedCode(serialized);
     setEditMode(false);
 
-    setNotification({ type: "success", message: "XML cargado correctamente." });
+    addNotification("success", "XML cargado correctamente.");
   };
 
   const handleDeleteXml = () => {
@@ -73,45 +74,49 @@ export default function App() {
     setOriginalCode("");
     setSavedCode("");
     if (fileInputRef.current) fileInputRef.current.value = "";
-    setNotification({ type: "info", message: "Archivo XML eliminado." });
+    addNotification("info", "Archivo XML eliminado.");
   };
 
   const handleSave = () => {
     try {
       const parser = new DOMParser();
       const newDoc = parser.parseFromString(code, "text/xml");
+      const parserError = newDoc.getElementsByTagName("parsererror")[0];
 
-      if (newDoc.getElementsByTagName("parsererror").length > 0) {
-        setNotification({ type: "error", message: "XML inválido." });
+      if (parserError) {
+        const errorText = parserError.textContent || "XML inválido.";
+        let message = "XML inválido.";
+
+        const match = errorText.match(/line\s+(\d+).*column\s+(\d+)/i);
+        if (match) {
+          const line = parseInt(match[1], 10);
+          const column = parseInt(match[2], 10);
+          message = `Error de sintaxis en línea ${line}, columna ${column}`;
+        } else {
+          message = errorText.split("\n")[0];
+        }
+
+        addNotification("error", message);
         return;
       }
 
       const errors = validateUniqueIds(newDoc);
       if (errors.length > 0) {
-        setNotification({
-          type: "error",
-          message: "IDs duplicados:\n" + errors.join("\n"),
-        });
+        addNotification("error", "IDs duplicados:\n" + errors.join("\n"));
         return;
       }
+
       setXmlDoc(newDoc);
       setSavedCode(code);
-
-      setNotification({ type: "success", message: "Cambios guardados." });
-    } catch {
-      setNotification({
-        type: "error",
-        message: "Error inesperado al guardar.",
-      });
+      addNotification("success", "Cambios guardados.");
+    } catch (e) {
+      addNotification("error", "Error inesperado al guardar.");
     }
   };
 
   const handleRestoreOriginal = () => {
     setCode(originalCode);
-    setNotification({
-      type: "info",
-      message: "Restaurado al archivo original.",
-    });
+    addNotification("info", "Restaurado al archivo original.");
   };
 
   const handleExport = () => {
@@ -123,13 +128,19 @@ export default function App() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setNotification({
-        type: "success",
-        message: "XML exportado correctamente.",
-      });
+      addNotification("success", "XML exportado correctamente.");
     } catch {
-      setNotification({ type: "error", message: "Error al exportar el XML." });
+      addNotification("error", "Error al exportar el XML.");
     }
+  };
+
+  const addNotification = (type, message) => {
+    const id = Date.now(); // id único
+    setNotifications((prev) => [...prev, { id, type, message }]);
+  };
+
+  const removeNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   return (
@@ -178,7 +189,7 @@ export default function App() {
               xmlDoc={xmlDoc}
               setXmlDoc={setXmlDoc}
               setCode={setCode}
-              setNotification={setNotification}
+              setNotification={addNotification}
               markDirty={() => setCode(code + " ")}
             />
 
@@ -209,13 +220,10 @@ export default function App() {
         onChange={handleFileUpload}
       />
 
-      {notification && (
-        <Notification
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
+      <NotificationContainer
+        notifications={notifications}
+        removeNotification={removeNotification}
+      />
     </div>
   );
 }

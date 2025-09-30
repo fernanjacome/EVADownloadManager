@@ -51,7 +51,7 @@
   transition: background 0.2s;
 }
 .header-btn:hover:not(:disabled) {
-  background: #4cafef;
+  background: #05916e;
   color: #fff;
 }
 .header-btn:disabled {
