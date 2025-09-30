@@ -1,12 +1,13 @@
-import NotificationCustom from "./Notification";
+import NotificationCustom from "./NotificationCustom";
 
 export default function NotificationContainer({
   notifications,
   removeNotification,
 }) {
+  const limited = [...notifications].slice(-5); // solo últimas 5
   return (
     <div className="notification-container">
-      {[...notifications].reverse().map((n) => (
+      {limited.reverse().map((n) => (
         <NotificationCustom
           key={n.id}
           type={n.type}

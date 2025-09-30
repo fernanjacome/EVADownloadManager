@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import CodeEditor from "./components/CodeEditor";
@@ -21,7 +21,23 @@ export default function App() {
   const fileInputRef = useRef(null);
 
   const dirty = useMemo(() => code !== savedCode, [code, savedCode]);
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Bloquea Ctrl/Cmd + +/- o Ctrl/Cmd + 0 (reset zoom)
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "+" || e.key === "-" || e.key === "=" || e.key === "0")
+      ) {
+        e.preventDefault();
+      }
+    };
 
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
   // --- Handlers (cargar, guardar, restaurar, exportar) ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -165,8 +181,15 @@ export default function App() {
   };
 
   const addNotification = (type, message) => {
-    const id = Date.now(); // id único
-    setNotifications((prev) => [...prev, { id, type, message }]);
+    setNotifications((prev) => {
+      if (prev.length > 0) {
+        const last = prev[prev.length - 1];
+        if (last.type === type && last.message === message) {
+          return prev;
+        }
+      }
+      return [...prev, { id: crypto.randomUUID(), type, message }];
+    });
   };
 
   const removeNotification = (id) => {
