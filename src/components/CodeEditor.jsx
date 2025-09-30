@@ -9,7 +9,6 @@ export default function CodeEditor({
   code,
   onChange,
   highlightId,
-  editMode,
   onSave,
   canSave,
 }) {
@@ -82,8 +81,8 @@ export default function CodeEditor({
             },
           ]),
         ]}
-        editable={editMode}
-        className={editMode ? "editor-code" : "editor-code read-only"}
+        editable={true}
+        className={"editor-code"}
         onChange={(val) => onChange(val)}
         onCreateEditor={(view) => {
           viewRef.current = view;

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Download>
+    <States>
+        <State Id="0" Type="CRD" Comment="">
+            <Param Key="ReadFlags">11</Param>
+            <Param Key="Screen">12</Param>
+            <Param Key="Timeout">0</Param>
+            <Param Key="GoodState">1002</Param>
+            <Param Key="CardLessState">40</Param>
+            <Param Key="NoMatchState">237</Param>
+            <Param Key="TimeoutState">998</Param>
+            <Param Key="ErrorState">237</Param>
+            <Param Key="InvalidCardScreen">37</Param>
+            <Param Key="RemoveCardScreen">23</Param>
+        </State>
+    </States>
+
+    <Screens>
+        <Screen Id="12" Comment="Ingrese su tarjeta">
+            <Param Key="Resource" Lan="0">http://localhost/pantalla_idle.html</Param>
+            <ResBuffer>UserEntryB</ResBuffer>
+        </Screen>
+    </Screens>
+
+    <Fits>
+        <Fit Id="1">
+            <Param Key="Bin">505512</Param>
+            <Param Key="Index">9</Param>
+        </Fit>
+        <Fit Id="2">
+            <Param Key="Bin" />
+            <Param Key="Index">0</Param>
+        </Fit>
+    </Fits>
+
+    <General>
+        <Param Key="NextStateOnCriticalError">900</Param>
+        <Param Key="MaxBillsDispensed">30</Param>
+        <Param Key="ScreenOnDispense">5</Param>
+        <Param Key="ScreenOnTakeYourCash">6</Param>
+        <Param Key="ScreenOnTakeReceipt">7</Param>
+        <Param Key="PrinterComponentObject">ReciboGeneral.CReciboGeneral</Param>
+        <Param Key="StateOnOutOfMoney">207</Param>
+        <Param Key="StateOnCanDispenseThis">208</Param>
+        <Param Key="ScreenOnCanDispenseThis">42</Param>
+        <Param Key="StateOnMaxBillsCannot">210</Param>
+        <Param Key="ConfigPath">D:\ExtremePCI\ConfigFiles\EVAConfig.XML</Param>
+        <Param Key="ConfDescription">EMV:Imagen 01 Demo</Param>
+    </General>
+
+    <Transactions>
+        <Tran Code="15" OperCodeKey="AA   A  " Comment="Consulta Saldos">
+            <Param Key="NextStateContinue">201</Param>
+            <Param Key="DispenseMoney">false</Param>
+            <Param Key="ComponentObject">GRP:SRVATM</Param>
+            <Param Key="TranCode">30</Param>
+            <Param Key="AccountFrom">10</Param>
+            <Param Key="AccountTo">0</Param>
+            <Param Key="Printer">true</Param>
+        </Tran>
+    </Transactions>
+
+    <TranMaps>
+        <TranMap Id="1" Comment="Retiro Ahorros Con Recibo">
+            <Param Key="OperationCodeKey">ABA A </Param>
+            <Param Key="FieldName1">TrxType</Param>
+            <Param Key="FieldValue1">A</Param>
+            <Param Key="FieldName2">AccType</Param>
+            <Param Key="FieldValue2">A</Param>
+            <Param Key="FieldName3">PrintFlag</Param>
+            <Param Key="FieldValue3">A</Param>
+        </TranMap>
+    </TranMaps>
+
+    <Errors>
+        <Error RetCode="33" Comment="Excede cupo">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+    </Errors>
+</Download>

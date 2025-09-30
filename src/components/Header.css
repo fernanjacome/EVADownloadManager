@@ -3,7 +3,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--c-fondo-secundario);
+  background: var(--c-fondo);
   padding: 10px 20px;
   color: var(--c-principal);
   border-bottom: 1px solid #333;
@@ -38,17 +38,18 @@
   align-items: center;
 }
 .header-btn {
-  background: #333;
-  color: #ddd;
-  padding: 6px 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: background 0.2s;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 18px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  background: var(--c-fondo-btn);
+  color: #ddd;
+  transition: all 0.2s ease;
 }
 .header-btn:hover:not(:disabled) {
   background: #05916e;
@@ -77,7 +78,7 @@
   user-select: none;
 }
 .header-toggle:hover {
-  background: #1e1e1e;
+  background: var(--c-fondo-secundario);
   color: #fff;
 }
 

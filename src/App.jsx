@@ -2,9 +2,7 @@ import React, { useState, useMemo, useRef } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import CodeEditor from "./components/CodeEditor";
-import CardsEditor from "./components/CardsEditor";
-import EditorToolbar from "./components/EditorToolbar"; // 👈 nuevo
-import Notification from "./components/Notification";
+import EditorToolbar from "./components/EditorToolbar";
 import EmptyState from "./components/EmptyState";
 import "./App.css";
 import { serializeXML, formatXml, validateUniqueIds } from "./utils/xmlUtils";
@@ -14,7 +12,6 @@ export default function App() {
   const [xmlDoc, setXmlDoc] = useState(null);
   const [fileInfo, setFileInfo] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
-  const [editMode, setEditMode] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [code, setCode] = useState("");
   const [originalCode, setOriginalCode] = useState("");
@@ -62,9 +59,28 @@ export default function App() {
     setCode(serialized);
     setOriginalCode(serialized);
     setSavedCode(serialized);
-    setEditMode(false);
 
     addNotification("success", "XML cargado correctamente.");
+  };
+  const handleNewXml = async () => {
+    try {
+      const response = await fetch("/default.xml");
+      const text = await response.text();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, "text/xml");
+
+      setFileInfo({
+        name: "default.xml",
+        size: "1000 KB",
+        lastModified: new Date().toLocaleString(),
+      });
+
+      handleLoadXml(doc);
+      addNotification("success", "Nuevo XML creado desde plantilla.");
+    } catch (err) {
+      addNotification("error", "Error al crear nuevo XML.");
+    }
   };
 
   const handleDeleteXml = () => {
@@ -115,8 +131,22 @@ export default function App() {
   };
 
   const handleRestoreOriginal = () => {
-    setCode(originalCode);
-    addNotification("info", "Restaurado al archivo original.");
+    try {
+      const parser = new DOMParser();
+      const restoredDoc = parser.parseFromString(originalCode, "text/xml");
+
+      const parserError = restoredDoc.getElementsByTagName("parsererror")[0];
+      if (parserError) {
+        addNotification("error", "Error al restaurar: XML inválido.");
+        return;
+      }
+
+      setXmlDoc(restoredDoc); // 🔹 refresca Sidebar y demás
+      setCode(originalCode); // 🔹 refresca CodeEditor
+      addNotification("info", "Restaurado al archivo original.");
+    } catch {
+      addNotification("error", "Error inesperado al restaurar.");
+    }
   };
 
   const handleExport = () => {
@@ -165,14 +195,15 @@ export default function App() {
         />
 
         {!xmlDoc ? (
-          <EmptyState onLoadClick={() => fileInputRef.current?.click()} />
+          <EmptyState
+            onLoadClick={() => fileInputRef.current?.click()}
+            onNewClick={handleNewXml}
+          />
         ) : (
           <div className="editor-wrapper">
             {/* 🔹 Toolbar centralizada */}
             <EditorToolbar
               viewMode={viewMode}
-              editMode={editMode}
-              setEditMode={setEditMode}
               onSave={handleSave}
               onRestoreOriginal={handleRestoreOriginal}
               onFormat={
@@ -183,8 +214,8 @@ export default function App() {
                     }
                   : null
               }
-              canSave={viewMode === "code" ? editMode && dirty : dirty}
-              canRestoreOriginal={editMode && code !== originalCode}
+              canSave={viewMode === "code" ? dirty : dirty}
+              canRestoreOriginal={code !== originalCode}
               dirty={dirty}
               xmlDoc={xmlDoc}
               setXmlDoc={setXmlDoc}
@@ -198,15 +229,11 @@ export default function App() {
                 code={code}
                 onChange={setCode}
                 highlightId={highlightId}
-                editMode={editMode}
                 onSave={handleSave}
-                canSave={editMode && dirty}
+                canSave={dirty}
               />
             ) : (
-              <CardsEditor
-                xmlDoc={xmlDoc}
-                markDirty={() => setCode(code + " ")}
-              />
+              <p>Work on it!!</p>
             )}
           </div>
         )}

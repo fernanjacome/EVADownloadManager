@@ -42,7 +42,7 @@ export default function Header({
 
       <div className="header-actions">
         <button className="header-btn" onClick={onLoadClick}>
-          <FaUpload /> Cargar
+          <FaUpload /> Importar
         </button>
         <button className="header-btn" disabled={!hasXml} onClick={onExport}>
           <FaFileExport /> Exportar
@@ -54,8 +54,7 @@ export default function Header({
         >
           <FaTrash /> Eliminar
         </button>
-
-        {/* 🔹 Toggle de vista */}
+        {/* 🔹 Toggle de vista
         {hasXml && (
           <div
             className={`header-toggle ${viewMode}`}
@@ -68,7 +67,7 @@ export default function Header({
               {viewMode === "code" ? "Código" : "Cards"}
             </span>
           </div>
-        )}
+        )} */}
       </div>
     </header>
   );

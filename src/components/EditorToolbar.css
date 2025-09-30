@@ -4,7 +4,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: #1e1e1e;
+  background: var(--c-fondo-secundario);
 
   border-bottom: 1px solid #333;
 }
@@ -16,10 +16,10 @@
   gap: 4px;
   padding: 5px 10px;
   border-radius: 5px;
-  border: none;
+  border: 1px dashed #444;
   cursor: pointer;
   font-size: 13px;
-  background: #2a2a2a;
+  background: var(--c-fondo-btn);
   color: #ddd;
   transition: all 0.2s ease;
 }
@@ -55,7 +55,7 @@
   top: 100%; /* 👈 debajo del botón */
   left: 0;
   margin-top: 6px;
-  background: #1e1e1e;
+  background: var(--c-fondo-secundario);
   border: 1px solid #333;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
@@ -93,7 +93,7 @@
 
 .param-row input {
   flex: 1;
-  background: #2a2a2a;
+  background: var(--c-fondo-btn);
   color: #ddd;
   border: 1px solid #444;
   border-radius: 5px;

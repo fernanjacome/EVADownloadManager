@@ -2,7 +2,7 @@ import React from "react";
 import { FaFileUpload, FaPlus } from "react-icons/fa";
 import "./EmptyState.css";
 
-export default function EmptyState({ onLoadClick }) {
+export default function EmptyState({ onLoadClick, onNewClick }) {
   return (
     <div className="empty-state">
       <svg
@@ -29,10 +29,7 @@ export default function EmptyState({ onLoadClick }) {
         <button className="btn-primary" onClick={onLoadClick}>
           <FaFileUpload /> Cargar XML
         </button>
-        <button
-          className="btn-secondary"
-          onClick={() => alert("Nuevo XML aún no implementado")}
-        >
+        <button className="btn-secondary" onClick={onNewClick}>
           <FaPlus /> Nuevo XML
         </button>
       </div>
