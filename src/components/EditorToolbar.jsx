@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import "./EditorToolbar.css";
 import GeneralConfigPanel from "./GeneralConfigPanel"; // 👈 nuevo
+import ConfirmModal from "./ConfirmModal";
 
 export default function EditorToolbar({
   viewMode,
@@ -25,7 +26,7 @@ export default function EditorToolbar({
   setNotification,
 }) {
   const [openPanel, setOpenPanel] = useState(false);
-
+  const [showConfirmRestore, setShowConfirmRestore] = useState(false);
   return (
     <>
       <div className="editor-toolbar">
@@ -45,7 +46,7 @@ export default function EditorToolbar({
 
         <button
           className="toolbar-btn toolbar-btn-restore"
-          onClick={onRestoreOriginal}
+          onClick={() => setShowConfirmRestore(true)}
           disabled={!canRestoreOriginal}
         >
           <FaUndo /> Restaurar original
@@ -69,6 +70,13 @@ export default function EditorToolbar({
           setNotification={setNotification} // 🔹 pasa el notifier
         />
       )}
+      <ConfirmModal
+        isOpen={showConfirmRestore}
+        onClose={() => setShowConfirmRestore(false)}
+        onConfirm={onRestoreOriginal}
+        title="Restaurar archivo"
+        message="¿Seguro que quieres restaurar el archivo al estado original? Perderás los cambios no guardados."
+      />
     </>
   );
 }

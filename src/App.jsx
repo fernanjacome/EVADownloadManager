@@ -7,6 +7,7 @@ import EmptyState from "./components/EmptyState";
 import "./App.css";
 import { serializeXML, formatXml, validateUniqueIds } from "./utils/xmlUtils";
 import NotificationContainer from "./components/NotificationContainer";
+import TitleBar from "./components/TitleBar/TitleBar";
 
 export default function App() {
   const [xmlDoc, setXmlDoc] = useState(null);
@@ -43,24 +44,18 @@ export default function App() {
     const file = e.target.files[0];
     if (!file) return;
 
-    setFileInfo({
-      name: file.name,
-      size: (file.size / 1024).toFixed(1) + " KB",
-      lastModified: new Date(file.lastModified).toLocaleString(),
-    });
-
     const reader = new FileReader();
     reader.onload = () => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(reader.result, "text/xml");
-      handleLoadXml(doc);
+      handleLoadXml(doc, file); // pasamos el file
     };
     reader.readAsText(file);
 
     e.target.value = "";
   };
 
-  const handleLoadXml = (doc) => {
+  const handleLoadXml = (doc, file = null) => {
     const errors = validateUniqueIds(doc);
     if (errors.length > 0) {
       addNotification(
@@ -76,11 +71,30 @@ export default function App() {
     setOriginalCode(serialized);
     setSavedCode(serialized);
 
+    if (file) {
+      setFileInfo({
+        name: file.name,
+        size: (file.size / 1024).toFixed(1) + " KB",
+        lastModified: new Date(file.lastModified).toLocaleString(),
+      });
+
+      if (window.electronAPI) {
+        window.electronAPI.setWindowTitle(
+          `${file.name} - EVA Download Manager`
+        );
+      }
+    } else {
+      if (window.electronAPI) {
+        window.electronAPI.setWindowTitle("EVA Download Manager");
+      }
+    }
+
     addNotification("success", "XML cargado correctamente.");
   };
   const handleNewXml = async () => {
     try {
-      const response = await fetch("/default.xml");
+      const url = new URL("../public/default.xml", import.meta.url).pathname;
+      const response = await fetch(`file://${url}`);
       const text = await response.text();
 
       const parser = new DOMParser();
@@ -88,14 +102,14 @@ export default function App() {
 
       setFileInfo({
         name: "default.xml",
-        size: "1000 KB",
+        size: `${(text.length / 1024).toFixed(2)} KB`,
         lastModified: new Date().toLocaleString(),
       });
 
       handleLoadXml(doc);
-      addNotification("success", "Nuevo XML creado desde plantilla.");
     } catch (err) {
       addNotification("error", "Error al crear nuevo XML.");
+      console.error(err);
     }
   };
 
@@ -106,6 +120,11 @@ export default function App() {
     setOriginalCode("");
     setSavedCode("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (window.electronAPI) {
+      window.electronAPI.setWindowTitle("EVA Download Manager");
+    }
+
     addNotification("info", "Archivo XML eliminado.");
   };
 
@@ -198,6 +217,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <TitleBar fileName={fileInfo?.name} />
       <Header
         fileInfo={fileInfo}
         onLoadClick={() => fileInputRef.current?.click()}
@@ -221,6 +241,7 @@ export default function App() {
           <EmptyState
             onLoadClick={() => fileInputRef.current?.click()}
             onNewClick={handleNewXml}
+            onFileDrop={handleFileUpload}
           />
         ) : (
           <div className="editor-wrapper">

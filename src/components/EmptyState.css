@@ -52,3 +52,30 @@
 .btn-secondary:hover {
   background: #444;
 }
+
+.drop-zone {
+  border: 2px dashed #444;
+  transition: all 0.2s ease;
+}
+
+.drop-zone.dragging {
+  border: 2px dashed #05916e;
+  background: #05916e1c;
+}
+
+.drag-hint {
+  display: block;
+  margin-top: 6px;
+  font-weight: 600;
+  color: #05916e;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -73,20 +73,22 @@ export default function Sidebar({ xmlDoc, onSelect }) {
         const children = Array.from(section.children).filter(
           (child) => child.tagName === config.childTag
         );
-        const hasMatch = children.some((child) => {
-          const idVal = child.getAttribute(config.idAttr) || "";
-          const comment = child.getAttribute("Comment") || "";
-          const key = child.getAttribute("Key") || "";
-          const code = child.getAttribute("Code") || "";
-          const text = child.textContent || "";
-          return (
-            idVal.toLowerCase().includes(term) ||
-            comment.toLowerCase().includes(term) ||
-            key.toLowerCase().includes(term) ||
-            code.toLowerCase().includes(term) ||
-            text.toLowerCase().includes(term)
-          );
-        });
+        const hasMatch =
+          group.toLowerCase().includes(term) ||
+          children.some((child) => {
+            const idVal = child.getAttribute(config.idAttr) || "";
+            const comment = child.getAttribute("Comment") || "";
+            const key = child.getAttribute("Key") || "";
+            const code = child.getAttribute("Code") || "";
+            const text = child.textContent || "";
+            return (
+              idVal.toLowerCase().includes(term) ||
+              comment.toLowerCase().includes(term) ||
+              key.toLowerCase().includes(term) ||
+              code.toLowerCase().includes(term) ||
+              text.toLowerCase().includes(term)
+            );
+          });
         newState[group] = !hasMatch;
       });
       return newState;
@@ -126,8 +128,11 @@ export default function Sidebar({ xmlDoc, onSelect }) {
               (child) => child.tagName === config.childTag
             );
 
+            // 🔹 Filtrado
             if (searchTerm) {
               const term = searchTerm.toLowerCase();
+              const groupMatches = group.toLowerCase().includes(term); // ✅ Coincidencia por nombre de grupo
+
               children = children.filter((child) => {
                 const idVal = child.getAttribute(config.idAttr) || "";
                 const comment = child.getAttribute("Comment") || "";
@@ -144,6 +149,13 @@ export default function Sidebar({ xmlDoc, onSelect }) {
                   text.toLowerCase().includes(term)
                 );
               });
+
+              // ✅ Si no hay hijos pero el grupo coincide con la búsqueda, mantenlo
+              if (children.length === 0 && groupMatches) {
+                children = Array.from(section.children).filter(
+                  (child) => child.tagName === config.childTag
+                );
+              }
             }
 
             if (children.length === 0) return null;

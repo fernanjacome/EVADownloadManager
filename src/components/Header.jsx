@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FaUpload,
   FaFileExport,
@@ -7,6 +7,7 @@ import {
   FaThLarge,
 } from "react-icons/fa";
 import "./Header.css";
+import ConfirmModal from "./ConfirmModal";
 
 export default function Header({
   fileInfo,
@@ -17,6 +18,7 @@ export default function Header({
   viewMode,
   setViewMode,
 }) {
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   return (
     <header className="header-bar">
       <div className="header-title">
@@ -49,25 +51,18 @@ export default function Header({
         </button>
         <button
           className="header-btn header-btn-danger"
-          onClick={onDeleteXml}
+          onClick={() => setShowConfirmDelete(true)}
           disabled={!hasXml}
         >
           <FaTrash /> Eliminar
         </button>
-        {/* 🔹 Toggle de vista
-        {hasXml && (
-          <div
-            className={`header-toggle ${viewMode}`}
-            onClick={() => setViewMode(viewMode === "code" ? "cards" : "code")}
-          >
-            <div className="header-toggle-thumb">
-              {viewMode === "code" ? <FaCode /> : <FaThLarge />}
-            </div>
-            <span className="header-toggle-label">
-              {viewMode === "code" ? "Código" : "Cards"}
-            </span>
-          </div>
-        )} */}
+        <ConfirmModal
+          isOpen={showConfirmDelete}
+          onClose={() => setShowConfirmDelete(false)}
+          onConfirm={onDeleteXml}
+          title="Eliminar archivo"
+          message="¿Seguro que quieres eliminar este archivo XML de la aplicación?"
+        />
       </div>
     </header>
   );

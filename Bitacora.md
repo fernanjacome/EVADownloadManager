@@ -15,4 +15,9 @@
 [26/9/2025]
 -Se agrego botones para controlar la fuente del editor de codigo.
 
--Cards:
+[30/9/2025]
+-Se agrego panel de configuracion general (GeneralConfigPanel).
+-Se cambio de Ctrl + F -> a Ctrl + B para acceder al buscador del sidebar.
+-Se creo un buscador para el editor de codigo (SearchBar).
+-Ctrl + F ahora abre SearchBar.
+-Notifiaciones ahora alertan linea y columna en caso de error en validacion del XML.
