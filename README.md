@@ -1,78 +1,135 @@
-# Flujo General de la Aplicación
+# EVA Download Manager
 
-## 1. App.jsx (Orquestador Principal)
-
-- Mantiene en `state`:
-  - `originalCode` → XML original cargado (inmutable).
-  - `code` → XML editable en texto.
-  - `xmlDoc` → versión parseada en `Document` para navegación.
-  - `savedCode` → última versión guardada.
-- Decide qué mostrar:
-  - `<EmptyState />` si no hay XML cargado.
-  - `<Sidebar />` y `<Editor />` si sí lo hay.
-- Gestiona notificaciones globales.
+Versión: 1.0.0  
+Última actualización: 2 de octubre de 2025
 
 ---
 
-## 2. Header.jsx
+## Actualizaciones Recientes
 
-- Botones principales:
-  - **Cargar XML** → dispara `onLoadClick`.
-  - **Exportar** → habilitado solo si hay XML cargado.
-  - **Eliminar XML** → dispara `onDeleteXml`.
-- Muestra metadata del archivo cargado:
-  - Nombre, tamaño, fecha de última modificación.
-
----
-
-## 3. EmptyState.jsx
-
-- Vista inicial si no hay XML cargado.
-- Contiene botones sincronizados con el `Header`:
-  - **Cargar XML** → usa el mismo `onLoadClick`.
-  - **Nuevo XML** → reservado (aún sin lógica).
-- No incluye exportación.
+- Panel de configuración general.
+- Buscadores independientes en sidebar y editor.
+- Notificaciones con detalles de error.
+- Control de fuente en el editor.
+- Modales de ayuda y documentación integrada.
 
 ---
 
-## 4. Sidebar.jsx
+## Descripción General
 
-- Recibe `xmlDoc` (Document) desde `App`.
-- Usa `sidebarConfig` para recorrer nodos (`States`, `Screens`, `Transactions`, etc.).
-- Renderiza lista colapsable de elementos.
-- Funcionalidades:
-  - **Búsqueda** → filtra elementos (atajo `Ctrl+F`).
-  - **Selección de ítems** → dispara `onSelect(id)` que `App` pasa al `Editor`.
+EVA Download Manager es una aplicación para gestionar archivos XML de configuración para cajeros integrados con EVA. Permite importar, editar, validar, exportar y organizar archivos XML con una interfaz moderna y funcionalidades avanzadas.
 
 ---
 
-## 5. Editor.jsx
+## Instalación y Ejecución
 
-- Recibe `code` (string) desde `App`.
-- Usa **CodeMirror** para edición del XML.
-- Funcionalidades:
-  - **Guardar (`Ctrl+S`)** → valida y guarda cambios en `App`.
-  - **Buscar (`Ctrl+B`)** → enfoca buscador de `Sidebar`.
-  - **Formatear XML** → usa `formatXml` (indentación estándar).
-  - **Restaurar archivo original**.
-  - **Restaurar última versión guardada**.
-- Cambios en el editor → llaman `onChange`, que actualiza `code` en `App`.
+```sh
+npm install
+npm run dev           # Solo frontend
+npm run electron:dev  # App completa con Electron
+```
 
 ---
 
-## 6. Notification.jsx
+## Funcionalidades Principales
 
-- Componente simple.
-- Muestra mensajes de éxito, error o información.
-- Controlado por el `state` de `App`.
+### Carga y gestión de archivos XML
+
+- Importa archivos XML locales.
+- Crea un archivo base (`default.xml`).
+- Elimina el archivo cargado.
+- Exporta el XML editado.
+
+### Edición avanzada
+
+- Editor de código con [CodeMirror](src/components/CodeEditor.jsx).
+- Formateo automático del XML (`formatXml`).
+- Panel de configuración general para editar parámetros globales.
+- Restaurar archivo al estado original o al último guardado.
+
+### Validaciones
+
+- Verifica que el XML esté bien formado y sin errores de sintaxis.
+- Controla que no existan IDs duplicados en secciones clave.
+- Asegura la presencia de la estructura raíz `<Download>`.
+- Notifica errores con línea y columna si corresponde.
+
+### Navegación y búsqueda
+
+- Barra lateral con grupos (`States`, `Screens`, `Fits`, etc.) usando [`sidebarConfig`](src/utils/sidebarConfig.js).
+- Buscador en la barra lateral (Ctrl+B) y en el editor de código (Ctrl+F).
+- Filtrado por atributos clave y comentarios.
+- Selección de elementos para navegación rápida en el editor.
+
+### Notificaciones
+
+- Sistema de notificaciones para éxito, error, advertencia e información.
+- Mensajes apilados y autodestructibles.
+
+### Interfaz y usabilidad
+
+- Paneles modales de ayuda, formato, validaciones, errores comunes, atajos y recomendaciones.
+- Atajos de teclado:
+  - Ctrl+B: Buscar en la barra lateral
+  - Ctrl+F: Buscar en el editor
+  - Ctrl+S: Guardar cambios
+  - Ctrl + Wheel: Zoom en el editor
+- Control de fuente del editor (aumentar, disminuir, restablecer).
+- Animaciones y estilos modernos.
+
+### Integración con Electron
+
+- Ventana sin marco, controles personalizados (minimizar, maximizar, cerrar).
+- Cambia el título de la ventana según el archivo cargado.
+- Soporte para abrir múltiples ventanas.
 
 ---
 
-# Resumen Técnico
+## Estructura del Proyecto
 
-- **App.jsx** mantiene el estado global del XML (original + editable).
-- **Header / EmptyState** gestionan la carga y eliminación del XML.
-- **Sidebar** permite navegar el XML parseado.
-- **Editor** permite modificar el XML como texto.
-- **Notification** informa los cambios al usuario.
-- **Toda la lógica está centralizada en `App.jsx`.**
+- [`App.jsx`](src/App.jsx): Orquestador principal, gestiona el estado global y decide qué componentes mostrar.
+- [`Header.jsx`](src/components/Header.jsx): Acciones principales y metadata del archivo.
+- [`Sidebar.jsx`](src/components/Sidebar.jsx): Navegación por grupos y búsqueda.
+- [`CodeEditor.jsx`](src/components/CodeEditor.jsx): Edición y búsqueda de código XML.
+- [`GeneralConfigPanel.jsx`](src/components/GeneralConfigPanel.jsx): Panel para editar parámetros generales.
+- [`NotificationContainer.jsx`](src/components/NotificationContainer.jsx): Muestra notificaciones.
+- [`TitleBar.jsx`](src/components/TitleBar/TitleBar.jsx): Menú superior y modales de ayuda.
+- [`xmlUtils.js`](src/utils/xmlUtils.js): Utilidades para parsear, serializar, formatear y validar XML.
+
+---
+
+## Atajos de Teclado
+
+- Ctrl+B: Buscar en la barra lateral
+- Ctrl+F: Buscar en el editor de código
+- Ctrl+S: Guardar cambios
+- Ctrl + (WheelUp/WheelDown): Zoom en el editor
+
+---
+
+## Validaciones
+
+- Sintaxis y formato XML.
+- IDs únicos en secciones clave.
+- Estructura raíz `<Download>`.
+- Exportación segura.
+
+---
+
+## Historial de Versiones
+
+- 1.0.0  
+  Versión inicial con todas las funcionalidades descritas arriba.
+
+---
+
+## Autor
+
+Fernando Jácome  
+Extreme Visual Appliance
+
+---
+
+## Licencia
+
+MIT
