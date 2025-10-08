@@ -39,7 +39,17 @@
   font-size: 12px;
   font-weight: 500;
   color: #fff;
-  background: rgba(255, 167, 25, 0.9); /* Ámbar */
+  background: rgba(255, 167, 25); /* Ámbar */
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+.toolbar-warning {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(25, 182, 255, 0.9); /* Ámbar */
   padding: 3px 10px;
   border-radius: 20px;
   letter-spacing: 0.5px;

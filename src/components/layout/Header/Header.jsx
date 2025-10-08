@@ -7,7 +7,7 @@ import {
   FaThLarge,
 } from "react-icons/fa";
 import "./Header.css";
-import ConfirmModal from "./ConfirmModal";
+import ConfirmModal from "../../utils/ConfirmModal";
 
 export default function Header({
   fileInfo,

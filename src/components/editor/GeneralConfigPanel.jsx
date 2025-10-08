@@ -7,7 +7,7 @@ import {
   FaTimesCircle,
 } from "react-icons/fa";
 import "./GeneralConfigPanel.css";
-import { formatXml, serializeXML } from "../utils/xmlUtils";
+import { formatXml, serializeXML } from "../../utils/xmlUtils";
 
 export default function GeneralConfigPanel({
   xmlDoc,

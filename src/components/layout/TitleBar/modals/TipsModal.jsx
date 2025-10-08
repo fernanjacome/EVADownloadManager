@@ -20,7 +20,7 @@ export default function TipsModal({ isOpen, onClose }) {
           </li>
           <li>Valida y formatea el XML desde la app antes de exportarlo.</li>
           <li>
-            Usa nombres de archivo descriptivos para identificar descargas
+            Usa nombres de archivo descriptivos para identificar downloads
             fácilmente.
           </li>
         </ul>

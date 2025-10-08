@@ -8,7 +8,6 @@
   display: flex;
   flex: 1;
   overflow: hidden;
-  max-width: 1600px; /* límite máximo razonable */
   margin: 0 auto; /* centra el contenido */
   width: 100%; /* ocupa todo hasta llegar al límite */
   box-sizing: border-box;

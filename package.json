@@ -1,6 +1,6 @@
 {
   "name": "eva-download-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Gestor de Downloads XML para EVA", 
   "author": "Fernando Jácome",
   "license": "MIT",

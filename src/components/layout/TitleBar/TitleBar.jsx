@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./TitleBar.css";
-import expand from "../../assets/expand.png";
-import minus from "../../assets/minus.png";
-import equis from "../../assets/equis.png";
+import expand from "../../../assets/expand.png";
+import minus from "../../../assets/minus.png";
+import equis from "../../../assets/equis.png";
 import AboutModal from "./modals/AboutModal";
 import FormatModal from "./modals/FormatModal";
 import TipsModal from "./modals/TipsModal";
@@ -14,7 +14,7 @@ import ErrorsModal from "./modals/ErrorsModal";
 export default function TitleBar({ fileName }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [showModal, setShowModal] = useState(null); // 👈 ahora null | "about" | "format" | "validations" | "tips"
-
+  const menuRef = useRef(null);
   const handleAction = (action) => {
     if (window.electronAPI) {
       window.electronAPI.windowControl(action);
@@ -157,7 +157,7 @@ export default function TitleBar({ fileName }) {
           </button>
           <button
             className="win-btn close"
-            onClick={() => handleAction("close")}
+            onClick={() => window.dispatchEvent(new Event("tryAppClose"))}
           >
             <img src={equis} alt="close" />
           </button>

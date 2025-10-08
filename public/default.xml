@@ -1,79 +1,819 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Download>
     <States>
-        <State Id="0" Type="CRD" Comment="">
-            <Param Key="ReadFlags">11</Param>
-            <Param Key="Screen">12</Param>
+        <State Id="0" Type="CRD" Comment="Card Reader">
+            <Param Key="ReadFlags">2</Param>
+            <Param Key="Screen">5</Param>
             <Param Key="Timeout">0</Param>
-            <Param Key="GoodState">1002</Param>
-            <Param Key="CardLessState">40</Param>
-            <Param Key="NoMatchState">237</Param>
+            <Param Key="GoodState">2</Param>
+            <Param Key="NoMatchState">900</Param>
             <Param Key="TimeoutState">998</Param>
-            <Param Key="ErrorState">237</Param>
-            <Param Key="InvalidCardScreen">37</Param>
-            <Param Key="RemoveCardScreen">23</Param>
+            <Param Key="ErrorState">900</Param>
+            <Param Key="InvalidCardScreen">43</Param>
+            <Param Key="RemoveCardScreen">44</Param>
+        </State>
+        <State Id="2" Type="PIN" Comment="Ingrese su clave">
+            <Param Key="Screen">6</Param>
+            <Param Key="Timeout">20</Param>
+            <Param Key="GoodState">3</Param>
+            <Param Key="MinLen">4</Param>
+            <Param Key="MaxLen">4</Param>
+            <Param Key="CancelState">999</Param>
+            <Param Key="TimeoutState">998</Param>
+            <Param Key="ErrorState">900</Param>
+        </State>
+        <State Id="3" Type="SELECT" Comment="Menu principal">
+            <Param Key="Screen">7</Param>
+            <Param Key="KeyAState">4</Param>
+            <Param Key="KeyBState">9</Param>
+            <Param Key="Buffer">TrxType</Param>
+            <Param Key="Timeout">20</Param>
+            <Param Key="CancelState">999</Param>
+            <Param Key="TimeoutState">998</Param>
+            <Param Key="ErrorState">900</Param>
+        </State>
+        <State Id="4" Type="SELECT" Comment="Menu tipo cuenta">
+            <Param Key="Screen">8</Param>
+            <Param Key="KeyAState">5</Param>
+            <Param Key="KeyBState">5</Param>
+            <Param Key="Buffer">AccType</Param>
+            <Param Key="Timeout">20</Param>
+            <Param Key="CancelState">999</Param>
+            <Param Key="TimeoutState">998</Param>
+            <Param Key="ErrorState">900</Param>
+        </State>
+        <State Id="5" Type="SELECT" Comment="Elegir la cantidad">
+            <Param Key="Screen">9</Param>
+            <Param Key="KeyAState">6</Param>
+            <Param Key="KeyBState">6</Param>
+            <Param Key="KeyCState">6</Param>
+            <Param Key="KeyDState">6</Param>
+            <Param Key="KeyFState">6</Param>
+            <Param Key="KeyGState">6</Param>
+            <Param Key="KeyHState">6</Param>
+            <Param Key="KeyIState">7</Param>
+            <Param Key="Buffer">Button</Param>
+            <Param Key="Timeout">20</Param>
+            <Param Key="CancelState">999</Param>
+            <Param Key="TimeoutState">998</Param>
+            <Param Key="ErrorState">900</Param>
+        </State>
+        <State Id="6" Type="SETWHEN" Comment="Setear cuando (Case)">
+            <Param Key="WhenBuffer">Button</Param>
+            <Param Key="SetBuffer">Ammount</Param>
+            <Param Key="When1">A</Param>
+            <Param Key="Set1">5</Param>
+            <Param Key="When2">B</Param>
+            <Param Key="Set2">10</Param>
+            <Param Key="When3">C</Param>
+            <Param Key="Set3">20</Param>
+            <Param Key="When4">D</Param>
+            <Param Key="Set4">50</Param>
+            <Param Key="When5">F</Param>
+            <Param Key="Set5">100</Param>
+            <Param Key="When6">G</Param>
+            <Param Key="Set6">200</Param>
+            <Param Key="When7">H</Param>
+            <Param Key="Set7">500</Param>
+            <Param Key="GoodState">8</Param>
+            <Param Key="ErrorState">900</Param>
+        </State>
+        <State Id="7" Type="SELECT" Comment="Seleccion de billetes">
+            <Param Key="Screen">13</Param>
+            <Param Key="Timeout">20</Param>
+            <Param Key="KeyDState">8</Param>
+            <Param Key="Buffer">Button</Param>
+            <Param Key="CancelState">999</Param>
+            <Param Key="ErrorState">900</Param>
+            <Param Key="TimeoutState">998</Param>
+        </State>
+        <State Id="8" Type="SELECT" Comment="¿Desea recibo?">
+            <Param Key="Screen">10</Param>
+            <Param Key="Timeout">20</Param>
+            <Param Key="KeyAState">100</Param>
+            <Param Key="KeyFState">100</Param>
+            <Param Key="Buffer">PrintFlag</Param>
+            <Param Key="CancelState">999</Param>
+            <Param Key="ErrorState">900</Param>
+            <Param Key="TimeoutState">998</Param>
+        </State>
+        <State Id="9" Type="SELECT" Comment="Seleccion tipo de consulta">
+            <Param Key="Screen">8</Param>
+            <Param Key="Timeout">20</Param>
+            <Param Key="KeyAState">100</Param>
+            <Param Key="KeyBState">100</Param>
+            <Param Key="Buffer">AccType</Param>
+            <Param Key="TimeoutState">998</Param>
+            <Param Key="CancelState">999</Param>
+            <Param Key="ErrorState">900</Param>
+        </State>
+        <State Id="20" Type="END" Comment="Transaccion terminada">
+            <Param Key="Screen">12</Param>
+            <Param Key="Timeout">5</Param>
+        </State>
+        <State Id="100" Type="SEND" Comment="Envio de informacion (SEND)">
+            <Param Key="Screen">11</Param>
+            <Param Key="Timeout">30</Param>
+            <Param Key="Buffer1">TrackII</Param>
+            <Param Key="Buffer2">Pin</Param>
+            <Param Key="Buffer3">TrxType</Param>
+            <Param Key="Buffer4">AccType</Param>
+            <Param Key="Buffer5">PrintFlag</Param>
+            <Param Key="Buffer6">Ammount</Param>
+            <Param Key="Buffer7">LocalDispMix</Param>
+            <Param Key="Buffer8">TLV</Param>
+            <Param Key="Buffer9">DataKey</Param>
+            <Param Key="TimeoutState">998</Param>
+            <Param Key="ErrorState">900</Param>
+        </State>
+        <State Id="900" Type="END" Comment="Error general">
+            <Param Key="Screen">91</Param>
+            <Param Key="Timeout">5</Param>
+        </State>
+        <State Id="910" Type="END" Comment="Error general con texto">
+            <Param Key="Screen">91</Param>
+            <Param Key="Timeout">5</Param>
+        </State>
+        <State Id="998" Type="END" Comment="Tiempo de espera agotado">
+            <Param Key="Screen">36</Param>
+            <Param Key="Timeout">5</Param>
+        </State>
+        <State Id="999" Type="END" Comment="Transaccion cancelada por usted">
+            <Param Key="Screen">45</Param>
+            <Param Key="Timeout">5</Param>
         </State>
     </States>
-
     <Screens>
-        <Screen Id="12" Comment="Ingrese su tarjeta">
-            <Param Key="Resource" Lan="0">http://localhost/pantalla_idle.html</Param>
+        <Screen Id="-1" Comment="Cajero no disponible por el momento">
+            <Param Key="Resource" Lan="0">pantalla_fuera_servicio.html</Param>
+        </Screen>
+        <Screen Id="0" Comment="Desea mas tiempo">
+            <Param Key="Resource" Lan="0">pantalla_tiempo.html</Param>
+        </Screen>
+        <Screen Id="2" Comment="Contando su dinero">
+            <Param Key="Resource" Lan="0">pantalla_contando_dinero.html</Param>
+        </Screen>
+        <Screen Id="3" Comment="Tome su dinero">
+            <Param Key="Resource" Lan="0">pantalla_tomar_dinero.html</Param>
+        </Screen>
+        <Screen Id="4" Comment="Retirar su recibo">
+            <Param Key="Resource" Lan="0">pantalla_retirar_recibo.html</Param>
+        </Screen>
+        <Screen Id="5" Comment="Ingrese su tarjeta">
+            <Param Key="Resource" Lan="0">pantalla_index.html</Param>
             <ResBuffer>UserEntryB</ResBuffer>
         </Screen>
-    </Screens>
+        <Screen Id="6" Comment="Ingrese su pin">
+            <Param Key="Resource" Lan="0">pantalla_ingreso_pin.html</Param>
+            <Param Key="EntryControl" Lan="0">password</Param>
+        </Screen>
+        <Screen Id="7" Comment="Menu Principal">
+            <Param Key="Resource" Lan="0">pantalla_acciones_menu.html</Param>
+        </Screen>
+        <Screen Id="8" Comment="Menu tipo cuenta">
+            <Param Key="Resource" Lan="0">pantalla_tipo_cuenta.html</Param>
+        </Screen>
+        <Screen Id="9" Comment="Elegir cantidad">
+            <Param Key="Resource" Lan="0">pantalla_elegir_cantidad.html</Param>
+        </Screen>
+        <Screen Id="10" Comment="¿Desea recibo?">
+            <Param Key="Resource" Lan="0">pantalla_recibo.html</Param>
+        </Screen>
+        <Screen Id="11" Comment="Espera">
+            <Param Key="Resource" Lan="0">pantalla_espera.html</Param>
+        </Screen>
+        <Screen Id="12" Comment="Gracias">
+            <Param Key="Resource" Lan="0">pantalla_gracias.html</Param>
+        </Screen>
+        <Screen Id="13" Comment="Seleccion de billetes">
+            <Param Key="Resource" Lan="0">pantalla_ingreso_monto.html</Param>
+            <ResBuffer>Ammount</ResBuffer>
+            <ResBuffer>LocalDispMix</ResBuffer>
+        </Screen>
 
+        <Screen Id="36" Comment="Tiempo de espera agotado">
+            <Param Key="Resource" Lan="0">pantalla_tiempo_agotado.html</Param>
+        </Screen>
+        <Screen Id="42" Comment="Out of money">
+            <Param Key="Resource" Lan="0">pantalla_out_of_money.html</Param>
+        </Screen>
+        <Screen Id="43" Comment="Tarjeta invalida">
+            <Param Key="Resource" Lan="0">pantalla_tarjeta_invalida.html</Param>
+        </Screen>
+        <Screen Id="44" Comment="Retirar tarjeta">
+            <Param Key="Resource" Lan="0">pantalla_retirar_tarjeta.html</Param>
+        </Screen>
+        <Screen Id="45" Comment="Transaccion cancelada por usted">
+            <Param Key="Resource" Lan="0">pantalla_transaccion_cancelada.html</Param>
+        </Screen>
+        <Screen Id="91" Comment="Error general con texto">
+            <Param Key="Resource" Lan="0">pantalla_error.html</Param>
+            <ReqBuffer>ErrMsg</ReqBuffer>
+        </Screen>
+        <Screen Id="900" Comment="Error general">
+            <Param Key="Resource" Lan="0">pantalla_error.html</Param>
+        </Screen>
+    </Screens>
     <Fits>
-        <Fit Id="1">
-            <Param Key="Bin">505512</Param>
-            <Param Key="Index">9</Param>
-        </Fit>
-        <Fit Id="2">
+        <Fit Id="0">
             <Param Key="Bin" />
             <Param Key="Index">0</Param>
         </Fit>
     </Fits>
-
     <General>
         <Param Key="NextStateOnCriticalError">900</Param>
         <Param Key="MaxBillsDispensed">30</Param>
-        <Param Key="ScreenOnDispense">5</Param>
-        <Param Key="ScreenOnTakeYourCash">6</Param>
-        <Param Key="ScreenOnTakeReceipt">7</Param>
+        <Param Key="ScreenOnDispense">2</Param>
+        <Param Key="ScreenOnTakeYourCash">3</Param>
+        <Param Key="ScreenOnTakeReceipt">4</Param>
         <Param Key="PrinterComponentObject">ReciboGeneral.CReciboGeneral</Param>
         <Param Key="StateOnOutOfMoney">207</Param>
         <Param Key="StateOnCanDispenseThis">208</Param>
         <Param Key="ScreenOnCanDispenseThis">42</Param>
         <Param Key="StateOnMaxBillsCannot">210</Param>
         <Param Key="ConfigPath">D:\ExtremePCI\ConfigFiles\EVAConfig.XML</Param>
-        <Param Key="ConfDescription">EMV:Imagen 01 Demo</Param>
+        <Param Key="ConfDescription">EMV:Imagen 75 CAPAEVA</Param>
     </General>
-
     <Transactions>
-        <Tran Code="15" OperCodeKey="AA   A  " Comment="Consulta Saldos">
-            <Param Key="NextStateContinue">201</Param>
+        <Tran Code="1" OperCodeKey="CSA" Comment="Consulta de saldos de ahorros">
+            <Param Key="NextStateContinue">20</Param>
             <Param Key="DispenseMoney">false</Param>
             <Param Key="ComponentObject">GRP:SRVATM</Param>
             <Param Key="TranCode">30</Param>
             <Param Key="AccountFrom">10</Param>
             <Param Key="AccountTo">0</Param>
             <Param Key="Printer">true</Param>
+            <Param Key="AssemblyPath">D:\ExtremePCI\DotNet\LibreriaPersonalizada.dll</Param>
+            <Param Key="AssemblyClass">LibreriaPersonalizada.Autorizador</Param>
+            <Param Key="AssemblyMethod">Procesar</Param>
+        </Tran>
+        <Tran Code="2" OperCodeKey="CSC" Comment="Consulta de saldos de corriente">
+            <Param Key="NextStateContinue">20</Param>
+            <Param Key="DispenseMoney">false</Param>
+            <Param Key="ComponentObject">GRP:SRVATM</Param>
+            <Param Key="TranCode">30</Param>
+            <Param Key="AccountFrom">20</Param>
+            <Param Key="AccountTo">0</Param>
+            <Param Key="Printer">true</Param>
+            <Param Key="AssemblyPath">D:\ExtremePCI\DotNet\LibreriaPersonalizada.dll</Param>
+            <Param Key="AssemblyClass">LibreriaPersonalizada.Autorizador</Param>
+            <Param Key="AssemblyMethod">Procesar</Param>
+        </Tran>
+        <Tran Code="3" OperCodeKey="RCA" Comment="Retiro de cuenta de ahorro">
+            <Param Key="NextStateContinue">20</Param>
+            <Param Key="DispenseMoney">true</Param>
+            <Param Key="ComponentObject">GRP:SRVATM</Param>
+            <Param Key="TranCode">1</Param>
+            <Param Key="AccountFrom">10</Param>
+            <Param Key="AccountTo">0</Param>
+            <Param Key="Printer">true</Param>
+            <Param Key="AssemblyPath">D:\ExtremePCI\DotNet\LibreriaPersonalizada.dll</Param>
+            <Param Key="AssemblyClass">LibreriaPersonalizada.Autorizador</Param>
+            <Param Key="AssemblyMethod">Procesar</Param>
+        </Tran>
+        <Tran Code="4" OperCodeKey="RCC" Comment="Retiro de cuenta de corriente">
+            <Param Key="NextStateContinue">20</Param>
+            <Param Key="DispenseMoney">true</Param>
+            <Param Key="ComponentObject">GRP:SRVATM</Param>
+            <Param Key="TranCode">1</Param>
+            <Param Key="AccountFrom">20</Param>
+            <Param Key="AccountTo">0</Param>
+            <Param Key="Printer">true</Param>
+            <Param Key="AssemblyPath">D:\ExtremePCI\DotNet\LibreriaPersonalizada.dll</Param>
+            <Param Key="AssemblyClass">LibreriaPersonalizada.Autorizador</Param>
+            <Param Key="AssemblyMethod">Procesar</Param>
+        </Tran>
+        <Tran Code="5" OperCodeKey="RCAN" Comment="Retiro de cuenta de ahorros (No Receipt)">
+            <Param Key="NextStateContinue">20</Param>
+            <Param Key="DispenseMoney">true</Param>
+            <Param Key="ComponentObject">GRP:SRVATM</Param>
+            <Param Key="TranCode">1</Param>
+            <Param Key="AccountFrom">10</Param>
+            <Param Key="AccountTo">0</Param>
+            <Param Key="Printer">false</Param>
+            <Param Key="AssemblyPath">D:\ExtremePCI\DotNet\LibreriaPersonalizada.dll</Param>
+            <Param Key="AssemblyClass">LibreriaPersonalizada.Autorizador</Param>
+            <Param Key="AssemblyMethod">Procesar</Param>
+        </Tran>
+        <Tran Code="6" OperCodeKey="RCCN" Comment="Retiro de cuenta de corriente (No Receipt)">
+            <Param Key="NextStateContinue">20</Param>
+            <Param Key="DispenseMoney">true</Param>
+            <Param Key="ComponentObject">GRP:SRVATM</Param>
+            <Param Key="TranCode">1</Param>
+            <Param Key="AccountFrom">20</Param>
+            <Param Key="AccountTo">0</Param>
+            <Param Key="Printer">false</Param>
+            <Param Key="AssemblyPath">D:\ExtremePCI\DotNet\LibreriaPersonalizada.dll</Param>
+            <Param Key="AssemblyClass">LibreriaPersonalizada.Autorizador</Param>
+            <Param Key="AssemblyMethod">Procesar</Param>
         </Tran>
     </Transactions>
-
     <TranMaps>
-        <TranMap Id="1" Comment="Retiro Ahorros Con Recibo">
-            <Param Key="OperationCodeKey">ABA A </Param>
+        <TranMap Id="1" Comment="(CSA) Consulta de saldos de ahorros">
+            <Param Key="OperationCodeKey">CSA</Param>
+            <Param Key="FieldName1">TrxType</Param>
+            <Param Key="FieldValue1">B</Param>
+            <Param Key="FieldName2">AccType</Param>
+            <Param Key="FieldValue2">B</Param>
+        </TranMap>
+        <TranMap Id="2" Comment="(CSC) Consulta de saldos de corrientes">
+            <Param Key="OperationCodeKey">CSC</Param>
+            <Param Key="FieldName1">TrxType</Param>
+            <Param Key="FieldValue1">B</Param>
+            <Param Key="FieldName2">AccType</Param>
+            <Param Key="FieldValue2">A</Param>
+        </TranMap>
+        <TranMap Id="3" Comment="(RCA) Retiro de cuenta de ahorro">
+            <Param Key="OperationCodeKey">RCA</Param>
+            <Param Key="FieldName1">TrxType</Param>
+            <Param Key="FieldValue1">A</Param>
+            <Param Key="FieldName2">AccType</Param>
+            <Param Key="FieldValue2">B</Param>
+            <Param Key="FieldName3">PrintFlag</Param>
+            <Param Key="FieldValue3">F</Param>
+        </TranMap>
+        <TranMap Id="4" Comment="(RCC) Retiro de cuenta de corriente">
+            <Param Key="OperationCodeKey">RCC</Param>
             <Param Key="FieldName1">TrxType</Param>
             <Param Key="FieldValue1">A</Param>
             <Param Key="FieldName2">AccType</Param>
             <Param Key="FieldValue2">A</Param>
             <Param Key="FieldName3">PrintFlag</Param>
+            <Param Key="FieldValue3">F</Param>
+        </TranMap>
+        <TranMap Id="5" Comment="(RCAN) Retiro de cuenta de ahorro (No Receipt)">
+            <Param Key="OperationCodeKey">RCAN</Param>
+            <Param Key="FieldName1">TrxType</Param>
+            <Param Key="FieldValue1">A</Param>
+            <Param Key="FieldName2">AccType</Param>
+            <Param Key="FieldValue2">B</Param>
+            <Param Key="FieldName3">PrintFlag</Param>
+            <Param Key="FieldValue3">A</Param>
+        </TranMap>
+        <TranMap Id="6" Comment="(RCCN) Retiro de cuenta de corriente (No Receipt)">
+            <Param Key="OperationCodeKey">RCCN</Param>
+            <Param Key="FieldName1">TrxType</Param>
+            <Param Key="FieldValue1">A</Param>
+            <Param Key="FieldName2">AccType</Param>
+            <Param Key="FieldValue2">B</Param>
+            <Param Key="FieldName3">PrintFlag</Param>
             <Param Key="FieldValue3">A</Param>
         </TranMap>
     </TranMaps>
-
     <Errors>
         <Error RetCode="33" Comment="Excede cupo">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="34" Comment="Excede cupo">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="100" Comment="Llamar al emisor (01)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="101" Comment="Llamar al emisor condicion especial  (02)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="102" Comment="Proveedor o Comercio invalido  (03)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="103" Comment="Retener Tarjeta  (04)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="104" Comment="No Honrar Tarjeta  (05)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="105" Comment="Error general  (06)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="106" Comment="Retener Tarjeta condicion especial (07)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="108" Comment="Transaccion invalida (12)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="109" Comment="Monto invalido (13)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="110" Comment="Numero de cuenta invalido (14)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="111" Comment="Emisor invalido (15)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="112" Comment="Transaccion invalida">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="117" Comment="Tarjeta perdida (Retener) (41)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="118" Comment="Tarjeta robada (Retener) (43)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="119" Comment="Fondos insuficientes (51)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="120" Comment="No es cuenta corriente (52)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="130" Comment="No es cuenta de ahorros (53)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="131" Comment="Tarjeta expirada (54)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="132" Comment="PIN Incorrecto (55)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="133" Comment="Transaccion no permitida a tarjetahabiente (57)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="134" Comment="Transaccion no permitida en terminal (58)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="135" Comment="Limite de actividad en monto exedido (61)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="136" Comment="VISANET: Tarjeta restringida (62)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="138" Comment="Limite de actividad en numero excedido (65)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="139" Comment="Excedido reintentos en clave (75)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="143" Comment="PIN cryptographic error (81)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="147" Comment="Emisor o switch no operativo (91)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="148" Comment="No se pudo encontrar destino en ruteo (92)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="150" Comment="Malfuncionamiento del sistema (96)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="324" Comment="Tarjeta retenida">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="350" Comment="Clave de tarjet en blanco">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="501" Comment="Respuesta Cliente No puesee TARJETAS DE CREDITO">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="604" Comment="CIRRUS:Monto Invalido">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="605" Comment="CIRRUS:Tarjeta Invalida TARJETA NO EXISTE">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="608" Comment="CIRRUS:TARJETA ROBADA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="610" Comment="CIRRUS:Fondos Insuficientes">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="612" Comment="CIRRUS:Pin Invalido">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="613" Comment="CIRRUS:Transaccion no Permitida en Tarjeta">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="615" Comment="CIRRUS:Limite Execido">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="616" Comment="CIRRUS:Restriccion de Tarjeta">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="618" Comment="CIRRUS:Excede limite de Frecuencia  CUPOS POR MONTOS">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="619" Comment="CIRRUS:Excede Intento de PIN">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="670" Comment="PIL selecciona">
+            <Param Key="ErrNxtState">300</Param>
+        </Error>
+        <Error RetCode="677" Comment="PIL reintenta">
+            <Param Key="ErrNxtState">300</Param>
+        </Error>
+        <Error RetCode="701" Comment="Deposito no puede ser procesado">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="804" Comment="ATH: Pick-up (04)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="806" Comment="ATH: Error (06)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="808" Comment="ATH: Honor with identification (08)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="810" Comment="ATH: Approved for partial ammount (not supported) (10)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="811" Comment="ATH: Approved (VIP) (11)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="815" Comment="ATH: No such issuer (15)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="816" Comment="ATH: Approved  update track 3 (not supported)  (16)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="817" Comment="ATH: Customer cacellation (17)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="818" Comment="ATH: Customer dispute (18)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="819" Comment="ATH: Re-enter transaction (19)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="820" Comment="ATH: Invalid response (20)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="821" Comment="ATH: No action taken (21)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="823" Comment="ATH: Unacceptable transaction fee (23)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="832" Comment="ATH: Completed partially (32)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="835" Comment="ATH: Card acceptor contact acquirer; pick-up (35)">
+            <Param Key="ErrNxtState">910</Param>
+            <Param Key="ErrFlag">R</Param>
+        </Error>
+        <Error RetCode="839" Comment="ATH: No credit account (39)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="842" Comment="ATH: No universal account (42)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="844" Comment="ATH: No investment account (44)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="852" Comment="ATH: No checking account (52)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="853" Comment="ATH: No savings account (53)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="858" Comment="Robada">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="860" Comment="ATH: Card acceptor contact acquirer (60)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="863" Comment="ATH: Security violation (63)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="866" Comment="ATH: Card acceptor call security dept. of acquirer (66)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="881" Comment="ATH: Reserved for private use (81)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="886" Comment="ATH: Reserved for private use (86)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="887" Comment="ATH: Reserved for private use (87)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="888" Comment="ATH: Reserved for private use (88)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="889" Comment="ATH: Reserved for private use (89)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="890" Comment="ATH: Cutoff is in process (try later) (90)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="892"
+            Comment="ATH: Financial institution or intermediate network not found for routing (92)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="895" Comment="ATH: Reconcile error (95)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="900" Comment="Valor seteado en codigo de error al inicio del programa">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="902" Comment="Clave Invalida - reingrese la clave">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="905" Comment="Clave Invalida - reingrese la clave">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="1022" Comment="FDC: Numero de Retiros Excedidos">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="1038" Comment="Error en consulta de cuentas">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="1197"
+            Comment="Fecha ingresada de vencimiento errada no valida menor al dia en blanco etc">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="1902" Comment="Subsidio ya fue pagado">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="1939" Comment="PIL VISA inicia">
+            <Param Key="ErrNxtState">300</Param>
+        </Error>
+        <Error RetCode="1916" Comment="No tiene clave PIL generada">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="1981" Comment="PIL VISA reintente">
+            <Param Key="ErrNxtState">300</Param>
+        </Error>
+        <Error RetCode="1982" Comment="PIL VISA ultimo intento">
+            <Param Key="ErrNxtState">300</Param>
+        </Error>
+        <Error RetCode="1983" Comment="Tarjeta Bloqueada">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="1903" Comment="Subsidio no existe">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2000" Comment="Utilizada en FIN de OARs - Vaya a menu de CloseOut">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2001" Comment="INIT CASH - CloseOut no ejecutado">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2002" Comment="Clave Invalida - usuario normal">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2003" Comment="ADD CASH - INIT CASH no ejecutado">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2004" Comment="SETTLE - INIT CASH no ejecutado">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2005" Comment="CLOSE - INIT CASH no ejecutado">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2006" Comment="El ATM no ha sido iniciado">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2007" Comment="Usuario de Soporte - Ir a opciones de soporte">
+            <Param Key="ErrNxtState">504</Param>
+        </Error>
+        <Error RetCode="2008" Comment="Usuario no autorizado a cuadrar este ATM">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2009" Comment="Clave invalida - Soporte        ">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="2010" Comment="Lote ya está cerrado o no tiene movimientos">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3413" Comment="PIN INVALIDO">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3414" Comment="MONTO INVALIDO">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3441" Comment="TRANSACCION NO PERMITIDA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3451" Comment="FONDOS INSUFIENTES">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3452" Comment="USTED NO TIENE EL TIPO CUENTA SELECIONADA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3453" Comment="USTED NO TIENE EL TIPO CUENTA SELECIONADA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3455" Comment="PIN INVALIDO">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3457" Comment="TRANSACCION NO PERMITIDA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3461" Comment="CUPOS POR TRANSACCION EXCEDIDA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3462" Comment="TARJETA RESTRINGIDA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3465" Comment="CUPOS POR MONTOS">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="3475" Comment="B24 Allowable number of PIN tries exceeded (75)">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4007" Comment="Fondos Insuficientes">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4009" Comment="Problemas con la Cuenta">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4019" Comment="TIPO DE CUENTA SELECCIONADA ERRADA">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4024" Comment="Error General de Interface">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4030" Comment="Valor cero en retiro o transaccion">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4100" Comment="No se permite transferencia">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4186" Comment="Transaccion no permitida a tarjetahabiente">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4268" Comment="Gaveta de rechazos lleno">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4269" Comment="Puerta Abierta">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4270" Comment="Cajero sin dinero">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4271" Comment="Numero de billetes excede">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4272" Comment="Codigo de complete en no money error">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4273" Comment="Error al grabar atmtran">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4280" Comment="Error en cryptografia de clave de cajero">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4375" Comment="Cajero en proceso de cuadre">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="4379" Comment="Cajero desabhilitado por software">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9114" Comment="Cliente sin cuentas registradas">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9503" Comment="Solicita codigo de NPE">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9504" Comment="Envia Transaccion a Host">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9505" Comment="Envia Transaccion a Host de cobros claro">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9506" Comment="Envia Transaccion a Host de cobros movi">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9507" Comment="Envia Transaccion a Host de cobros digitel">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9508" Comment="Envia Transaccion a Host de cobros tigo">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9509" Comment="Solicita fecha vencimiento">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9510" Comment="Solicita numero de telefono para colectora">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9511" Comment="Solicita datos">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9512" Comment="Envia Transaccion a Host">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9914" Comment="Transaccion invalida">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9991" Comment="Flujo no definido">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="9999"
+            Comment="Trama devuelta por autorizador errada problema en conversion de XML">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="10000"
+            Comment="Valor con que se encera en ingreso del proceso de una transaccion">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="10001" Comment="Valor con que se encera retorno en respuesta a OAR">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="11001" Comment="Error al invocar a autorizador">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="11002" Comment="EXT ATMS  negado con codigo error cero">
+            <Param Key="ErrNxtState">910</Param>
+        </Error>
+        <Error RetCode="11003" Comment="Respuesta con serial diferente a requerimiento">
             <Param Key="ErrNxtState">910</Param>
         </Error>
     </Errors>

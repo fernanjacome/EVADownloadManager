@@ -1,5 +1,5 @@
 import React from "react";
-import "./TitleBar/modals/AboutModal.css"; // reutiliza los mismos estilos
+import "../layout/TitleBar/modals/AboutModal.css"; // reutiliza los mismos estilos
 
 export default function ConfirmModal({
   isOpen,

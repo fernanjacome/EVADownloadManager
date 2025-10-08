@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import Header from "./components/Header";
-import Sidebar from "./components/Sidebar";
-import CodeEditor from "./components/CodeEditor";
-import EditorToolbar from "./components/EditorToolbar";
-import EmptyState from "./components/EmptyState";
+
 import "./App.css";
 import { serializeXML, formatXml, validateUniqueIds } from "./utils/xmlUtils";
-import NotificationContainer from "./components/NotificationContainer";
-import TitleBar from "./components/TitleBar/TitleBar";
+import TitleBar from "./components/layout/TitleBar/TitleBar";
+import Header from "./components/layout/Header/Header";
+import Sidebar from "./components/layout/Sidebar/Sidebar";
+import EmptyState from "./components/editor/EmptyState";
+import EditorToolbar from "./components/editor/EditorToolbar";
+import CodeEditor from "./components/editor/CodeEditor";
+import NotificationContainer from "./components/utils/NotificationContainer";
+import ConfirmModal from "./components/utils/ConfirmModal";
 
 export default function App() {
   const [xmlDoc, setXmlDoc] = useState(null);
@@ -17,9 +19,12 @@ export default function App() {
   const [code, setCode] = useState("");
   const [originalCode, setOriginalCode] = useState("");
   const [savedCode, setSavedCode] = useState("");
+  const [splitView, setSplitView] = useState(false);
+  const [showConfirmExit, setShowConfirmExit] = useState(false);
 
   const [viewMode, setViewMode] = useState("code"); // code | cards
   const fileInputRef = useRef(null);
+  const [exportedCode, setExportedCode] = useState("");
 
   const dirty = useMemo(() => code !== savedCode, [code, savedCode]);
   useEffect(() => {
@@ -183,6 +188,10 @@ export default function App() {
       addNotification("error", "Error inesperado al restaurar.");
     }
   };
+  const unexportedChanges = useMemo(
+    () => savedCode !== exportedCode,
+    [savedCode, exportedCode]
+  );
 
   const handleExport = () => {
     try {
@@ -193,6 +202,10 @@ export default function App() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // 🟢 marcar como exportado
+      setExportedCode(code);
+
       addNotification("success", "XML exportado correctamente.");
     } catch {
       addNotification("error", "Error al exportar el XML.");
@@ -214,6 +227,25 @@ export default function App() {
   const removeNotification = (id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
+
+  useEffect(() => {
+    const handleAppClose = () => {
+      if (code !== savedCode) {
+        setShowConfirmExit(true); // abre modal personalizado
+        return;
+      }
+
+      // si no hay cambios pendientes → cerrar directamente
+      if (window.electronAPI) {
+        window.electronAPI.windowControl("close");
+      } else {
+        window.close();
+      }
+    };
+
+    window.addEventListener("tryAppClose", handleAppClose);
+    return () => window.removeEventListener("tryAppClose", handleAppClose);
+  }, [code, savedCode]);
 
   return (
     <div className="app">
@@ -244,7 +276,7 @@ export default function App() {
             onFileDrop={handleFileUpload}
           />
         ) : (
-          <div className="editor-wrapper">
+          <div className="editor-wrapper full">
             {/* 🔹 Toolbar centralizada */}
             <EditorToolbar
               viewMode={viewMode}
@@ -261,21 +293,37 @@ export default function App() {
               canSave={viewMode === "code" ? dirty : dirty}
               canRestoreOriginal={code !== originalCode}
               dirty={dirty}
+              unexportedChanges={unexportedChanges}
               xmlDoc={xmlDoc}
               setXmlDoc={setXmlDoc}
               setCode={setCode}
               setNotification={addNotification}
               markDirty={() => setCode(code + " ")}
+              setSplitView={setSplitView}
+              splitView={splitView}
             />
 
             {viewMode === "code" ? (
-              <CodeEditor
-                code={code}
-                onChange={setCode}
-                highlightId={highlightId}
-                onSave={handleSave}
-                canSave={dirty}
-              />
+              <div className={`editor-wrapper ${splitView ? "split" : ""}`}>
+                <CodeEditor
+                  code={code}
+                  onChange={setCode}
+                  highlightId={highlightId}
+                  onSave={handleSave}
+                  canSave={dirty}
+                  editable={true}
+                />
+
+                {splitView && (
+                  <CodeEditor
+                    code={code}
+                    onChange={setCode}
+                    highlightId={highlightId}
+                    editable={false}
+                    syncKey="right"
+                  />
+                )}
+              </div>
             ) : (
               <p>Work on it!!</p>
             )}
@@ -289,6 +337,20 @@ export default function App() {
         accept=".xml"
         hidden
         onChange={handleFileUpload}
+      />
+      <ConfirmModal
+        isOpen={showConfirmExit}
+        onClose={() => setShowConfirmExit(false)}
+        onConfirm={() => {
+          setShowConfirmExit(false);
+          if (window.electronAPI) {
+            window.electronAPI.windowControl("close");
+          } else {
+            window.close();
+          }
+        }}
+        title="Salir de la aplicación"
+        message="Tienes cambios sin guardar o sin exportar. Si cierras ahora, podrías perderlos."
       />
 
       <NotificationContainer

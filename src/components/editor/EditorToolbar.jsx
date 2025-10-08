@@ -9,7 +9,8 @@ import {
 } from "react-icons/fa";
 import "./EditorToolbar.css";
 import GeneralConfigPanel from "./GeneralConfigPanel"; // 👈 nuevo
-import ConfirmModal from "./ConfirmModal";
+import ConfirmModal from "../utils/ConfirmModal";
+import { BsLayoutSplit } from "react-icons/bs";
 
 export default function EditorToolbar({
   viewMode,
@@ -19,11 +20,14 @@ export default function EditorToolbar({
   canSave,
   canRestoreOriginal,
   dirty,
+  unexportedChanges,
   xmlDoc,
   setXmlDoc,
   setCode,
   markDirty,
   setNotification,
+  setSplitView,
+  splitView,
 }) {
   const [openPanel, setOpenPanel] = useState(false);
   const [showConfirmRestore, setShowConfirmRestore] = useState(false);
@@ -57,7 +61,18 @@ export default function EditorToolbar({
         >
           <FaCog /> Configuración
         </button>
+        <button
+          className="toolbar-btn toolbar-btn-config"
+          onClick={() => setSplitView(!splitView)}
+        >
+          <BsLayoutSplit />
+          {splitView ? "Una pantalla" : "Dividir pantalla"}
+        </button>
+
         {dirty && <span className="toolbar-dirty">● Cambios sin guardar</span>}
+        {!dirty && unexportedChanges && (
+          <span className="toolbar-warning">● Cambios sin exportar</span>
+        )}
       </div>
 
       {/* Panel de configuración */}

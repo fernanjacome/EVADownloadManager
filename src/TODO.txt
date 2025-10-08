@@ -8,3 +8,4 @@ BUGS
 MEJORAS
 -Comparador de XML (Pantalla dividida)
 -Si existen cambios sin guardar / sin exportar, avisar antes de cerrar la app
+-Agregar marcador de falta de exportacion

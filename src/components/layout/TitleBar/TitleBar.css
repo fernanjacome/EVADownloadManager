@@ -6,7 +6,7 @@
   color: #ccc;
   height: 30px;
   -webkit-app-region: drag;
-  padding: 0 0.5rem;
+  padding: 0 0 0 0.5rem;
 }
 .title-bar,
 .title-bar * {

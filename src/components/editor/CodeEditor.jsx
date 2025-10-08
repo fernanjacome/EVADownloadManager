@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
-import SearchBar from "./SearchBar";
+import SearchBar from "../utils/SearchBar";
 import { xml } from "@codemirror/lang-xml";
 import { EditorSelection } from "@codemirror/state";
 import { FaSearchPlus, FaSearchMinus, FaRedo } from "react-icons/fa";
@@ -12,6 +12,7 @@ export default function CodeEditor({
   highlightId,
   onSave,
   canSave,
+  editable,
 }) {
   const viewRef = useRef(null);
   const [fontSize, setFontSize] = useState(15);
@@ -154,9 +155,9 @@ export default function CodeEditor({
         height="100%"
         theme="dark"
         extensions={[xml(), fontSizeTheme]}
-        editable={true}
-        className={"editor-code"}
-        onChange={(val) => onChange(val)}
+        editable={editable}
+        className={`editor-code ${!editable ? "read-only" : ""}`}
+        onChange={(val) => editable && onChange(val)}
         onCreateEditor={(view) => {
           viewRef.current = view;
         }}

@@ -1,6 +1,6 @@
 // Sidebar.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { sidebarConfig } from "../utils/sidebarConfig";
+import { sidebarConfig } from "../../../utils/sidebarConfig";
 import "./Sidebar.css";
 import {
   FaCogs,
