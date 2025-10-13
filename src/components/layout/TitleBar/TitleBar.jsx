@@ -10,8 +10,12 @@ import ValidationsModal from "./modals/ValidationsModal";
 import ShortcutsModal from "./modals/ShortcutModal";
 import FilesModal from "./modals/FilesModal";
 import ErrorsModal from "./modals/ErrorsModal";
+import { FiMaximize } from "react-icons/fi";
+import { IoClose } from "react-icons/io5";
+import { FaWindowMinimize } from "react-icons/fa6";
+import { FaMoon, FaSun } from "react-icons/fa";
 
-export default function TitleBar({ fileName }) {
+export default function TitleBar({ fileName, theme, setTheme }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [showModal, setShowModal] = useState(null); // 👈 ahora null | "about" | "format" | "validations" | "tips"
   const menuRef = useRef(null);
@@ -31,7 +35,6 @@ export default function TitleBar({ fileName }) {
     }
     setActiveMenu(null);
   };
-
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -55,6 +58,15 @@ export default function TitleBar({ fileName }) {
                 <div className="dropdown">
                   <div className="dropdown-item" onClick={handleNewWindow}>
                     Nueva ventana
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={() =>
+                      setTheme(theme === "dark" ? "light" : "dark")
+                    }
+                  >
+                    {theme === "dark" ? <FaSun /> : <FaMoon />}{" "}
+                    {theme === "dark" ? "Modo Claro" : "Modo Oscuro"}{" "}
                   </div>
                 </div>
               )}
@@ -147,19 +159,21 @@ export default function TitleBar({ fileName }) {
             className="win-btn min"
             onClick={() => handleAction("minimize")}
           >
-            <img src={minus} alt="minimize" />
+            <FaWindowMinimize
+              style={{ color: theme === "dark" ? "#fff" : "#000" }}
+            />
           </button>
           <button
             className="win-btn max"
             onClick={() => handleAction("maximize")}
           >
-            <img src={expand} alt="maximize" />
+            <FiMaximize style={{ color: theme === "dark" ? "#fff" : "#000" }} />
           </button>
           <button
             className="win-btn close"
             onClick={() => window.dispatchEvent(new Event("tryAppClose"))}
           >
-            <img src={equis} alt="close" />
+            <IoClose style={{ color: theme === "dark" ? "#fff" : "#000" }} />
           </button>
         </div>
       </div>

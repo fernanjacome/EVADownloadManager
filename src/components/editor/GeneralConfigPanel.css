@@ -30,7 +30,7 @@
   width: 500px;
   height: 100%;
   background: var(--c-fondo);
-  border-left: 1px solid #222;
+  border-left: 1px solid var(--border-general);
   color: #e0e0e0;
   display: flex;
   flex-direction: column;
@@ -59,12 +59,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  border-bottom: 1px solid #222;
-  background: #1a1a1a;
+  border-bottom: 1px solid var(--border-general);
+  border-top: 1px solid var(--border-general);
+  background: var(--c-fondo-code);
 }
 
 .gconfig-header h3 {
   margin: 0;
+  color: var(--txt-normal);
   font-size: 15px;
   font-weight: 600;
 }
@@ -88,7 +90,6 @@
 
 .gconfig-btn.primary {
   background: #4caf50;
-  color: #fff;
 }
 .gconfig-btn.primary:hover {
   background: #3c8c40;
@@ -103,7 +104,7 @@
   transition: color 0.2s;
 }
 .gconfig-btn-close:hover {
-  color: #fff;
+  color: var(--txt-normald);
 }
 
 /* Body */
@@ -121,14 +122,14 @@
 .gconfig-input {
   flex: 1;
   padding: 6px 8px;
-  border: 1px dashed #333;
+  border: 1px dashed var(--border-general);
   border-radius: 4px;
-  background: #1c1c1c;
-  color: #f5f5f5;
+  background: var(--button-sidebar-bg);
+  color: var(--txt-normalb);
   font-size: 13px;
 }
 .gconfig-input.key {
-  border: 1px dashed #98c37970;
+  border: 1px dashed var(--border-general);
 }
 
 .gconfig-input:focus {
@@ -153,11 +154,11 @@
 }
 .gconfig-btn-icon.danger:hover {
   background: #f44336;
-  color: #fff;
+  color: var(--txt-normald);
 }
 .gconfig-btn.secondary {
   background: #555;
-  color: #fff;
+  color: var(--txt-normald);
 }
 .gconfig-btn.secondary:hover {
   background: #666;
@@ -167,10 +168,10 @@
   width: 100%;
   margin-top: 10px;
   padding: 8px;
-  border: 1px dashed #444;
+  border: 1px dashed var(--border-general);
   border-radius: 4px;
-  background: #1c1c1c;
-  color: #fff;
+  background: var(--c-fondo-code);
+  color: var(--txt-normal);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -178,10 +179,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: background 0.1s;
+  transition: background-color 0.2s color 0.2s;
 }
 .gconfig-btn-add:hover {
-  background-color: var(--c-fondo);
+  background-color: var(--txt-normal);
+  color: var(--c-fondo-code);
 }
 
 /* Footer */
@@ -202,5 +204,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  color: white;
   transition: background 0.2s;
 }

@@ -1,12 +1,13 @@
 .sidebar {
   width: 240px;
   background: var(--c-fondo);
-  border-right: 1px solid var(--c-fondo-btn);
+  border-right: 1px solid var(--border-general);
   overflow-y: auto;
   padding: 10px;
-  color: #ccc;
+  color: var(--txt-normalc);
   font-size: 13px;
   line-height: 1.4;
+  user-select: none;
 }
 
 /* Grupo */
@@ -21,12 +22,13 @@
   padding: 6px 10px;
   border-radius: 4px;
   user-select: none;
-  color: #eee;
+  color: var(--txt-normalb);
   font-size: 13px;
   display: flex;
   gap: 8px;
   align-items: center;
-  background: #202020;
+  background: var(--button-sidebar-bg);
+  border: var(--border-sidebar);
   transition: background 0.2s, color 0.2s;
 }
 
@@ -57,7 +59,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
   border-radius: 3px;
-  color: #bbb;
+  color: var(--txt-normalb);
 }
 
 .sidebar-item:hover {
@@ -69,11 +71,8 @@
 .sidebar-search {
   display: flex;
   align-items: center;
-  gap: 6px;
   margin-bottom: 12px;
-  padding: 4px;
   background: #1a1a1a;
-  border: 1px solid var(--c-fondo-btn);
   border-radius: 6px;
 }
 
@@ -82,13 +81,14 @@
   flex: 1;
   display: flex;
   align-items: center;
-  background: #202020;
+  background: var(--c-fondo-secundario);
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 0.4rem 0.7rem;
+  border: 1px dashed var(--border-general);
 }
 
 .search-icon {
-  color: #666;
+  color: var(--txt-code);
   margin-right: 6px;
   font-size: 13px;
 }
@@ -98,28 +98,16 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #eee;
+  color: var(--txt-code);
   font-size: 13px;
 }
 
 .search-box input::placeholder {
-  color: #555;
+  color: var(--txt-code);
   font-style: italic;
 }
 
-/* 🔹 Select */
-.search-select {
-  background: #202020;
-  color: #ccc;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 3px 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: border 0.2s, color 0.2s;
-}
-
-.search-select:hover {
-  border-color: #00c896;
-  color: #00c896;
+.search-box:focus-within {
+  border-color: #00c896; /* color activo */
+  box-shadow: 0 0 2px rgba(0, 200, 150, 0.4);
 }

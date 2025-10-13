@@ -5,8 +5,8 @@
   gap: 6px;
   padding: 6px 10px;
   background: var(--c-fondo-secundario);
-
-  border-bottom: 1px solid #333;
+  user-select: none;
+  border-bottom: 1px solid var(--border-general);
 }
 
 .toolbar-btn {
@@ -20,13 +20,13 @@
   cursor: pointer;
   font-size: 13px;
   background: var(--c-fondo-btn);
-  color: #ddd;
+  color: var(--txt-normald);
   transition: all 0.2s ease;
 }
 
 .toolbar-btn:hover:not(:disabled) {
   background: #3a3a3a;
-  color: #fff;
+  color: var(--txt-normald);
 }
 
 .toolbar-btn:disabled {
@@ -38,7 +38,7 @@
   margin-left: auto;
   font-size: 12px;
   font-weight: 500;
-  color: #fff;
+  color: white;
   background: rgba(255, 167, 25); /* Ámbar */
   padding: 3px 10px;
   border-radius: 20px;
@@ -48,7 +48,7 @@
   margin-left: auto;
   font-size: 12px;
   font-weight: 500;
-  color: #fff;
+  color: white;
   background: rgba(25, 182, 255, 0.9); /* Ámbar */
   padding: 3px 10px;
   border-radius: 20px;
@@ -90,7 +90,7 @@
   margin: 0 0 10px 0;
   font-size: 14px;
   font-weight: bold;
-  color: #ccc;
+  color: var(--txt-normalc);
   border-bottom: 1px solid #333;
   padding-bottom: 6px;
 }
@@ -104,7 +104,7 @@
 .param-row input {
   flex: 1;
   background: var(--c-fondo-btn);
-  color: #ddd;
+  color: var(--txt-normald);
   border: 1px solid #444;
   border-radius: 5px;
   padding: 4px 6px;
@@ -113,7 +113,7 @@
 
 .btn-apply {
   background: #0078d4;
-  color: #fff;
+  color: var(--txt-normald);
   border: none;
   border-radius: 6px;
   padding: 6px 12px;

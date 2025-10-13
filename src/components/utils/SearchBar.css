@@ -15,7 +15,7 @@
 
 .search-bar input {
   background: var(--c-fondo-btn);
-  color: #fff;
+  color: var(--txt-normald);
   border: 1px solid #555;
   border-radius: 4px;
   padding: 4px 8px;
@@ -25,12 +25,12 @@
 }
 
 .search-bar .search-icon {
-  color: #aaa;
+  color: var(--txt-normal);
   font-size: 18px;
 }
 
 .search-bar .search-counter {
-  color: #bbb;
+  color: var(--txt-normalb);
   font-size: 13px;
   min-width: 70px;
   text-align: center;
@@ -40,7 +40,7 @@
   background: #333;
   border: none;
   border-radius: 4px;
-  color: #eee;
+  color: var(--txt-normald);
   cursor: pointer;
   padding: 4px 6px;
   display: flex;

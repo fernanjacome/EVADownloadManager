@@ -14,12 +14,12 @@
   overflow: auto !important; /* 🔹 cada CodeMirror scrollea de forma independiente */
   font-family: Consolas, monospace;
   font-size: 13px;
-  background: #202020 !important;
-  color: #e0e0e0 !important;
+  background: var(--c-fondo-code) !important;
+  color: var(--txt-code) !important;
   line-height: 1.5;
 }
-.ͼo .cm-gutters {
-  background: #202020 !important;
+.cm-gutters {
+  background: var(--c-fondo-code) !important;
 }
 
 .editor-dirty {
@@ -91,9 +91,9 @@
 }
 
 .editor-fontsize button {
-  background: var(--c-fondo);
+  background: #333;
   border: 1px solid #444;
-  color: #fff;
+  color: var(--txt-normald);
   padding: 0.4rem;
   border-radius: 6px;
   cursor: pointer;
@@ -130,7 +130,7 @@
 
 .editor-folding button {
   background: none;
-  color: #ccc;
+  color: var(--txt-normalc);
   border: 1px solid #444;
   padding: 4px 8px;
   font-size: 12px;
@@ -141,5 +141,9 @@
 
 .editor-folding button:hover {
   background: #333;
-  color: #fff;
+  color: var(--txt-normald);
+}
+
+.cm-activeLineGutter {
+  background-color: var(--c-fondo-code) !important;
 }

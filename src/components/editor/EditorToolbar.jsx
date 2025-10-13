@@ -11,6 +11,7 @@ import "./EditorToolbar.css";
 import GeneralConfigPanel from "./GeneralConfigPanel"; // 👈 nuevo
 import ConfirmModal from "../utils/ConfirmModal";
 import { BsLayoutSplit } from "react-icons/bs";
+import { FaMoon, FaSun } from "react-icons/fa";
 
 export default function EditorToolbar({
   viewMode,
@@ -28,6 +29,8 @@ export default function EditorToolbar({
   setNotification,
   setSplitView,
   splitView,
+  theme,
+  setTheme,
 }) {
   const [openPanel, setOpenPanel] = useState(false);
   const [showConfirmRestore, setShowConfirmRestore] = useState(false);

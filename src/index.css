@@ -7,8 +7,18 @@
 :root {
   --c-principal: #00c896;
   --c-fondo: #121212;
+  --c-fondo-code: #202020;
   --c-fondo-secundario: #1e1e1e;
   --c-fondo-btn: #2a2a2a;
+  --txt-code: #e0e0e0;
+  --txt-normal: #aaa;
+  --txt-normalb: #bbb;
+  --txt-normalc: #ccc;
+  --border-general: #444;
+  --txt-normald: #ddd;
+  --button-sidebar-bg: #202020;
+  --border-sidebar: 1px solid #1e1e1e;
+  --hover-general: #313131;
 }
 body,
 html,
@@ -50,4 +60,29 @@ html,
 
 *::-webkit-scrollbar-thumb:hover {
   background-color: #00e0aa; /* hover más brillante */
+}
+
+/* 🌞 Tema claro */
+body.light-theme {
+  --c-fondo: #f9f9f9;
+  --c-fondo-code: #f9f9f9;
+  --txt-code: #222;
+  --txt-normal: #333;
+  --txt-normalb: #444;
+  --border-general: #ccc;
+  --c-fondo-secundario: #ffffff;
+  --c-fondo-btn: #ffffff;
+  --button-sidebar-bg: #ffffff;
+  --border-sidebar: 1px solid #999;
+  --hover-general: #dfdfdf;
+}
+
+body.light-theme .app {
+  background-color: var(--c-fondo);
+  color: #222;
+}
+
+body.light-theme .toolbar-btn {
+  background: var(--c-fondo-btn);
+  color: #333;
 }

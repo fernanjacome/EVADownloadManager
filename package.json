@@ -1,7 +1,7 @@
 {
   "name": "eva-download-manager",
-  "version": "1.0.1",
-  "description": "Gestor de Downloads XML para EVA", 
+  "version": "1.0.2",
+  "description": "Gestor de Downloads XML para EVA",
   "author": "Fernando Jácome",
   "license": "MIT",
   "private": true,
@@ -25,11 +25,12 @@
     },
     "win": {
       "target": "nsis",
-        "icon": "public/favicon.ico"
+      "icon": "public/favicon.ico"
     }
   },
   "dependencies": {
     "@codemirror/lang-xml": "^6.1.0",
+    "@uiw/codemirror-theme-eclipse": "^4.25.2",
     "@uiw/react-codemirror": "^4.25.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

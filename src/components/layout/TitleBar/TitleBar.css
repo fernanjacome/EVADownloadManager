@@ -2,11 +2,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #1e1e1e;
+  background: var(--c-fondo);
   color: #ccc;
   height: 30px;
   -webkit-app-region: drag;
   padding: 0 0 0 0.5rem;
+  border-bottom: 1px solid var(--border-general);
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
 }
 .title-bar,
 .title-bar * {
@@ -25,7 +28,7 @@
   flex: 1;
   text-align: center;
   font-size: 13px;
-  color: #aaa;
+  color: var(--txt-normalb);
   pointer-events: none; /* permite arrastrar la ventana aunque hagas clic */
   -webkit-app-region: drag;
 }
@@ -47,39 +50,45 @@
   font-size: 13px;
   line-height: 30px;
   user-select: none;
-  color: #aaa;
+  color: var(--txt-normalb);
 }
 
 .menu-item:hover {
-  background: #2a2a2a;
-  border-radius: 4px;
+  background: var(--hover-general);
 }
 
 .dropdown {
   position: absolute;
   top: 100%;
   left: 0;
-  background: #252526;
-  border: 1px solid #333;
+  background: var(--c-fondo);
+  border: 1px solid var(--border-general);
   border-radius: 4px;
   min-width: 140px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
   z-index: 100;
 }
 
 .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 6px 12px;
   cursor: pointer;
   font-size: 13px;
 }
+.dropdown-item svg {
+  margin-top: 1px;
+  padding: 0;
+}
 
 .dropdown-item:hover {
-  background: #3a3d41;
+  background: var(--hover-general);
 }
 
 .dropdown-separator {
   height: 1px;
-  background: #444;
+  background: var(--txt-normalb);
   margin: 4px 0;
 }
 
@@ -91,10 +100,9 @@
 
 .win-btn {
   border: none;
-  width: 36px;
-  height: 36px;
-  background: #1e1e1e;
-
+  background: var(--c-fondo);
+  padding: 0.2rem 0.5rem;
+  font-size: 1rem;
   cursor: pointer;
 }
 
@@ -103,22 +111,21 @@
   border: none;
 }
 
-.win-btn img {
-  border: none;
-  width: 15px;
-  height: 15px;
-  transition: background 0.2s;
+.win-btn.max svg {
+  font-size: 0.8rem !important;
 }
-
-.win-btn:hover {
-  background: #333;
+.win-btn.min svg {
+  font-size: 0.8rem !important;
+  margin-bottom: 0.4rem;
 }
-
+.win-btn.close svg {
+  font-size: 1.2rem !important;
+}
 .win-btn:hover {
-  background: #333;
+  background: var(--hover-general);
 }
 
 .win-btn.close:hover {
   background: #e81123;
-  color: #fff;
+  color: white;
 }

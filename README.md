@@ -1,17 +1,25 @@
 # EVA Download Manager
 
-Versión: 1.0.0  
-Última actualización: 2 de octubre de 2025
+Versión: 1.0.2
+Última actualización: 13 de octubre de 2025
 
 ---
 
-## Actualizaciones Recientes
+## Actualizaciones v1.0.2
 
-- Panel de configuración general.
-- Buscadores independientes en sidebar y editor.
-- Notificaciones con detalles de error.
-- Control de fuente en el editor.
-- Modales de ayuda y documentación integrada.
+- Optimizacion de contraste en bordes.
+- Mejora de iconos en el TitleBar
+- Se agrego el modo claro.
+
+---
+
+## Actualizaciones v1.0.1
+
+- Pantalla Divida.
+- Correccion de bug visual en panel de configuración
+- Se agrego validacion de exportación.
+- Se agrego valdiacion antes de salir sin guardar cambios o exportar.
+- Se agrego por defecto un download cargado.
 
 ---
 
@@ -118,8 +126,12 @@ npm run electron:dev  # App completa con Electron
 
 ## Historial de Versiones
 
-- 1.0.0  
+- 1.0.0
   Versión inicial con todas las funcionalidades descritas arriba.
+- 1.0.1
+  Versión inicial con optimización.
+- 1.0.2
+  Versión inicial con modo claro agregado.
 
 ---
 

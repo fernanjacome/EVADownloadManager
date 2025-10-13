@@ -1,11 +1,6 @@
 TO DO LIST
-
-BUGS
--Boton guardar en "Configuracion general" se ve afectado por la barra de windows
--Ctrl + F debe siempre habilitar el buscador (Actualmente bug al seleccionar una palabra y luego dar ctrl + f)
--Palabra "descargas" confudidad por "downloads"
-
 MEJORAS
--Comparador de XML (Pantalla dividida)
--Si existen cambios sin guardar / sin exportar, avisar antes de cerrar la app
--Agregar marcador de falta de exportacion
+-PANTALLA DIVIDA Y SEPARACION DE REDIRECCION DE SIDEBAR EN BASE AL EDITOR QUE ESTE EN EL FOCO.
+-BOTON PARA CAMBIAR DE TEMA
+    -Oscuro original
+    -Blanco Notepad++

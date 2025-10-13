@@ -5,6 +5,8 @@ import { xml } from "@codemirror/lang-xml";
 import { EditorSelection } from "@codemirror/state";
 import { FaSearchPlus, FaSearchMinus, FaRedo } from "react-icons/fa";
 import "./CodeEditor.css";
+import { eclipse } from "@uiw/codemirror-theme-eclipse";
+import { notepadPlus } from "../../utils/notepadPlusTheme";
 
 export default function CodeEditor({
   code,
@@ -13,6 +15,9 @@ export default function CodeEditor({
   onSave,
   canSave,
   editable,
+  syncKey = "left",
+  onFocus,
+  theme,
 }) {
   const viewRef = useRef(null);
   const [fontSize, setFontSize] = useState(15);
@@ -20,6 +25,7 @@ export default function CodeEditor({
   const [showSearch, setShowSearch] = useState(false);
   const [matches, setMatches] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
   // --- Atajo Ctrl+S / Cmd+S ---
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -32,17 +38,13 @@ export default function CodeEditor({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [canSave, onSave]);
 
+  // --- Scroll + Zoom con Ctrl + rueda ---
   useEffect(() => {
     const handleWheel = (e) => {
       if (e.ctrlKey) {
         e.preventDefault();
-        if (e.deltaY < 0) {
-          // scroll up → aumentar
-          setFontSize((s) => Math.min(26, s + 1));
-        } else {
-          // scroll down → disminuir
-          setFontSize((s) => Math.max(8, s - 1));
-        }
+        if (e.deltaY < 0) setFontSize((s) => Math.min(26, s + 1));
+        else setFontSize((s) => Math.max(8, s - 1));
       }
     };
 
@@ -53,7 +55,10 @@ export default function CodeEditor({
   // --- Navegación desde Sidebar ---
   useEffect(() => {
     if (!highlightId || !viewRef.current) return;
-    const [tag, id] = highlightId.split("-");
+
+    if (highlightId.target && highlightId.target !== syncKey) return;
+
+    const [tag, id] = highlightId.id.split("-");
     const regex =
       tag === "General"
         ? new RegExp(`<Param[^>]*Key=["']${id}["'][^>]*>`, "i")
@@ -68,9 +73,9 @@ export default function CodeEditor({
         effects: EditorView.scrollIntoView(pos, { y: "center" }),
       });
     }
-  }, [highlightId, code]);
+  }, [highlightId, code, syncKey]);
 
-  // --- Extension dinámica para cambiar font-size ---
+  // --- Tema dinámico (font-size) ---
   const fontSizeTheme = useMemo(
     () =>
       EditorView.theme(
@@ -82,22 +87,20 @@ export default function CodeEditor({
     [fontSize]
   );
 
-  // Ctrl+F → abrir buscador
+  // --- Atajo Ctrl+F ---
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
-        if (showSearch) {
-          searchInputRef.current?.focus();
-        } else {
-          setShowSearch(true);
-        }
+        if (showSearch) searchInputRef.current?.focus();
+        else setShowSearch(true);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showSearch]);
 
+  // --- Funciones de búsqueda ---
   const doSearch = (query) => {
     if (!query) {
       setMatches([]);
@@ -137,6 +140,22 @@ export default function CodeEditor({
     goTo(matches[prev]);
   };
 
+  // --- Configurar CodeMirror ---
+  useEffect(() => {
+    if (!viewRef.current) return;
+
+    const dom = viewRef.current.dom;
+    const handleFocus = () => {
+      if (typeof onFocus === "function") onFocus(syncKey);
+    };
+
+    dom.addEventListener("focusin", handleFocus);
+
+    return () => {
+      dom.removeEventListener("focusin", handleFocus);
+    };
+  }, [onFocus, syncKey]);
+
   return (
     <div className="editor-container">
       {showSearch && (
@@ -150,10 +169,11 @@ export default function CodeEditor({
           inputRef={searchInputRef}
         />
       )}
+
       <CodeMirror
         value={code}
         height="100%"
-        theme="dark"
+        theme={theme === "dark" ? "dark" : notepadPlus} // 👈 usa el prop theme
         extensions={[xml(), fontSizeTheme]}
         editable={editable}
         className={`editor-code ${!editable ? "read-only" : ""}`}
@@ -164,7 +184,6 @@ export default function CodeEditor({
       />
 
       {/* Botones de Zoom */}
-
       <div className="editor-fontsize">
         <button
           onClick={() => setFontSize((s) => Math.min(26, s + 2))}

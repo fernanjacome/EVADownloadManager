@@ -6,7 +6,8 @@
   background: var(--c-fondo);
   padding: 10px 20px;
   color: var(--c-principal);
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-general);
+  user-select: none;
 }
 
 /* ====== Title ====== */
@@ -19,13 +20,13 @@
   font-size: 18px;
 }
 .header-filename {
-  color: #aaa;
+  color: var(--txt-normal);
   font-size: 13px;
 }
 .header-file-info {
   margin-top: 4px;
   font-size: 13px;
-  color: #ccc;
+  color: var(--txt-code);
 }
 .header-file-info span {
   margin-right: 10px;
@@ -47,13 +48,13 @@
   border: none;
   cursor: pointer;
   font-size: 13px;
-  background: var(--c-fondo-btn);
-  color: #ddd;
+  background: #2a2a2a;
+  color: white;
   transition: all 0.2s ease;
 }
 .header-btn:hover:not(:disabled) {
-  background: #05916e;
-  color: #fff;
+  background: var(--c-principal);
+  color: var(--txt-normald);
 }
 .header-btn:disabled {
   opacity: 0.4;
@@ -79,7 +80,7 @@
 }
 .header-toggle:hover {
   background: var(--c-fondo-secundario);
-  color: #fff;
+  color: var(--txt-normald);
 }
 
 .header-toggle:hover .header-toggle-thumb {
@@ -99,5 +100,5 @@
 }
 .header-toggle-label {
   font-size: 13px;
-  color: #ddd;
+  color: var(--txt-normald);
 }

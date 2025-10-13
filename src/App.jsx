@@ -21,12 +21,19 @@ export default function App() {
   const [savedCode, setSavedCode] = useState("");
   const [splitView, setSplitView] = useState(false);
   const [showConfirmExit, setShowConfirmExit] = useState(false);
+  const [activeEditor, setActiveEditor] = useState("left"); // "left" | "right"
+  const [theme, setTheme] = useState("dark"); // "dark" | "light"
 
   const [viewMode, setViewMode] = useState("code"); // code | cards
   const fileInputRef = useRef(null);
   const [exportedCode, setExportedCode] = useState("");
 
   const dirty = useMemo(() => code !== savedCode, [code, savedCode]);
+
+  useEffect(() => {
+    document.body.classList.toggle("light-theme", theme === "light");
+  }, [theme]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Bloquea Ctrl/Cmd + +/- o Ctrl/Cmd + 0 (reset zoom)
@@ -230,7 +237,7 @@ export default function App() {
 
   useEffect(() => {
     const handleAppClose = () => {
-      if (code !== savedCode) {
+      if (code !== savedCode || code !== exportedCode) {
         setShowConfirmExit(true); // abre modal personalizado
         return;
       }
@@ -249,7 +256,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <TitleBar fileName={fileInfo?.name} />
+      <TitleBar fileName={fileInfo?.name} theme={theme} setTheme={setTheme} />
       <Header
         fileInfo={fileInfo}
         onLoadClick={() => fileInputRef.current?.click()}
@@ -264,7 +271,7 @@ export default function App() {
         <Sidebar
           xmlDoc={xmlDoc}
           onSelect={(id) => {
-            setHighlightId(id);
+            setHighlightId({ target: activeEditor, id });
             setTimeout(() => setHighlightId(null), 0);
           }}
         />
@@ -301,6 +308,8 @@ export default function App() {
               markDirty={() => setCode(code + " ")}
               setSplitView={setSplitView}
               splitView={splitView}
+              theme={theme}
+              setTheme={setTheme}
             />
 
             {viewMode === "code" ? (
@@ -312,6 +321,9 @@ export default function App() {
                   onSave={handleSave}
                   canSave={dirty}
                   editable={true}
+                  onFocus={(key) => setActiveEditor(key)}
+                  syncKey="left"
+                  theme={theme}
                 />
 
                 {splitView && (
@@ -319,8 +331,10 @@ export default function App() {
                     code={code}
                     onChange={setCode}
                     highlightId={highlightId}
-                    editable={false}
+                    editable={true}
+                    onFocus={(key) => setActiveEditor(key)}
                     syncKey="right"
+                    theme={theme}
                   />
                 )}
               </div>

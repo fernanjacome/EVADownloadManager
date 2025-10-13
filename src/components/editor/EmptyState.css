@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #aaa;
+  color: var(--txt-normal);
   text-align: center;
   gap: 16px;
   width: 100%;
@@ -18,7 +18,8 @@
 .empty-state h2 {
   margin: 0;
   font-size: 18px;
-  color: #ddd;
+  color: var(--txt-normab);
+  user-select: none;
 }
 
 .empty-actions {
@@ -27,8 +28,8 @@
 }
 
 .btn-primary {
-  background: #05916e;
-  color: #fff;
+  background: var(--c-principal);
+  color: white;
   padding: 8px 14px;
   border: none;
   border-radius: 6px;
@@ -42,7 +43,7 @@
 
 .btn-secondary {
   background: #333;
-  color: #fff;
+  color: white;
   padding: 8px 14px;
   border: none;
   border-radius: 6px;
@@ -54,8 +55,9 @@
 }
 
 .drop-zone {
-  border: 2px dashed #444;
+  border: 2px dashed var(--border-general);
   transition: all 0.2s ease;
+  user-select: none;
 }
 
 .drop-zone.dragging {
