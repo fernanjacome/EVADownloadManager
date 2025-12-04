@@ -10,15 +10,19 @@ export default function SearchBar({
   onClose,
   total = 0,
   current = 0,
-  inputRef, // 👈 nuevo
+  inputRef,
+  initialQuery = "",
+  theme,
 }) {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
+    setQuery(initialQuery);
+
     if (inputRef?.current) {
-      inputRef.current.focus(); // se autoenfoca al montarse
+      inputRef.current.focus();
     }
-  }, [inputRef]);
+  }, [initialQuery, inputRef]);
 
   return (
     <div className="search-bar">
@@ -28,6 +32,7 @@ export default function SearchBar({
         type="text"
         placeholder="Buscar..."
         value={query}
+        className={theme == "light" ? "light" : "dark"}
         onChange={(e) => {
           setQuery(e.target.value);
           onSearch(e.target.value);

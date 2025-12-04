@@ -33,7 +33,7 @@ const groupIcons = {
   Errors: <FaExclamationTriangle />,
 };
 
-export default function Sidebar({ xmlDoc, onSelect }) {
+export default function Sidebar({ xmlDoc, onSelect, style }) {
   const [collapsed, setCollapsed] = useState(
     Object.fromEntries(groupOrder.map((g) => [g, true]))
   );
@@ -96,7 +96,7 @@ export default function Sidebar({ xmlDoc, onSelect }) {
   }, [searchTerm, xmlDoc]);
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" style={style}>
       {!xmlDoc ? (
         // 🔹 Estado vacío cuando no hay XML
         <div className="empty-state">
@@ -196,6 +196,7 @@ export default function Sidebar({ xmlDoc, onSelect }) {
                               `${config.childTag}-${idVal || `idx${idx}`}`
                             )
                           }
+                          title={comment}
                         >
                           [{config.childTag}] {idVal} - {comment}
                         </li>

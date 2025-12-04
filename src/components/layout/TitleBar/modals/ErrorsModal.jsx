@@ -21,10 +21,6 @@ export default function ErrorsModal({ isOpen, onClose }) {
             <strong>Falta estructura raíz</strong> → Asegúrate de que el XML
             empiece con <code>&lt;Download&gt;</code>.
           </li>
-          <li>
-            <strong>Exportación fallida</strong> → Verifica que el XML sea
-            válido antes de exportarlo.
-          </li>
         </ul>
         <button className="about-close" onClick={onClose}>
           Cerrar

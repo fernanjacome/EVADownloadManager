@@ -24,6 +24,14 @@
   font-size: 14px;
 }
 
+.search-bar input.dark {
+  color: var(--txt-normald);
+}
+
+.search-bar input.light {
+  color: #333;
+}
+
 .search-bar .search-icon {
   color: var(--txt-normal);
   font-size: 18px;

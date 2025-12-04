@@ -1,5 +1,6 @@
 import React from "react";
 import "./AboutModal.css";
+import { BsMouseFill } from "react-icons/bs";
 
 export default function ShortcutsModal({ isOpen, onClose }) {
   if (!isOpen) return null;
@@ -20,8 +21,13 @@ export default function ShortcutsModal({ isOpen, onClose }) {
             editor.
           </li>
           <li>
-            <strong>Ctrl + (WheelUp/WheelDown)</strong> → Control de zoom dentro
-            del editor.
+            <strong>
+              Ctrl + (WheelUp/WheelDown <BsMouseFill />)
+            </strong>{" "}
+            → Control de zoom dentro del editor.
+          </li>
+          <li>
+            <strong>Ctrl + /</strong> → Comentar/descomentar linea o bloque.
           </li>
         </ul>
         <button className="about-close" onClick={onClose}>

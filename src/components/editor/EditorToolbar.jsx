@@ -2,16 +2,20 @@ import React, { useState } from "react";
 import {
   FaSave,
   FaUndo,
-  FaEdit,
-  FaEye,
   FaAlignLeft,
   FaCog,
+  FaRegCommentDots,
+  FaRegComment,
 } from "react-icons/fa";
 import "./EditorToolbar.css";
-import GeneralConfigPanel from "./GeneralConfigPanel"; // 👈 nuevo
+import GeneralConfigPanel from "./GeneralConfigPanel";
 import ConfirmModal from "../utils/ConfirmModal";
 import { BsLayoutSplit } from "react-icons/bs";
-import { FaMoon, FaSun } from "react-icons/fa";
+import ToolbarButton from "./ToolbarButton";
+import {
+  MdOutlineCommentsDisabled,
+  MdOutlineInsertComment,
+} from "react-icons/md";
 
 export default function EditorToolbar({
   viewMode,
@@ -21,7 +25,6 @@ export default function EditorToolbar({
   canSave,
   canRestoreOriginal,
   dirty,
-  unexportedChanges,
   xmlDoc,
   setXmlDoc,
   setCode,
@@ -31,51 +34,50 @@ export default function EditorToolbar({
   splitView,
   theme,
   setTheme,
+  toggleComment,
 }) {
   const [openPanel, setOpenPanel] = useState(false);
   const [showConfirmRestore, setShowConfirmRestore] = useState(false);
   return (
     <>
       <div className="editor-toolbar">
-        <button
-          className="toolbar-btn toolbar-btn-save"
+        <ToolbarButton
+          icon={<FaSave />}
+          label="Guardar"
           onClick={onSave}
           disabled={!canSave}
-        >
-          <FaSave /> Guardar
-        </button>
+          title="Guardar (Ctrl+S)"
+        />
 
         {viewMode === "code" && (
-          <button className="toolbar-btn toolbar-btn-format" onClick={onFormat}>
-            <FaAlignLeft /> Formatear
-          </button>
+          <ToolbarButton
+            icon={<FaAlignLeft />}
+            label="Formatear"
+            onClick={onFormat}
+            title="Formatear XML"
+          />
         )}
 
-        <button
-          className="toolbar-btn toolbar-btn-restore"
+        <ToolbarButton
+          icon={<FaCog />}
+          label="General"
+          onClick={() => setOpenPanel(true)}
+        />
+
+        <ToolbarButton
+          icon={<BsLayoutSplit />}
+          label={splitView ? "Una pantalla" : "Dividir"}
+          onClick={() => setSplitView(!splitView)}
+        />
+        <ToolbarButton
+          icon={<FaUndo />}
+          label="Restaurar original"
           onClick={() => setShowConfirmRestore(true)}
           disabled={!canRestoreOriginal}
-        >
-          <FaUndo /> Restaurar original
-        </button>
-        <button
-          className="toolbar-btn toolbar-btn-config"
-          onClick={() => setOpenPanel(true)}
-        >
-          <FaCog /> Configuración
-        </button>
-        <button
-          className="toolbar-btn toolbar-btn-config"
-          onClick={() => setSplitView(!splitView)}
-        >
-          <BsLayoutSplit />
-          {splitView ? "Una pantalla" : "Dividir pantalla"}
-        </button>
+          title="Restaurar original"
+        />
 
         {dirty && <span className="toolbar-dirty">● Cambios sin guardar</span>}
-        {!dirty && unexportedChanges && (
-          <span className="toolbar-warning">● Cambios sin exportar</span>
-        )}
       </div>
 
       {/* Panel de configuración */}

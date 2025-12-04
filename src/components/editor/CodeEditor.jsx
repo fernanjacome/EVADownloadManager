@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import SearchBar from "../utils/SearchBar";
 import { xml } from "@codemirror/lang-xml";
+
 import { EditorSelection } from "@codemirror/state";
 import { FaSearchPlus, FaSearchMinus, FaRedo } from "react-icons/fa";
 import "./CodeEditor.css";
-import { eclipse } from "@uiw/codemirror-theme-eclipse";
 import { notepadPlus } from "../../utils/notepadPlusTheme";
 
 export default function CodeEditor({
@@ -25,6 +25,7 @@ export default function CodeEditor({
   const [showSearch, setShowSearch] = useState(false);
   const [matches, setMatches] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // --- Atajo Ctrl+S / Cmd+S ---
   useEffect(() => {
@@ -32,6 +33,15 @@ export default function CodeEditor({
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         if (canSave) onSave();
+      }
+
+      if (e.key === "F3") {
+        e.preventDefault();
+        nextMatch();
+      }
+      if (e.shiftKey && e.key === "F3") {
+        e.preventDefault();
+        prevMatch();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -92,14 +102,37 @@ export default function CodeEditor({
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
-        if (showSearch) searchInputRef.current?.focus();
-        else setShowSearch(true);
+
+        const view = viewRef.current;
+        if (!view) return;
+
+        const sel = view.state.selection.main;
+
+        if (sel.from !== sel.to) {
+          const selectedText = view.state.doc.sliceString(sel.from, sel.to);
+          setSearchQuery(selectedText); // 1) guarda texto
+        }
+
+        setShowSearch(true);
+
+        setTimeout(() => {
+          if (searchInputRef.current) {
+            searchInputRef.current.focus();
+            searchInputRef.current.select();
+          }
+        }, 0);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showSearch]);
 
+  useEffect(() => {
+    doSearch(searchQuery);
+  }, [searchQuery, code]);
+  function escapeRegex(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
   // --- Funciones de búsqueda ---
   const doSearch = (query) => {
     if (!query) {
@@ -107,15 +140,23 @@ export default function CodeEditor({
       setCurrentIndex(0);
       return;
     }
-    const regex = new RegExp(query, "gi");
-    let m,
-      found = [];
+
+    const safe = escapeRegex(query);
+    const regex = new RegExp(safe, "gi");
+
+    let m;
+    let found = [];
+
     while ((m = regex.exec(code)) !== null) {
       found.push(m.index);
     }
+
     setMatches(found);
     setCurrentIndex(0);
-    if (found.length > 0) goTo(found[0]);
+
+    if (found.length > 0) {
+      goTo(found[0]);
+    }
   };
 
   const goTo = (pos) => {
@@ -156,6 +197,74 @@ export default function CodeEditor({
     };
   }, [onFocus, syncKey]);
 
+  const commentSelectionCM = () => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    const sel = view.state.selection.main;
+    let from = sel.from;
+    let to = sel.to;
+
+    // si no hay selección → comentar la línea completa
+    if (from === to) {
+      const line = view.state.doc.lineAt(from);
+      from = line.from;
+      to = line.to;
+    }
+
+    const selectedText = view.state.doc.sliceString(from, to);
+
+    // si ya parece bloque comentado, no hacemos nada aquí
+    // (el descomentar lo maneja uncommentSelectionCM)
+    const trimmed = selectedText.trim();
+    if (trimmed.startsWith("<!--") && trimmed.endsWith("-->")) {
+      return;
+    }
+
+    // bloque: envolvemos TODO en un solo comentario
+    const commented = `<!--${selectedText}-->`;
+
+    view.dispatch({
+      changes: { from, to, insert: commented },
+    });
+  };
+
+  const uncommentSelectionCM = () => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    const sel = view.state.selection.main;
+    let from = sel.from;
+    let to = sel.to;
+
+    // si no hay selección → tomar línea completa
+    if (from === to) {
+      const line = view.state.doc.lineAt(from);
+      from = line.from;
+      to = line.to;
+    }
+
+    const text = view.state.doc.sliceString(from, to);
+    const trimmed = text.trim();
+
+    // solo descomenta si es un bloque tipo <!-- ... -->
+    if (!trimmed.startsWith("<!--") || !trimmed.endsWith("-->")) {
+      return;
+    }
+
+    // quitamos la primera ocurrencia de <!-- y la última de -->
+    // asumiendo que el bloque lo generamos nosotros
+    let inner = trimmed.slice(4, trimmed.length - 3); // quitamos "<!--" y "-->"
+
+    // limpiamos saltos extra al inicio/fin
+    inner = inner.replace(/^\s*\n?/, "").replace(/\n?\s*$/, "");
+
+    // reemplazamos TODO el rango original por el contenido interno
+    view.dispatch({
+      changes: { from, to, insert: inner },
+    });
+  };
+
   return (
     <div className="editor-container">
       {showSearch && (
@@ -167,6 +276,8 @@ export default function CodeEditor({
           total={matches.length}
           current={currentIndex}
           inputRef={searchInputRef}
+          initialQuery={searchQuery}
+          theme={theme}
         />
       )}
 
@@ -175,6 +286,10 @@ export default function CodeEditor({
         height="100%"
         theme={theme === "dark" ? "dark" : notepadPlus} // 👈 usa el prop theme
         extensions={[xml(), fontSizeTheme]}
+        basicSetup={{
+          highlightSelectionMatches: false,
+          searchKeymap: false,
+        }}
         editable={editable}
         className={`editor-code ${!editable ? "read-only" : ""}`}
         onChange={(val) => editable && onChange(val)}

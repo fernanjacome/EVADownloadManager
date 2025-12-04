@@ -1,6 +1,5 @@
 TO DO LIST
-MEJORAS
--PANTALLA DIVIDA Y SEPARACION DE REDIRECCION DE SIDEBAR EN BASE AL EDITOR QUE ESTE EN EL FOCO.
--BOTON PARA CAMBIAR DE TEMA
-    -Oscuro original
-    -Blanco Notepad++
+-Actualizar instantaneamente
+-Ampliar arbol de archivos
+-Tooltips
+-Comentar / Descomentar

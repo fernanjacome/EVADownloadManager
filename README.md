@@ -1,15 +1,27 @@
 # EVA Download Manager
 
-Versión: 1.0.2
-Última actualización: 13 de octubre de 2025
+Versión: 1.0.3
+Última actualización: 2 de diciembre de 2025
+
+---
+
+## Actualizaciones v1.0.3
+
+- Ahora cualquier cambio se actualiza directamente en el archivo.
+- Se agregaron tooltips para los botones.
+- Se agregaron tooltips para los items del arbol de navegacion.
+- Se establecio un control personalizado de la anchura del arbol de navegacion.
+- Se implemento el comando Control + / para comentar/descomentar lineas o bloques de codigo.
 
 ---
 
 ## Actualizaciones v1.0.2
 
+- En el modo dividir pantalla, el control por el sidebar ahora se realiza al editor que tenga el focus seleccionado.
+  -Ahora ambos editores son editables y se sincronizan.
 - Optimizacion de contraste en bordes.
-- Mejora de iconos en el TitleBar
 - Se agrego el modo claro.
+- Mejora de iconos en el TitleBar
 
 ---
 
@@ -18,14 +30,14 @@ Versión: 1.0.2
 - Pantalla Divida.
 - Correccion de bug visual en panel de configuración
 - Se agrego validacion de exportación.
-- Se agrego valdiacion antes de salir sin guardar cambios o exportar.
+- Se agrego valdiacion antes de salir sin guardar cambios.
 - Se agrego por defecto un download cargado.
 
 ---
 
 ## Descripción General
 
-EVA Download Manager es una aplicación para gestionar archivos XML de configuración para cajeros integrados con EVA. Permite importar, editar, validar, exportar y organizar archivos XML con una interfaz moderna y funcionalidades avanzadas.
+EVA Download Manager es una aplicación para gestionar archivos XML de configuración para cajeros integrados con EVA. Permite importar, editar, validar y organizar archivos XML con una interfaz moderna y funcionalidades avanzadas.
 
 ---
 
@@ -82,6 +94,7 @@ npm run electron:dev  # App completa con Electron
   - Ctrl+F: Buscar en el editor
   - Ctrl+S: Guardar cambios
   - Ctrl + Wheel: Zoom en el editor
+  - Ctrl + /: Comentar/descomentar lineas o bloques de codigo.
 - Control de fuente del editor (aumentar, disminuir, restablecer).
 - Animaciones y estilos modernos.
 
@@ -141,7 +154,3 @@ Fernando Jácome
 Extreme Visual Appliance
 
 ---
-
-## Licencia
-
-MIT

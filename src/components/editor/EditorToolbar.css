@@ -9,47 +9,26 @@
   border-bottom: 1px solid var(--border-general);
 }
 
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  border: 1px dashed #444;
-  cursor: pointer;
-  font-size: 13px;
-  background: var(--c-fondo-btn);
-  color: var(--txt-normald);
-  transition: all 0.2s ease;
-}
-
-.toolbar-btn:hover:not(:disabled) {
-  background: #3a3a3a;
-  color: var(--txt-normald);
-}
-
-.toolbar-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
 
 .toolbar-dirty {
   margin-left: auto;
   font-size: 12px;
   font-weight: 500;
   color: white;
-  background: rgba(255, 167, 25); /* Ámbar */
+  background: rgba(255, 167, 25);
+  /* Ámbar */
   padding: 3px 10px;
   border-radius: 20px;
   letter-spacing: 0.5px;
 }
+
 .toolbar-warning {
   margin-left: auto;
   font-size: 12px;
   font-weight: 500;
   color: white;
-  background: rgba(25, 182, 255, 0.9); /* Ámbar */
+  background: rgba(25, 182, 255, 0.9);
+  /* Ámbar */
   padding: 3px 10px;
   border-radius: 20px;
   letter-spacing: 0.5px;
@@ -62,7 +41,8 @@
 
 .toolbar-dropdown {
   position: absolute;
-  top: 100%; /* 👈 debajo del botón */
+  top: 100%;
+  /* 👈 debajo del botón */
   left: 0;
   margin-top: 6px;
   background: var(--c-fondo-secundario);
@@ -80,6 +60,7 @@
     opacity: 0;
     transform: translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

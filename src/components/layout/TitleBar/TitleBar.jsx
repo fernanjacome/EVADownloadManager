@@ -13,7 +13,7 @@ import ErrorsModal from "./modals/ErrorsModal";
 import { FiMaximize } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import { FaWindowMinimize } from "react-icons/fa6";
-import { FaMoon, FaSun } from "react-icons/fa";
+import { FaMoon, FaRegWindowRestore, FaSun } from "react-icons/fa";
 
 export default function TitleBar({ fileName, theme, setTheme }) {
   const [activeMenu, setActiveMenu] = useState(null);
@@ -57,6 +57,7 @@ export default function TitleBar({ fileName, theme, setTheme }) {
               {activeMenu === "file" && (
                 <div className="dropdown">
                   <div className="dropdown-item" onClick={handleNewWindow}>
+                    <FaRegWindowRestore />
                     Nueva ventana
                   </div>
                   <div

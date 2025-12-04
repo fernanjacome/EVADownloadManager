@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  FaUpload,
-  FaFileExport,
-  FaTrash,
-  FaCode,
-  FaThLarge,
-} from "react-icons/fa";
+import { FaUpload, FaTrash } from "react-icons/fa";
 import "./Header.css";
 import ConfirmModal from "../../utils/ConfirmModal";
 
@@ -14,7 +8,6 @@ export default function Header({
   onLoadClick,
   onDeleteXml,
   hasXml,
-  onExport,
   viewMode,
   setViewMode,
 }) {
@@ -46,9 +39,9 @@ export default function Header({
         <button className="header-btn" onClick={onLoadClick}>
           <FaUpload /> Importar
         </button>
-        <button className="header-btn" disabled={!hasXml} onClick={onExport}>
+        {/* <button className="header-btn" disabled={!hasXml} onClick={onExport}>
           <FaFileExport /> Exportar
-        </button>
+        </button> */}
         <button
           className="header-btn header-btn-danger"
           onClick={() => setShowConfirmDelete(true)}

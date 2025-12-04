@@ -8,6 +8,10 @@
   font-size: 13px;
   line-height: 1.4;
   user-select: none;
+
+  min-width: 214px;
+  max-width: 700px;
+  overflow-y: auto;
 }
 
 /* Grupo */
@@ -30,12 +34,25 @@
   background: var(--button-sidebar-bg);
   border: var(--border-sidebar);
   transition: background 0.2s, color 0.2s;
+
+}
+
+.sidebar-resizer {
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+}
+
+.sidebar-resizer:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-icon {
-  color: #00c896; /* mismo verde que usas en tu UI */
+  color: #00c896;
+  /* mismo verde que usas en tu UI */
   font-size: 14px;
 }
+
 .sidebar-title:hover {
   background: #262626;
   color: var(--c-principal);
@@ -65,8 +82,10 @@
 .sidebar-item:hover {
   background: rgba(0, 200, 150, 0.08);
   color: var(--c-principal);
-  padding-left: 6px; /* sutil indentación al hover */
+  padding-left: 6px;
+  /* sutil indentación al hover */
 }
+
 /* 🔹 Contenedor del buscador */
 .sidebar-search {
   display: flex;
@@ -108,6 +127,7 @@
 }
 
 .search-box:focus-within {
-  border-color: #00c896; /* color activo */
+  border-color: #00c896;
+  /* color activo */
   box-shadow: 0 0 2px rgba(0, 200, 150, 0.4);
 }

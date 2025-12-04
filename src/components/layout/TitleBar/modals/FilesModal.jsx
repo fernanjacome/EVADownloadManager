@@ -20,9 +20,6 @@ export default function FilesModal({ isOpen, onClose }) {
           <li>
             <strong>Eliminar XML</strong> → Limpia el área de trabajo.
           </li>
-          <li>
-            <strong>Exportar XML</strong> → Descarga el archivo editado.
-          </li>
         </ul>
         <p className="about-note">
           El nombre del archivo cargado siempre aparece en la barra superior.

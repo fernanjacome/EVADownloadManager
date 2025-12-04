@@ -25,10 +25,35 @@ export default function App() {
   const [theme, setTheme] = useState("dark"); // "dark" | "light"
 
   const [viewMode, setViewMode] = useState("code"); // code | cards
-  const fileInputRef = useRef(null);
-  const [exportedCode, setExportedCode] = useState("");
+
+  const [filePath, setFilePath] = useState(null);
 
   const dirty = useMemo(() => code !== savedCode, [code, savedCode]);
+
+  const [sidebarWidth, setSidebarWidth] = useState(240);
+  const isResizingRef = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizingRef.current) return;
+
+      const newWidth = e.clientX;
+      if (newWidth > 120 && newWidth < 600) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const stopResize = () => {
+      isResizingRef.current = false;
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", stopResize);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", stopResize);
+    };
+  }, []);
 
   useEffect(() => {
     document.body.classList.toggle("light-theme", theme === "light");
@@ -51,20 +76,41 @@ export default function App() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-  // --- Handlers (cargar, guardar, restaurar, exportar) ---
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(reader.result, "text/xml");
-      handleLoadXml(doc, file); // pasamos el file
-    };
-    reader.readAsText(file);
+  const handleOpenFile = async () => {
+    const path = await window.electronAPI.openFileDialog();
+    if (!path) return;
 
-    e.target.value = "";
+    setFilePath(path);
+
+    //👇 obtener info real del SO
+    const infoResult = await window.electronAPI.getFileInfo(path);
+    let sizeKb = "";
+    let lastMod = "";
+
+    console.log(infoResult);
+
+    if (infoResult.success) {
+      sizeKb = (infoResult.info.size / 1024).toFixed(1) + " KB";
+      lastMod = new Date(infoResult.info.lastModified).toLocaleString();
+    }
+
+    //👇 leer archivo
+    const result = await window.electronAPI.readFile(path);
+    if (!result.success) {
+      addNotification("error", "No se pudo leer el archivo");
+      return;
+    }
+
+    const xmlText = result.data;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlText, "text/xml");
+
+    handleLoadXml(doc, {
+      name: path,
+      size: infoResult.info.size,
+      lastModified: infoResult.info.lastModified,
+    });
   };
 
   const handleLoadXml = (doc, file = null) => {
@@ -86,13 +132,15 @@ export default function App() {
     if (file) {
       setFileInfo({
         name: file.name,
-        size: (file.size / 1024).toFixed(1) + " KB",
-        lastModified: new Date(file.lastModified).toLocaleString(),
+        size: file.size ? (file.size / 1024).toFixed(1) + " KB" : "",
+        lastModified: file.lastModified
+          ? new Date(file.lastModified).toLocaleString()
+          : "",
       });
 
       if (window.electronAPI) {
         window.electronAPI.setWindowTitle(
-          `${file.name} - EVA Download Manager`
+          `${filePath.split("\\").pop()} - EVA Download Manager`
         );
       }
     } else {
@@ -124,14 +172,12 @@ export default function App() {
       console.error(err);
     }
   };
-
   const handleDeleteXml = () => {
     setXmlDoc(null);
     setFileInfo(null);
     setCode("");
     setOriginalCode("");
     setSavedCode("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
 
     if (window.electronAPI) {
       window.electronAPI.setWindowTitle("EVA Download Manager");
@@ -139,8 +185,7 @@ export default function App() {
 
     addNotification("info", "Archivo XML eliminado.");
   };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
       const parser = new DOMParser();
       const newDoc = parser.parseFromString(code, "text/xml");
@@ -169,14 +214,35 @@ export default function App() {
         return;
       }
 
+      // ✔️ TU LÓGICA ORIGINAL
       setXmlDoc(newDoc);
       setSavedCode(code);
-      addNotification("success", "Cambios guardados.");
+      console.log(window.electronAPI?.writeFile);
+      console.log(filePath);
+      if (filePath && window.electronAPI?.writeFile) {
+        const result = await window.electronAPI.writeFile(filePath, code);
+
+        if (!result.success) {
+          addNotification(
+            "error",
+            "No se pudo guardar en disco: " + result.error
+          );
+          return;
+        }
+
+        // Opcional: notificación visual específica para guardado real
+        addNotification("success", `Archivo actualizado: ${filePath}`);
+      } else {
+        // Si no hay filePath → el archivo NO proviene de carga real
+        addNotification(
+          "info",
+          "Cambios actualizados en memoria, pero el archivo no tiene ruta en disco."
+        );
+      }
     } catch (e) {
       addNotification("error", "Error inesperado al guardar.");
     }
   };
-
   const handleRestoreOriginal = () => {
     try {
       const parser = new DOMParser();
@@ -195,30 +261,6 @@ export default function App() {
       addNotification("error", "Error inesperado al restaurar.");
     }
   };
-  const unexportedChanges = useMemo(
-    () => savedCode !== exportedCode,
-    [savedCode, exportedCode]
-  );
-
-  const handleExport = () => {
-    try {
-      const blob = new Blob([code], { type: "application/xml;charset=utf-8" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = fileInfo?.name || "archivo.xml";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // 🟢 marcar como exportado
-      setExportedCode(code);
-
-      addNotification("success", "XML exportado correctamente.");
-    } catch {
-      addNotification("error", "Error al exportar el XML.");
-    }
-  };
-
   const addNotification = (type, message) => {
     setNotifications((prev) => {
       if (prev.length > 0) {
@@ -230,18 +272,15 @@ export default function App() {
       return [...prev, { id: crypto.randomUUID(), type, message }];
     });
   };
-
   const removeNotification = (id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
-
   useEffect(() => {
     const handleAppClose = () => {
-      if (code !== savedCode || code !== exportedCode) {
+      if (code !== savedCode) {
         setShowConfirmExit(true); // abre modal personalizado
         return;
       }
-
       // si no hay cambios pendientes → cerrar directamente
       if (window.electronAPI) {
         window.electronAPI.windowControl("close");
@@ -254,15 +293,70 @@ export default function App() {
     return () => window.removeEventListener("tryAppClose", handleAppClose);
   }, [code, savedCode]);
 
+  useEffect(() => {
+    const prevent = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", prevent);
+    window.addEventListener("drop", async (e) => {
+      prevent(e);
+
+      const file = e.dataTransfer?.files?.[0];
+      if (!file) return;
+
+      // ruta real en disco — NO PROTEGIDA POR SANDBOX
+      const realPath = file.path;
+      setFilePath(realPath);
+
+      // obtener metadata real
+      const infoResult = await window.electronAPI.getFileInfo(realPath);
+      let sizeKb = "";
+      let lastMod = "";
+
+      if (infoResult.success) {
+        sizeKb = (infoResult.info.size / 1024).toFixed(1) + " KB";
+        lastMod = new Date(infoResult.info.lastModified).toLocaleString();
+      }
+
+      // leer contenido
+      const result = await window.electronAPI.readFile(realPath);
+      if (!result.success) {
+        addNotification("error", "No se pudo leer el archivo");
+        return;
+      }
+
+      const xmlText = result.data;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlText, "text/xml");
+
+      handleLoadXml(doc, {
+        name: path.split("\\").pop(),
+        size: infoResult.info.size,
+        lastModified: infoResult.info.lastModified,
+      });
+    });
+
+    return () => {
+      window.removeEventListener("drop", prevent);
+      window.removeEventListener("dragover", prevent);
+    };
+  }, []);
+
   return (
     <div className="app">
-      <TitleBar fileName={fileInfo?.name} theme={theme} setTheme={setTheme} />
+      <TitleBar
+        fileName={filePath?.split("\\").pop()}
+        theme={theme}
+        setTheme={setTheme}
+      />
       <Header
         fileInfo={fileInfo}
-        onLoadClick={() => fileInputRef.current?.click()}
+        onLoadClick={handleOpenFile}
         onDeleteXml={handleDeleteXml}
         hasXml={!!xmlDoc}
-        onExport={handleExport}
         viewMode={viewMode}
         setViewMode={setViewMode}
       />
@@ -274,14 +368,16 @@ export default function App() {
             setHighlightId({ target: activeEditor, id });
             setTimeout(() => setHighlightId(null), 0);
           }}
+          style={{ width: sidebarWidth }}
+        />
+
+        <div
+          className="sidebar-resizer"
+          onMouseDown={() => (isResizingRef.current = true)}
         />
 
         {!xmlDoc ? (
-          <EmptyState
-            onLoadClick={() => fileInputRef.current?.click()}
-            onNewClick={handleNewXml}
-            onFileDrop={handleFileUpload}
-          />
+          <EmptyState onLoadClick={handleOpenFile} onNewClick={handleNewXml} />
         ) : (
           <div className="editor-wrapper full">
             {/* 🔹 Toolbar centralizada */}
@@ -300,7 +396,6 @@ export default function App() {
               canSave={viewMode === "code" ? dirty : dirty}
               canRestoreOriginal={code !== originalCode}
               dirty={dirty}
-              unexportedChanges={unexportedChanges}
               xmlDoc={xmlDoc}
               setXmlDoc={setXmlDoc}
               setCode={setCode}
@@ -345,13 +440,6 @@ export default function App() {
         )}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".xml"
-        hidden
-        onChange={handleFileUpload}
-      />
       <ConfirmModal
         isOpen={showConfirmExit}
         onClose={() => setShowConfirmExit(false)}
@@ -364,7 +452,7 @@ export default function App() {
           }
         }}
         title="Salir de la aplicación"
-        message="Tienes cambios sin guardar o sin exportar. Si cierras ahora, podrías perderlos."
+        message="Tienes cambios sin guardar. Si cierras ahora, podrías perderlos."
       />
 
       <NotificationContainer

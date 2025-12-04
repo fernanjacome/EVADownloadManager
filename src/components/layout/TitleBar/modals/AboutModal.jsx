@@ -22,7 +22,7 @@ export default function AboutModal({ isOpen, onClose }) {
         </div>
 
         <div className="about-footer">
-          <p className="about-version">Versión 1.0.2</p>
+          <p className="about-version">Versión 1.0.3</p>
           <p className="about-signature">Extreme Visual Appliance</p>
         </div>
 

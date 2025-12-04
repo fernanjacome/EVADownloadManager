@@ -1,0 +1,28 @@
+.toolbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px dashed #444;
+    cursor: pointer;
+    font-size: 13px;
+    background: var(--c-fondo-btn);
+    color: var(--txt-normald);
+    transition: all 0.2s ease;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+    background: #3a3a3a;
+    color: var(--txt-normald);
+}
+
+.toolbar-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.toolbar-btn .btn-icon {
+    margin-top: 3px;
+}

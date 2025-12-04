@@ -5,19 +5,22 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: auto; /* el wrapper oculta */
+  overflow: auto;
+  /* el wrapper oculta */
 }
 
 .editor-container .cm-editor {
   flex: 1;
   height: 100% !important;
-  overflow: auto !important; /* 🔹 cada CodeMirror scrollea de forma independiente */
+  overflow: auto !important;
+  /* 🔹 cada CodeMirror scrollea de forma independiente */
   font-family: Consolas, monospace;
   font-size: 13px;
   background: var(--c-fondo-code) !important;
   color: var(--txt-code) !important;
   line-height: 1.5;
 }
+
 .cm-gutters {
   background: var(--c-fondo-code) !important;
 }
@@ -27,7 +30,8 @@
   background: #f39c12;
   color: var(--c-fondo-secundario);
   padding: 2px 8px;
-  border-radius: 999px; /* forma de píldora */
+  border-radius: 999px;
+  /* forma de píldora */
   font-size: 12px;
   font-weight: 600;
   align-self: center;
@@ -40,10 +44,14 @@
 
 /* Modo lectura */
 .editor-code.read-only {
-  opacity: 0.7; /* más tenue */
-  filter: grayscale(0.5); /* ligero gris */
-  cursor: not-allowed; /* cursor bloqueado */
-  background: #111 !important; /* fondo un poco más oscuro */
+  opacity: 0.7;
+  /* más tenue */
+  filter: grayscale(0.5);
+  /* ligero gris */
+  cursor: not-allowed;
+  /* cursor bloqueado */
+  background: #111 !important;
+  /* fondo un poco más oscuro */
 }
 
 .editor-code.read-only::after {
@@ -55,7 +63,8 @@
   color: rgba(255, 255, 255, 0.1);
   font-size: 48px;
   font-weight: bold;
-  pointer-events: none; /* no bloquea clics */
+  pointer-events: none;
+  /* no bloquea clics */
 }
 
 .ͼo .cm-panels.cm-panels-bottom {
@@ -71,6 +80,7 @@
   min-width: 0;
   min-height: 0;
 }
+
 .editor-wrapper.full {
   width: 100%;
   max-height: 1080px;
@@ -89,6 +99,12 @@
   gap: 2px;
   z-index: 5;
 }
+
+.custom-search-highlight {
+  background: rgba(255, 230, 140, 0.6);
+  border-bottom: 2px solid orange;
+}
+
 
 .editor-fontsize button {
   background: #333;
@@ -111,6 +127,7 @@
 .editor-fontsize button:active {
   transform: scale(0.9);
 }
+
 .cm-activeLine {
   background-color: #00c8961f !important;
 }
