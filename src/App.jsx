@@ -10,6 +10,8 @@ import EditorToolbar from "./components/editor/EditorToolbar";
 import CodeEditor from "./components/editor/CodeEditor";
 import NotificationContainer from "./components/utils/NotificationContainer";
 import ConfirmModal from "./components/utils/ConfirmModal";
+import ScreensPanel from "./components/screens/ScreensPanel";
+import CompilerForm from "./components/compiler/CompilerForm";
 
 export default function App() {
   const [xmlDoc, setXmlDoc] = useState(null);
@@ -22,16 +24,78 @@ export default function App() {
   const [splitView, setSplitView] = useState(false);
   const [showConfirmExit, setShowConfirmExit] = useState(false);
   const [activeEditor, setActiveEditor] = useState("left"); // "left" | "right"
-  const [theme, setTheme] = useState("dark"); // "dark" | "light"
+  const [snowEnabled, setSnowEnabled] = useState(false);
+  const christmasAudioRef = useRef(null);
+  const [screensFolderInput, setScreensFolderInput] = useState(
+    localStorage.getItem("path_screens")
+  );
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("app_theme") || "dark";
+  });
 
-  const [viewMode, setViewMode] = useState("code"); // code | cards
+  useEffect(() => {
+    localStorage.setItem("path_screens", screensFolderInput);
+  }, [screensFolderInput]);
+
+  const [compilerState, setCompilerState] = useState({
+    batName: "",
+    imageName: "",
+    imageId: "",
+    consoleLines: [],
+  });
+
+  // "dark" | "light"
+  useEffect(() => {
+    document.body.classList.toggle("light-theme", theme === "light");
+    localStorage.setItem("app_theme", theme);
+  }, [theme]);
+
+  const [editorViewState, setEditorViewState] = useState({
+    cursor: 0,
+    scrollTop: 0,
+  });
+
+  const [title, setTitle] = useState("");
+
+  const [viewMode, setViewMode] = useState("code"); // code | screens
+  // Carpeta donde están las pantallas HTML
+  const [screensFolder, setScreensFolder] = useState(null);
+
+  // Lista extraída del XML
+  const [screensList, setScreensList] = useState([]);
+
+  // Pantalla seleccionada
+  const [selectedScreen, setSelectedScreen] = useState(null);
 
   const [filePath, setFilePath] = useState(null);
-
   const dirty = useMemo(() => code !== savedCode, [code, savedCode]);
-
   const [sidebarWidth, setSidebarWidth] = useState(240);
   const isResizingRef = useRef(false);
+  useEffect(() => {
+    if (snowEnabled) {
+      document.body.classList.add("xmas-lights-active");
+    } else {
+      document.body.classList.remove("xmas-lights-active");
+    }
+  }, [snowEnabled]);
+
+  useEffect(() => {
+    if (!screensFolder) {
+      setScreensList([]);
+      return;
+    }
+
+    const loadScreens = async () => {
+      const result = await window.electronAPI.readFolder(screensFolder);
+      if (result.success) {
+        setScreensList(result.files);
+      } else {
+        setScreensList([]);
+      }
+    };
+
+    loadScreens();
+  }, [screensFolder]);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -54,11 +118,6 @@ export default function App() {
       window.removeEventListener("mouseup", stopResize);
     };
   }, []);
-
-  useEffect(() => {
-    document.body.classList.toggle("light-theme", theme === "light");
-  }, [theme]);
-
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Bloquea Ctrl/Cmd + +/- o Ctrl/Cmd + 0 (reset zoom)
@@ -76,7 +135,6 @@ export default function App() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
   const handleOpenFile = async () => {
     const path = await window.electronAPI.openFileDialog();
     if (!path) return;
@@ -112,7 +170,6 @@ export default function App() {
       lastModified: infoResult.info.lastModified,
     });
   };
-
   const handleLoadXml = (doc, file = null) => {
     const errors = validateUniqueIds(doc);
     if (errors.length > 0) {
@@ -292,7 +349,6 @@ export default function App() {
     window.addEventListener("tryAppClose", handleAppClose);
     return () => window.removeEventListener("tryAppClose", handleAppClose);
   }, [code, savedCode]);
-
   useEffect(() => {
     const prevent = (e) => {
       e.preventDefault();
@@ -344,6 +400,125 @@ export default function App() {
       window.removeEventListener("dragover", prevent);
     };
   }, []);
+  useEffect(() => {
+    if (!filePath) return;
+
+    const fileName = filePath.split("\\").pop();
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+
+    setTitle(nameWithoutExt);
+  }, [filePath]);
+
+  const snowFalling = (enabled) => {
+    const existing = document.getElementById("snow-canvas");
+
+    // 🔴 APAGAR NIEVE
+    if (!enabled) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    if (existing) existing.remove();
+
+    const snow = document.createElement("canvas");
+    snow.id = "snow-canvas";
+    document.body.appendChild(snow);
+
+    const ctx = snow.getContext("2d");
+    let w = (snow.width = window.innerWidth);
+    let h = (snow.height = window.innerHeight);
+
+    window.addEventListener("resize", () => {
+      w = snow.width = window.innerWidth;
+      h = snow.height = window.innerHeight;
+    });
+
+    // ❄️ COPOS MÁS REALISTAS
+    const flakes = Array.from({ length: 90 }).map(() => ({
+      x: Math.random() * w,
+      y: Math.random() * -h,
+      r: Math.random() * 3 + 1.5, // tamaños más variados
+      d: Math.random() * 1.5 + 0.5, // velocidad vertical
+      drift: Math.random() * 0.8 - 0.4, // viento lateral
+      phase: Math.random() * Math.PI * 2, // oscilación
+      opacity: Math.random() * 0.5 + 0.4, // profundidad visual
+    }));
+
+    function drawSnowflake(x, y, r, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "#4AD6B3";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+
+      // forma tipo copo ✳
+      for (let i = 0; i < 6; i++) {
+        ctx.moveTo(x, y);
+        ctx.lineTo(
+          x + r * Math.cos((i * Math.PI) / 3),
+          y + r * Math.sin((i * Math.PI) / 3)
+        );
+      }
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+
+      flakes.forEach((f) => {
+        drawSnowflake(f.x, f.y, f.r, f.opacity);
+      });
+
+      move();
+    }
+
+    function move() {
+      flakes.forEach((f) => {
+        f.y += f.d;
+        f.phase += 0.01;
+        f.x += Math.sin(f.phase) * 0.3 + f.drift; // oscilación + viento
+
+        if (f.y > h) {
+          f.y = Math.random() * -100;
+          f.x = Math.random() * w;
+        }
+
+        if (f.x > w) f.x = 0;
+        if (f.x < 0) f.x = w;
+      });
+    }
+
+    function update() {
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    update();
+  };
+  const toggleSnow = () => {
+    setSnowEnabled((prev) => {
+      const next = !prev;
+      snowFalling(next);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!christmasAudioRef.current) {
+      christmasAudioRef.current = new Audio("navidad.mp3");
+      christmasAudioRef.current.loop = true;
+      christmasAudioRef.current.volume = 0.05; // suave, no molesto
+    }
+
+    if (snowEnabled) {
+      christmasAudioRef.current.currentTime = 0;
+      christmasAudioRef.current.play().catch(() => {});
+    } else {
+      christmasAudioRef.current.pause();
+    }
+  }, [snowEnabled]);
 
   return (
     <div className="app">
@@ -351,7 +526,16 @@ export default function App() {
         fileName={filePath?.split("\\").pop()}
         theme={theme}
         setTheme={setTheme}
+        snowEnabled={snowEnabled}
+        toggleSnow={toggleSnow}
       />
+      {snowEnabled && <div className="xmas-cable-lights" />}
+      {snowEnabled && <div className="xmas-cable-lights-down" />}
+      {snowEnabled && (
+        <div className="santa-sleigh">
+          <img src="santa.gif" alt="Santa Claus" />
+        </div>
+      )}
       <Header
         fileInfo={fileInfo}
         onLoadClick={handleOpenFile}
@@ -359,6 +543,9 @@ export default function App() {
         hasXml={!!xmlDoc}
         viewMode={viewMode}
         setViewMode={setViewMode}
+        xmlDoc={xmlDoc}
+        snowEnabled={snowEnabled}
+        toggleSnow={toggleSnow}
       />
 
       <div className="workspace">
@@ -376,39 +563,49 @@ export default function App() {
           onMouseDown={() => (isResizingRef.current = true)}
         />
 
-        {!xmlDoc ? (
-          <EmptyState onLoadClick={handleOpenFile} onNewClick={handleNewXml} />
-        ) : (
-          <div className="editor-wrapper full">
-            {/* 🔹 Toolbar centralizada */}
-            <EditorToolbar
-              viewMode={viewMode}
-              onSave={handleSave}
-              onRestoreOriginal={handleRestoreOriginal}
-              onFormat={
-                viewMode === "code"
-                  ? () => {
-                      const formatted = formatXml(code);
-                      if (formatted) setCode(formatted);
-                    }
-                  : null
-              }
-              canSave={viewMode === "code" ? dirty : dirty}
-              canRestoreOriginal={code !== originalCode}
-              dirty={dirty}
-              xmlDoc={xmlDoc}
-              setXmlDoc={setXmlDoc}
-              setCode={setCode}
-              setNotification={addNotification}
-              markDirty={() => setCode(code + " ")}
-              setSplitView={setSplitView}
-              splitView={splitView}
-              theme={theme}
-              setTheme={setTheme}
-            />
-
-            {viewMode === "code" ? (
+        <div className="editor-wrapper full">
+          {/* ======================= CODE ======================= */}
+          <div
+            style={{
+              display: viewMode === "code" ? "block" : "none",
+              height: "100%",
+            }}
+          >
+            {!xmlDoc ? (
+              <EmptyState
+                onLoadClick={handleOpenFile}
+                onNewClick={handleNewXml}
+                snowEnabled={snowEnabled}
+                toggleSnow={toggleSnow}
+              />
+            ) : (
               <div className={`editor-wrapper ${splitView ? "split" : ""}`}>
+                <EditorToolbar
+                  viewMode={viewMode}
+                  onSave={handleSave}
+                  onRestoreOriginal={handleRestoreOriginal}
+                  onFormat={
+                    viewMode === "code"
+                      ? () => {
+                          const formatted = formatXml(code);
+                          if (formatted) setCode(formatted);
+                        }
+                      : null
+                  }
+                  canSave={dirty}
+                  canRestoreOriginal={code !== originalCode}
+                  dirty={dirty}
+                  xmlDoc={xmlDoc}
+                  setXmlDoc={setXmlDoc}
+                  setCode={setCode}
+                  setNotification={addNotification}
+                  markDirty={() => setCode(code + " ")}
+                  setSplitView={setSplitView}
+                  splitView={splitView}
+                  theme={theme}
+                  setTheme={setTheme}
+                />
+
                 <CodeEditor
                   code={code}
                   onChange={setCode}
@@ -418,7 +615,10 @@ export default function App() {
                   editable={true}
                   onFocus={(key) => setActiveEditor(key)}
                   syncKey="left"
+                  viewMode={viewMode}
                   theme={theme}
+                  editorViewState={editorViewState}
+                  setEditorViewState={setEditorViewState}
                 />
 
                 {splitView && (
@@ -427,17 +627,64 @@ export default function App() {
                     onChange={setCode}
                     highlightId={highlightId}
                     editable={true}
+                    viewMode={viewMode}
                     onFocus={(key) => setActiveEditor(key)}
                     syncKey="right"
                     theme={theme}
+                    editorViewState={editorViewState}
+                    setEditorViewState={setEditorViewState}
                   />
                 )}
               </div>
-            ) : (
-              <p>Work on it!!</p>
             )}
           </div>
-        )}
+
+          {/* ======================= SCREENS ======================= */}
+          <div
+            style={{
+              display: viewMode === "screens" ? "block" : "none",
+              height: "100%",
+            }}
+          >
+            <ScreensPanel
+              screensFolder={screensFolder}
+              setScreensFolder={setScreensFolder}
+              screensFolderInput={screensFolderInput}
+              setScreensFolderInput={setScreensFolderInput}
+              screensList={screensList}
+              selectedScreen={selectedScreen}
+              onSelectScreen={setSelectedScreen}
+              setScreensList={setScreensList}
+            />
+          </div>
+
+          {/* ======================= COMPILER ======================= */}
+          <div
+            style={{
+              display: viewMode === "compiler" ? "block" : "none",
+              height: "100%",
+            }}
+          >
+            {xmlDoc ? (
+              <CompilerForm
+                xmlCode={code}
+                notify={addNotification}
+                xmlName={title}
+                dirty={dirty}
+                onSaveXml={handleSave}
+                compilerState={compilerState}
+                title={title}
+                setCompilerState={setCompilerState}
+              />
+            ) : (
+              <EmptyState
+                onLoadClick={handleOpenFile}
+                onNewClick={handleNewXml}
+                snowEnabled={snowEnabled}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       <ConfirmModal

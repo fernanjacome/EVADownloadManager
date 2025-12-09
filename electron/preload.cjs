@@ -11,6 +11,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getDroppedFilePath: (file) => ipcRenderer.invoke("get-dropped-file-path", file),
     openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
     readFile: (path) => ipcRenderer.invoke("read-file", path),
+    openFolderDialog: () => ipcRenderer.invoke("open-folder-dialog"),
+    readFolder: (folder) => ipcRenderer.invoke("read-folder", folder),
+
     writeFile: (path, data) => ipcRenderer.invoke("write-file", { path, data }),
+
+    startStaticServer: (folder) => ipcRenderer.invoke("start-static-server", folder),
+    clearStaticServerCache: () => ipcRenderer.invoke("clear-static-cache"),
 
 });

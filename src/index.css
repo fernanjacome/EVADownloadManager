@@ -4,6 +4,7 @@
   padding: 0;
   box-sizing: border-box;
 }
+
 :root {
   --c-principal: #00c896;
   --c-fondo: #121212;
@@ -14,12 +15,16 @@
   --txt-normal: #aaa;
   --txt-normalb: #bbb;
   --txt-normalc: #ccc;
+  --txt-normalf: #757575;
   --border-general: #444;
   --txt-normald: #ddd;
   --button-sidebar-bg: #202020;
   --border-sidebar: 1px solid #1e1e1e;
   --hover-general: #313131;
+  --iframe-scale: 1;
+
 }
+
 body,
 html,
 #root {
@@ -39,7 +44,8 @@ html,
 
 /* ===== Scrollbar global ===== */
 * {
-  scrollbar-color: #00c896 var(--c-fondo-secundario); /* thumb y track */
+  scrollbar-color: #00c896 var(--c-fondo-secundario);
+  /* thumb y track */
 }
 
 /* Chrome, Edge, Safari */
@@ -49,17 +55,21 @@ html,
 }
 
 *::-webkit-scrollbar-track {
-  background: var(--c-fondo-secundario); /* fondo */
+  background: var(--c-fondo-secundario);
+  /* fondo */
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #00c896; /* color de la barra */
+  background-color: #00c896;
+  /* color de la barra */
   border-radius: 6px;
-  border: 2px solid var(--c-fondo-secundario); /* borde para dar efecto de espacio */
+  border: 2px solid var(--c-fondo-secundario);
+  /* borde para dar efecto de espacio */
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: #00e0aa; /* hover más brillante */
+  background-color: #00e0aa;
+  /* hover más brillante */
 }
 
 /* 🌞 Tema claro */
@@ -69,6 +79,7 @@ body.light-theme {
   --txt-code: #222;
   --txt-normal: #333;
   --txt-normalb: #444;
+  --txt-normalf: #757575;
   --border-general: #ccc;
   --c-fondo-secundario: #ffffff;
   --c-fondo-btn: #ffffff;
@@ -85,4 +96,216 @@ body.light-theme .app {
 body.light-theme .toolbar-btn {
   background: var(--c-fondo-btn);
   color: #333;
+}
+
+#snow-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.xmas-icon {
+  cursor: pointer;
+  font-size: 1.1rem;
+  opacity: 0.6;
+  transition: 0.2s;
+}
+
+.xmas-icon:hover {
+  opacity: 1;
+}
+
+.xmas-icon.active {
+  color: var(--c-principal);
+  filter: drop-shadow(0 0 6px var(--c-principal));
+  opacity: 1;
+}
+
+/* 🎄 TIRA REALISTA DE LUCES NAVIDEÑAS CON CABLE ARQUEADO */
+.xmas-cable-lights {
+  position: fixed;
+  top: 0;
+  left: -5%;
+  width: 110%;
+  height: 90px;
+  pointer-events: none;
+  z-index: 999999;
+  animation: xmasEnterTop 0.4s ease-out forwards;
+}
+
+
+
+
+
+/* ✅ BOMBILLOS COLGANDO DEL CABLE (CON HILITO) */
+.xmas-cable-lights::after {
+  content: "";
+  position: absolute;
+  top: 90px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+
+  background:
+    radial-gradient(circle at 50% 8px, #ff4d4d 0%, #ff4d4d 5%, transparent 13%) 0 0 / 120px 20px,
+    radial-gradient(circle at 50% 8px, #22c55e 0%, #22c55e 5%, transparent 13%) 30px 0 / 120px 20px,
+    radial-gradient(circle at 50% 8px, #60a5fa 0%, #60a5fa 5%, transparent 13%) 60px 0 / 120px 20px,
+    radial-gradient(circle at 50% 8px, #facc15 0%, #facc15 5%, transparent 13%) 90px 0 / 120px 20px,
+
+    /* HILITOS MÁS FINOS Y MÁS LARGOS */
+    linear-gradient(#003a22, #003a22) 6px 0 / 1px 2px,
+    linear-gradient(#003a22, #003a22) 36px 0 / 1px 2px,
+    linear-gradient(#003a22, #003a22) 66px 0 / 1px 2px,
+    linear-gradient(#003a22, #003a22) 96px 0 / 1px 2px;
+
+  background-repeat: repeat-x;
+  filter:
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 14px rgba(255, 255, 255, 0.35));
+  animation:
+    xmasGlow 2.6s infinite ease-in-out alternate,
+    xmasSwing 6s infinite ease-in-out;
+}
+
+/* 🎄 TIRA REALISTA DE LUCES NAVIDEÑAS CON CABLE ARQUEADO */
+.xmas-cable-lights-down {
+  position: fixed;
+  bottom: 0;
+  left: -5%;
+  width: 110%;
+  height: 90px;
+  pointer-events: none;
+  z-index: 999999;
+  animation: xmasEnterBottom 0.4s ease-out forwards;
+}
+
+
+
+
+
+
+/* ✅ BOMBILLOS COLGANDO DEL CABLE (CON HILITO) */
+.xmas-cable-lights-down::after {
+  content: "";
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+
+  background:
+    radial-gradient(circle at 50% 8px, #ff4d4d 0%, #ff4d4d 5%, transparent 13%) 0 0 / 120px 20px,
+    radial-gradient(circle at 50% 8px, #22c55e 0%, #22c55e 5%, transparent 13%) 30px 0 / 120px 20px,
+    radial-gradient(circle at 50% 8px, #60a5fa 0%, #60a5fa 5%, transparent 13%) 60px 0 / 120px 20px,
+    radial-gradient(circle at 50% 8px, #facc15 0%, #facc15 5%, transparent 13%) 90px 0 / 120px 20px,
+
+    /* HILITOS MÁS FINOS Y MÁS LARGOS */
+    linear-gradient(#003a22, #003a22) 6px 0 / 1px 2px,
+    linear-gradient(#003a22, #003a22) 36px 0 / 1px 2px,
+    linear-gradient(#003a22, #003a22) 66px 0 / 1px 2px,
+    linear-gradient(#003a22, #003a22) 96px 0 / 1px 2px;
+
+  background-repeat: repeat-x;
+  filter:
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 14px rgba(255, 255, 255, 0.35));
+  animation:
+    xmasGlow 2.6s infinite ease-in-out alternate,
+    xmasSwing 6s infinite ease-in-out;
+}
+
+/* ✅ BRILLO REAL DE BOMBILLOS */
+@keyframes xmasGlow {
+  0% {
+    filter: brightness(0.9) drop-shadow(0 0 6px rgba(255, 255, 255, .35));
+  }
+
+  50% {
+    filter: brightness(1.3) drop-shadow(0 0 16px rgba(255, 255, 255, .8));
+  }
+
+  100% {
+    filter: brightness(1.1) drop-shadow(0 0 10px rgba(255, 255, 255, .55));
+  }
+}
+
+/* ✅ VAIVÉN SUAVE DEL CABLE */
+@keyframes xmasSwing {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(3px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ✅ ENTRADA DESDE ARRIBA */
+@keyframes xmasEnterTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ✅ ENTRADA DESDE ABAJO */
+@keyframes xmasEnterBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.santa-sleigh {
+  position: fixed;
+  top: 15%;
+  left: -300px;
+  width: 460px;
+  pointer-events: none;
+  z-index: 999999;
+  animation: santaFly 12s linear infinite;
+}
+
+.santa-sleigh img {
+  width: 100%;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+}
+
+/* ✅ VUELO DE IZQUIERDA A DERECHA */
+@keyframes santaFly {
+  0% {
+    transform: translateX(-300px) translateY(0) scale(0.9);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateX(50vw) translateY(-20px) scale(1);
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(120vw) translateY(0) scale(0.95);
+    opacity: 0;
+  }
 }

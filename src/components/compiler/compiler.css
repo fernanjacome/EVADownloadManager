@@ -1,0 +1,200 @@
+.compiler-layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    height: 100%;
+}
+
+/* ================= PANEL IZQUIERDO ================= */
+.compiler-form {
+    background: var(--c-fondo);
+
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+
+.form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    position: relative;
+}
+
+.compiler-form-group {
+    padding: 5px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-title {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    gap: 0.5rem;
+    padding: 10px 10px 3px 10px;
+    border-bottom: 1px solid var(--border-general);
+}
+
+.form-title h3 {
+    color: var(--txt-code);
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+.form-title svg {
+    color: var(--c-principal);
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.input-group label {
+    color: var(--txt-code);
+    margin-bottom: 4px;
+    font-size: 0.75rem;
+}
+
+.compiler-form input {
+    padding: 6px 8px;
+    background: var(--c-fondo);
+    border: 1px solid var(--border-general);
+    border-radius: 4px;
+    color: var(--txt-normalb);
+    outline: none;
+    width: 100%;
+}
+
+
+
+.button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    justify-content: end;
+    padding: 10px 12px;
+}
+
+.compile-btn {
+    background: var(--c-principal);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    height: 36px;
+    padding: 0 16px;
+}
+
+.compile-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cancel-btn {
+    background: #757575;
+}
+
+/* ================= PANEL DERECHO ================= */
+.compiler-console {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.console-header {
+    padding: 11px 12px;
+    background: #141414;
+    font-weight: bold;
+    color: var(--c-principal);
+    border-bottom: 1px solid #333;
+}
+
+.input-group span {
+    position: absolute;
+    top: 50%;
+    right: 5%;
+    user-select: none;
+
+    font-size: 0.8rem;
+    color: var(--txt-normalf);
+}
+
+.console-output {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    user-select: text;
+}
+
+/* Colores por tipo */
+.console-line.info {
+    color: #4da3ff;
+}
+
+.console-line.output {
+    color: #7CFC00;
+}
+
+.console-line.error {
+    color: #ff5555;
+    font-weight: bold;
+}
+
+.clear-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #444;
+}
+
+.clear-btn:hover {
+    background: #666;
+}
+
+/* Quitar flechas */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.compiler-console::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.04),
+            transparent);
+    animation: shine 6s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes shine {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}

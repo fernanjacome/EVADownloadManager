@@ -84,6 +84,7 @@
 .about-body li {
   margin-bottom: 0.3rem;
 }
+
 /* --- Código/XML --- */
 .xml-sample {
   background: #111;
@@ -111,6 +112,20 @@
 .about-version {
   margin-bottom: 0.3rem;
 }
+
+.about-version span {
+  color: rgb(255, 75, 75);
+  font-weight: 600;
+  cursor: pointer;
+  filter: drop-shadow(0 0 5px rgb(255, 75, 75, 0.7));
+  transition: scale 0.2s ease;
+  text-decoration: underline;
+}
+
+.about-version span:hover {
+  scale: 1.1;
+}
+
 
 .about-signature {
   font-weight: bold;
@@ -160,6 +175,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -170,6 +186,7 @@
     transform: translateY(18px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;

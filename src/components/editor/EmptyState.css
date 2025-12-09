@@ -15,6 +15,19 @@
   opacity: 0.7;
 }
 
+.empty-icon.snow {
+  filter: drop-shadow(0 0 6px var(--c-principal));
+  width: 120px;
+  height: 120px;
+  cursor: pointer;
+  transform: scale(1);
+  transition: transform 0.2s ease;
+}
+
+.empty-icon.snow:hover {
+  transform: scale(1.1);
+}
+
 .empty-state h2 {
   margin: 0;
   font-size: 18px;
@@ -77,6 +90,7 @@
   from {
     opacity: 0.6;
   }
+
   to {
     opacity: 1;
   }

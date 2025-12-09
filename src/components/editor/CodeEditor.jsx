@@ -17,6 +17,7 @@ export default function CodeEditor({
   editable,
   syncKey = "left",
   onFocus,
+  viewMode,
   theme,
 }) {
   const viewRef = useRef(null);
@@ -65,7 +66,7 @@ export default function CodeEditor({
   // --- Navegación desde Sidebar ---
   useEffect(() => {
     if (!highlightId || !viewRef.current) return;
-
+    if (viewMode !== "code") return;
     if (highlightId.target && highlightId.target !== syncKey) return;
 
     const [tag, id] = highlightId.id.split("-");
@@ -196,74 +197,6 @@ export default function CodeEditor({
       dom.removeEventListener("focusin", handleFocus);
     };
   }, [onFocus, syncKey]);
-
-  const commentSelectionCM = () => {
-    const view = viewRef.current;
-    if (!view) return;
-
-    const sel = view.state.selection.main;
-    let from = sel.from;
-    let to = sel.to;
-
-    // si no hay selección → comentar la línea completa
-    if (from === to) {
-      const line = view.state.doc.lineAt(from);
-      from = line.from;
-      to = line.to;
-    }
-
-    const selectedText = view.state.doc.sliceString(from, to);
-
-    // si ya parece bloque comentado, no hacemos nada aquí
-    // (el descomentar lo maneja uncommentSelectionCM)
-    const trimmed = selectedText.trim();
-    if (trimmed.startsWith("<!--") && trimmed.endsWith("-->")) {
-      return;
-    }
-
-    // bloque: envolvemos TODO en un solo comentario
-    const commented = `<!--${selectedText}-->`;
-
-    view.dispatch({
-      changes: { from, to, insert: commented },
-    });
-  };
-
-  const uncommentSelectionCM = () => {
-    const view = viewRef.current;
-    if (!view) return;
-
-    const sel = view.state.selection.main;
-    let from = sel.from;
-    let to = sel.to;
-
-    // si no hay selección → tomar línea completa
-    if (from === to) {
-      const line = view.state.doc.lineAt(from);
-      from = line.from;
-      to = line.to;
-    }
-
-    const text = view.state.doc.sliceString(from, to);
-    const trimmed = text.trim();
-
-    // solo descomenta si es un bloque tipo <!-- ... -->
-    if (!trimmed.startsWith("<!--") || !trimmed.endsWith("-->")) {
-      return;
-    }
-
-    // quitamos la primera ocurrencia de <!-- y la última de -->
-    // asumiendo que el bloque lo generamos nosotros
-    let inner = trimmed.slice(4, trimmed.length - 3); // quitamos "<!--" y "-->"
-
-    // limpiamos saltos extra al inicio/fin
-    inner = inner.replace(/^\s*\n?/, "").replace(/\n?\s*$/, "");
-
-    // reemplazamos TODO el rango original por el contenido interno
-    view.dispatch({
-      changes: { from, to, insert: inner },
-    });
-  };
 
   return (
     <div className="editor-container">

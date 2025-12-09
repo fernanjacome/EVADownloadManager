@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { FaUpload, FaTrash } from "react-icons/fa";
 import "./Header.css";
 import ConfirmModal from "../../utils/ConfirmModal";
+import { MdScreenshotMonitor } from "react-icons/md";
+import { IoBuild, IoCodeSlash } from "react-icons/io5";
+import { FaRegSnowflake } from "react-icons/fa6";
 
 export default function Header({
   fileInfo,
@@ -10,12 +13,25 @@ export default function Header({
   hasXml,
   viewMode,
   setViewMode,
+  xmlDoc,
+  snowEnabled,
+  toggleSnow,
 }) {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [showXmasMessage, setShowXmasMessage] = useState(false);
+
   return (
     <header className="header-bar">
       <div className="header-title">
-        <h2 className="header-title-text">EVA Download Manager</h2>
+        <div className="header-title-group">
+          <FaRegSnowflake
+            className={`xmas-icon ${snowEnabled ? "active" : ""}`}
+            title="Feliz navidad 2025"
+            onClick={toggleSnow}
+          />
+
+          <h2 className="header-title-text">EVA Download Manager</h2>
+        </div>
         {fileInfo ? (
           <div className="header-file-info">
             <span>
@@ -49,6 +65,28 @@ export default function Header({
         >
           <FaTrash /> Eliminar
         </button>
+        <div className="mode-switch">
+          <button
+            className={`mode-btn ${viewMode === "code" ? "active" : ""}`}
+            onClick={() => setViewMode("code")}
+          >
+            <IoCodeSlash /> XML
+          </button>
+
+          <button
+            className={`mode-btn ${viewMode === "screens" ? "active" : ""}`}
+            onClick={() => setViewMode("screens")}
+          >
+            <MdScreenshotMonitor /> Pantallas
+          </button>
+          <button
+            className={`mode-btn ${viewMode === "compiler" ? "active" : ""}`}
+            onClick={() => setViewMode("compiler")}
+          >
+            <IoBuild /> Compilador
+          </button>
+        </div>
+
         <ConfirmModal
           isOpen={showConfirmDelete}
           onClose={() => setShowConfirmDelete(false)}

@@ -1,7 +1,26 @@
 # EVA Download Manager
 
-Versión: 1.0.3
-Última actualización: 2 de diciembre de 2025
+Versión: 1.0.5
+Última actualización: 8 de diciembre de 2025
+
+---
+
+## Actualizaciones v1.0.5
+
+- Nuevo modulo: Compilar
+  - Compilacion usando Extreme.EVA.Compiler.exe mediante el formulario.
+  - Respuesta del .bat ejecutado visible en consola.
+  - [Easter Egg] Copo navideño.
+
+## Actualizaciones v1.0.4
+
+- Nuevo módulo: Pantallas
+- Se agregó visor de pantallas HTML independiente del XML.
+- Carga una carpeta y lista automáticamente todos los .html.
+- Renderiza con servidor estático para que CSS/JS funcionen correctamente.
+- Botón de refresco limpia caché y recarga todo.
+- Vista de 1024×768 con escalado adaptable.
+- Navegación lateral de pantallas y modal informativo.
 
 ---
 

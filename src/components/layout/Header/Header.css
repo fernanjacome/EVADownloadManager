@@ -15,19 +15,23 @@
   display: flex;
   flex-direction: column;
 }
+
 .header-title-text {
   margin: 0;
   font-size: 18px;
 }
+
 .header-filename {
   color: var(--txt-normal);
   font-size: 13px;
 }
+
 .header-file-info {
   margin-top: 4px;
   font-size: 13px;
   color: var(--txt-code);
 }
+
 .header-file-info span {
   margin-right: 10px;
 }
@@ -38,6 +42,14 @@
   gap: 10px;
   align-items: center;
 }
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
 .header-btn {
   display: flex;
   align-items: center;
@@ -45,27 +57,24 @@
   gap: 4px;
   padding: 7px 18px;
   border-radius: 5px;
-  border: none;
+  border: 1px solid var(--border-general);
   cursor: pointer;
   font-size: 13px;
-  background: #2a2a2a;
-  color: white;
+  background: var(--c-fondo-btn);
+  color: var(--txt-code);
   transition: all 0.2s ease;
 }
+
 .header-btn:hover:not(:disabled) {
   background: var(--c-principal);
   color: var(--txt-normald);
 }
+
 .header-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.header-btn-danger {
-  background: #8b2c2c;
-}
-.header-btn-danger:hover:not(:disabled) {
-  background: #e74c3c;
-}
+
 
 /* ====== Toggle (Code ↔ Cards) ====== */
 .header-toggle {
@@ -78,6 +87,7 @@
   transition: background 0.3s;
   user-select: none;
 }
+
 .header-toggle:hover {
   background: var(--c-fondo-secundario);
   color: var(--txt-normald);
@@ -98,7 +108,33 @@
   margin-right: 6px;
   font-size: 12px;
 }
+
 .header-toggle-label {
   font-size: 13px;
   color: var(--txt-normald);
 }
+
+.mode-switch {
+  display: flex;
+  background: var(--c-fondo-btn);
+  padding: 4px;
+  border-radius: 8px;
+  gap: 4px;
+  border: 1px solid var(--border-general);
+}
+
+.mode-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--txt-normal);
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  background: var(--c-principal);
+  color: #000;
+}
+
+/* 🎄 Header con luces navideñas cuando la nieve está activa */

@@ -14,8 +14,16 @@ import { FiMaximize } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import { FaWindowMinimize } from "react-icons/fa6";
 import { FaMoon, FaRegWindowRestore, FaSun } from "react-icons/fa";
+import ScreensInfoModal from "./modals/ScreensInfoModal";
+import CompilerInfoModal from "./modals/CompileInfoModal";
 
-export default function TitleBar({ fileName, theme, setTheme }) {
+export default function TitleBar({
+  fileName,
+  theme,
+  setTheme,
+  snowEnabled,
+  toggleSnow,
+}) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [showModal, setShowModal] = useState(null); // 👈 ahora null | "about" | "format" | "validations" | "tips"
   const menuRef = useRef(null);
@@ -77,6 +85,24 @@ export default function TitleBar({ fileName, theme, setTheme }) {
               Ayuda
               {activeMenu === "help" && (
                 <div className="dropdown">
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowModal("compiler");
+                      setActiveMenu(null);
+                    }}
+                  >
+                    Compilador
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowModal("screens");
+                      setActiveMenu(null);
+                    }}
+                  >
+                    Pantallas
+                  </div>
                   <div
                     className="dropdown-item"
                     onClick={() => {
@@ -183,6 +209,8 @@ export default function TitleBar({ fileName, theme, setTheme }) {
       <AboutModal
         isOpen={showModal === "about"}
         onClose={() => setShowModal(null)}
+        snowEnabled={snowEnabled}
+        toggleSnow={toggleSnow}
       />
       <FormatModal
         isOpen={showModal === "format"}
@@ -206,6 +234,14 @@ export default function TitleBar({ fileName, theme, setTheme }) {
       />
       <ErrorsModal
         isOpen={showModal === "errors"}
+        onClose={() => setShowModal(false)}
+      />
+      <ScreensInfoModal
+        isOpen={showModal === "screens"}
+        onClose={() => setShowModal(false)}
+      />
+      <CompilerInfoModal
+        isOpen={showModal === "compiler"}
         onClose={() => setShowModal(false)}
       />
     </>
