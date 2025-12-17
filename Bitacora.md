@@ -1,5 +1,14 @@
 ## EVA XML MANAGER
 
+[9/12/2025]
+Probando conexion remota
+{
+"type": "CHAT | LOG | COMMAND | CONTROL | FRAME",
+"from": "ID_DEL_CLIENTE",
+"to": "ID_DESTINO | null",
+"payload": {}
+}
+
 [26/9/2025]
 -Se agrego control de guardado con Cntrl+S y busqueda con Cntrl+F
 -Se agrego un buscador en el sidebar que busca y filtra respecto las keys principales y comments

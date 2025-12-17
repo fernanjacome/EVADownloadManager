@@ -1,13 +1,13 @@
 # EVA Download Manager
 
 Versión: 1.0.5
-Última actualización: 8 de diciembre de 2025
+Última actualización: 9 de diciembre de 2025
 
 ---
 
 ## Actualizaciones v1.0.5
 
-- Nuevo modulo: Compilar
+- Nuevo módulo: Compilar
   - Compilacion usando Extreme.EVA.Compiler.exe mediante el formulario.
   - Respuesta del .bat ejecutado visible en consola.
   - [Easter Egg] Copo navideño.

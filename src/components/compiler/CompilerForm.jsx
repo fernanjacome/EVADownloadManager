@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, use } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./compiler.css";
 import { PiPaintBrushHouseholdBold } from "react-icons/pi";
 import { FaGear } from "react-icons/fa6";
+import { GrPowerReset } from "react-icons/gr";
 
 export default function CompilerForm({
   xmlCode,
@@ -25,19 +26,85 @@ export default function CompilerForm({
     loadCfg("compiler_server", "192.168.10.241")
   );
   const [port, setPort] = useState(loadCfg("compiler_port", "5007"));
+  const [tls, setTLS] = useState(loadCfg("compiler_tls", "https"));
+  const [statusWS, setStatusWS] = useState("connecting");
+
+  const retryTimerRef = useRef(null);
+  const wsRef = useRef(null);
+
+  const connectWS = () => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    const protocol = tls === "https" ? "wss" : "ws";
+    const wsUrl = `${protocol}://${server}:${port}/ws`;
+
+    setStatusWS("connecting");
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+    ws.onopen = () => {
+      ws.send("FRONTEND_COMPILER");
+      setStatusWS("connected");
+    };
+
+    ws.onmessage = (msg) => {
+      let data;
+
+      try {
+        data = JSON.parse(msg.data);
+      } catch {
+        log("output", msg.data);
+        return;
+      }
+
+      const type = data.Type || data.type || "output";
+      const text = data.Payload?.text || data.payload?.text || "";
+
+      if (!text.trim()) return;
+
+      log(type.toLowerCase(), text);
+    };
+
+    // ws.onerror = () => {
+    //   setStatusWS("disconnected");
+    //   log("error", "[WebSocket error]");
+    // };
+
+    ws.onclose = () => {
+      setStatusWS("disconnected");
+      log("error", "[WebSocket cerrado]");
+    };
+  };
+
+  useEffect(() => {
+    connectWS();
+
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [server, port, tls]);
+
+  const retryConnection = () => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+    }
+
+    connectWS();
+  };
 
   useEffect(() => saveCfg("compiler_server", server), [server]);
   useEffect(() => saveCfg("compiler_port", port), [port]);
+  useEffect(() => saveCfg("compiler_tls", tls), [tls]);
 
-  const baseUrl = `http://${server}:${port}`;
+  const baseUrl = `${tls}://${server}:${port}`;
   useEffect(() => {
     setBatName(title);
     setImageName(title);
   }, [title]);
 
-  // -----------------------------
-  // 🧠 Estado elevado (NO local)
-  // -----------------------------
   const {
     batName = xmlName,
     imageName = xmlName,
@@ -103,6 +170,7 @@ export default function CompilerForm({
     log("info", `ImageName = ${imageName}`);
     log("info", `ImageId = ${imageId}`);
     log("info", `Servidor → ${baseUrl}`);
+    log("info", "Enviando petición al servidor...");
 
     try {
       const body = {
@@ -111,8 +179,6 @@ export default function CompilerForm({
         ImageId: imageId,
         XmlContent: xmlCode,
       };
-
-      log("info", "Enviando petición al servidor...");
 
       const resp = await fetch(`${baseUrl}/api/compiler/build`, {
         method: "POST",
@@ -123,33 +189,14 @@ export default function CompilerForm({
 
       log("info", `HTTP Status = ${resp.status}`);
 
-      const data = await resp.json();
-
       if (!resp.ok) {
-        log("error", data.error);
-        notify("error", "Error: " + data.error);
-      } else {
-        log("info", "Compilación finalizada en el servidor.");
+        const err = await resp.text();
+        log("error", err);
+        notify("error", err);
       }
 
-      log("info", "Salida del compilador:");
-
-      if (data.output) {
-        data.output.split("\n").forEach((line) => {
-          const clean = line.trim();
-          if (!clean) return;
-
-          const filtered = clean.replace(/presione una tecla.*/i, "").trim();
-          if (filtered) log("output", filtered);
-        });
-      }
-
-      if (data.error) {
-        data.error.split("\n").forEach((line) => {
-          const clean = line.trim();
-          if (clean) log("error", clean);
-        });
-      }
+      // ✅ YA NO SE LEE output NI error AQUÍ
+      // TODO se recibe por WebSocket
     } catch (err) {
       if (err.name === "AbortError") {
         log("error", "Proceso abortado.");
@@ -171,9 +218,6 @@ export default function CompilerForm({
     setAbortCtrl(null);
   };
 
-  // -----------------------------
-  // UI
-  // -----------------------------
   return (
     <div className="compiler-layout">
       {/* ================= PANEL IZQUIERDO ================= */}
@@ -184,35 +228,53 @@ export default function CompilerForm({
         </div>
         <div className="compiler-form-group">
           <div className="form-row">
+            <div className="input-group tls">
+              <label>TLS</label>
+              <select
+                value={tls}
+                onChange={(e) => setTLS(e.target.value)}
+                title="Utilizar HTTP o HTTPS"
+              >
+                <option value="http">http</option>
+                <option value="https">https</option>
+              </select>
+            </div>
             <div className="input-group server">
               <label>Servidor</label>
               <input
                 value={server}
                 onChange={(e) => setServer(e.target.value)}
+                title="Servidor donde se ejecutara el .bat"
               />
             </div>
 
             <div className="input-group puerto">
               <label>Puerto</label>
-              <input value={port} onChange={(e) => setPort(e.target.value)} />
+              <input
+                value={port}
+                onChange={(e) => setPort(e.target.value)}
+                title="Puerto de el servidor donde se ejecutara el .bat"
+              />
             </div>
           </div>
           <div className="form-row">
-            <div className="input-group">
-              <label>BAT</label>
-              <input
-                value={batName}
-                onChange={(e) => setBatName(e.target.value)}
-              />
-              <span>.bat</span>
-            </div>
-            <div className="input-group">
-              <label>ID</label>
+            <div className="input-group id">
+              <label>ConfID</label>
               <input
                 type="number"
                 value={imageId}
                 onChange={(e) => setImageId(e.target.value)}
+                title="Identificador de la imagen a compilar"
               />
+            </div>
+            <div className="input-group bat">
+              <label>BAT</label>
+              <input
+                value={batName}
+                onChange={(e) => setBatName(e.target.value)}
+                title="Nombre del .bat que se generara"
+              />
+              <span>.bat</span>
             </div>
           </div>
         </div>
@@ -237,7 +299,32 @@ export default function CompilerForm({
 
       {/* ================= PANEL DERECHO ================= */}
       <div className="compiler-console">
-        <div className="console-header">Consola</div>
+        <div className="console-header">
+          <h3>Consola</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
+            {statusWS === "disconnected" && (
+              <button className="retry-btn" onClick={retryConnection}>
+                <GrPowerReset />
+              </button>
+            )}
+
+            <p
+              className={`pill ${
+                statusWS === "connected"
+                  ? "connected"
+                  : statusWS === "connecting"
+                  ? "connecting"
+                  : "disconnected"
+              }`}
+            >
+              {statusWS === "connected"
+                ? "Conectado"
+                : statusWS === "connecting"
+                ? "Conectando..."
+                : "Desconectado"}
+            </p>
+          </div>
+        </div>
 
         <div className="console-output" ref={consoleRef}>
           {consoleLines.map((line, idx) => (

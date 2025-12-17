@@ -140,44 +140,109 @@
 
 /* ===== Panel Viewer ===== */
 
+/* Área general */
+/* Área donde debe encajar la pantalla (CUADRO ROJO) */
+/* Área donde debe encajar la pantalla */
 .screens-viewer-area {
     flex: 1;
-    position: relative;
-    border-left: 1px solid var(--border-general);
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    padding: 24px;
+    /* ✅ ESPACIADO GENERAL */
+    background: radial-gradient(circle at top, #1b1b1b, #0f0f0f);
 }
 
-/* Contenedor centrado que aplica el scaling */
-.screen-frame-wrapper {
-    position: relative;
+/* Contenedor principal */
+.screen-fit-wrapper {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    /* ✅ AHORA TIENE TOOLBAR + VIEW */
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #0c0c0c;
+    border-radius: 10px;
+    /* ✅ ESPACIADO ENTRE CONTROLES Y PANTALLA */
+}
 
-    /* Centrado perfecto */
+/* Barra de controles */
+.screen-toolbar {
+    align-items: center;
+    z-index: 9999;
+    display: flex;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Botones */
+.screen-tool-btn {
+    background: #202020;
+    border: 1px solid var(--border-general);
+
+    color: #ffffff;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+/* Primer botón */
+.screen-tool-btn:first-of-type {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+/* Último botón */
+.screen-tool-btn:last-of-type {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.screen-tool-btn:hover {
+    background: #444444;
+    color: #00e0b8;
+}
+
+/* Contenedor que define el área visible */
+.screen-fit-canvas {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    /* Para evitar overflow */
     overflow: hidden;
+    border-radius: 14px;
+    background: #0c0c0c;
+    padding: 16px;
+    /* ✅ AIRE INTERNO */
 }
 
-/* Iframe con tamaño real ATM */
+/* Contenedor que se escala */
+.screen-fit-inner {
+    width: 1024px;
+    height: 768px;
+    transform-origin: center center;
+    box-shadow: 0 0 45px rgba(0, 0, 0, 0.6);
+    /* ✅ SENSACIÓN DE MONITOR */
+}
+
+/* Iframe REAL */
 .screen-iframe {
     width: 1024px;
     height: 768px;
-
-    border-radius: 8px;
-    border: 2px solid var(--border-general);
+    border: 0;
+    display: block;
     background: var(--c-fondo);
-    transform-origin: top left;
+    border-radius: 10px;
 }
 
-.screen-frame-wrapper .screen-iframe {
-    transform: scale(var(--iframe-scale));
-}
+
+
 
 .screens-info {
     color: var(--txt-normalc);

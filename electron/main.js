@@ -178,6 +178,7 @@ ipcMain.handle("open-folder-dialog", async () => {
     return result.canceled ? null : result.filePaths[0];
 });
 
+
 /* ===========================================================
    🔥 APP READY
 =========================================================== */

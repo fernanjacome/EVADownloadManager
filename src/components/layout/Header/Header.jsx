@@ -13,12 +13,11 @@ export default function Header({
   hasXml,
   viewMode,
   setViewMode,
-  xmlDoc,
+
   snowEnabled,
   toggleSnow,
 }) {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [showXmasMessage, setShowXmasMessage] = useState(false);
 
   return (
     <header className="header-bar">

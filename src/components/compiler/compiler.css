@@ -28,6 +28,37 @@
     position: relative;
 }
 
+.input-group.server input {
+    width: 165px;
+}
+
+.input-group.id input {
+    width: 75px;
+}
+
+.input-group.id label span {
+    font-weight: 600;
+}
+
+.input-group.bat input {
+    width: 250px;
+}
+
+
+.input-group.tls {
+    gap: 0;
+}
+
+.input-group.tls select {
+    padding: 3px 8px;
+    background: var(--c-fondo);
+    border: 1px solid var(--border-general);
+    border-radius: 4px;
+    color: var(--txt-normalb);
+    outline: none;
+    height: 28px;
+}
+
 .compiler-form-group {
     padding: 5px 12px;
     display: flex;
@@ -113,12 +144,56 @@
 }
 
 .console-header {
-    padding: 11px 12px;
+
+    border-bottom: 1px solid #333;
     background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 1rem;
+}
+
+.console-header h3 {
     font-weight: bold;
     color: var(--c-principal);
-    border-bottom: 1px solid #333;
 }
+
+.console-header .pill {
+    color: white;
+    background-color: #333;
+    padding: 5px 8px;
+    font-size: 11px;
+    border-radius: 40px;
+    font-weight: 600;
+}
+
+.retry-btn {
+    color: white;
+    background-color: #333;
+    padding: 3px 4px 0px 4px;
+    font-size: 1rem;
+    border-radius: 40px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+
+
+.console-header .pill.connecting {
+    background-color: #00aac8;
+}
+
+.console-header .pill.connected {
+    background-color: #00c864;
+}
+
+.console-header .pill.disconnected {
+    background-color: #FF5858;
+}
+
+
 
 .input-group span {
     position: absolute;

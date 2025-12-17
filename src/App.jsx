@@ -98,6 +98,66 @@ export default function App() {
   }, [screensFolder]);
 
   useEffect(() => {
+    // Cargar estado guardado al iniciar la app
+    (async () => {
+      try {
+        if (window.electronAPI?.loadAppState) {
+          const res = await window.electronAPI.loadAppState();
+          if (res?.success && res.data) {
+            const s = res.data;
+            if (s.code) {
+              setCode(s.code);
+              setSavedCode(s.savedCode || "");
+              setOriginalCode(s.originalCode || "");
+              try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(s.code, "text/xml");
+                setXmlDoc(doc);
+              } catch {}
+            }
+
+            setFilePath(s.filePath || null);
+            setFileInfo(s.fileInfo || null);
+            setScreensFolderInput(
+              s.screensFolderInput || localStorage.getItem("path_screens")
+            );
+            if (s.theme) setTheme(s.theme);
+            setSplitView(!!s.splitView);
+            setActiveEditor(s.activeEditor || "left");
+            setEditorViewState(
+              s.editorViewState || { cursor: 0, scrollTop: 0 }
+            );
+            setSidebarWidth(s.sidebarWidth || 240);
+            setViewMode(s.viewMode || "code");
+            setScreensFolder(s.screensFolder || null);
+            setScreensList(s.screensList || []);
+            setSelectedScreen(s.selectedScreen || null);
+            setCompilerState(s.compilerState || compilerState);
+          } else if (!res?.success) {
+            console.warn("No se pudo cargar estado guardado:", res?.error);
+          }
+        } else {
+          // fallback si no hay electron: intentar cargar desde localStorage
+          const fallback = localStorage.getItem("app_state_fallback");
+          if (fallback) {
+            const s = JSON.parse(fallback);
+            if (s.code) {
+              setCode(s.code);
+              setSavedCode(s.savedCode || "");
+              setOriginalCode(s.originalCode || "");
+              try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(s.code, "text/xml");
+                setXmlDoc(doc);
+              } catch {}
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error cargando estado de la app:", e);
+      }
+    })();
+
     const handleMouseMove = (e) => {
       if (!isResizingRef.current) return;
 
@@ -520,6 +580,55 @@ export default function App() {
     }
   }, [snowEnabled]);
 
+  // Autosave (debounced) del estado de la app cuando cambian valores relevantes
+  useEffect(() => {
+    const scheduleSave = () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        persistStateNow();
+        saveTimeoutRef.current = null;
+      }, 1000);
+    };
+
+    scheduleSave();
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    code,
+    savedCode,
+    originalCode,
+    filePath,
+    screensFolderInput,
+    theme,
+    splitView,
+    activeEditor,
+    JSON.stringify(editorViewState),
+    sidebarWidth,
+    viewMode,
+    screensFolder,
+    JSON.stringify(screensList),
+    selectedScreen,
+    JSON.stringify(compilerState),
+  ]);
+
+  // Guardar inmediatamente al cerrar la ventana
+  useEffect(() => {
+    const handler = () => {
+      try {
+        persistStateNow();
+      } catch {}
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
   return (
     <div className="app">
       <TitleBar
@@ -681,6 +790,7 @@ export default function App() {
                 onLoadClick={handleOpenFile}
                 onNewClick={handleNewXml}
                 snowEnabled={snowEnabled}
+                toggleSnow={toggleSnow}
               />
             )}
           </div>
