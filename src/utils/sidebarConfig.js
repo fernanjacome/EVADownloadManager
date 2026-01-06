@@ -37,3 +37,13 @@ export const sidebarConfig = {
         idAttr: "RetCode",
     },
 };
+
+export const groupOrder = [
+    "General",
+    "States",
+    "Screens",
+    "Fits",
+    "Transactions",
+    "TranMaps",
+    "Errors",
+];

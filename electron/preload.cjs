@@ -3,11 +3,15 @@ const { contextBridge, ipcRenderer } = require("electron");
 console.log("✅ Preload cargado (CommonJS)");
 
 contextBridge.exposeInMainWorld("electronAPI", {
+    getMainPid: () => ipcRenderer.invoke("get-main-pid"),
     windowControl: (action) => ipcRenderer.send("window-control", action),
     openNewWindow: () => ipcRenderer.send("open-new-window"),
     setWindowTitle: (title) => ipcRenderer.send("set-window-title", title),
     getFileInfo: (path) => ipcRenderer.invoke("get-file-info", path),
-
+    clearAppCache: () => ipcRenderer.invoke("clear-app-cache"),
+    clearApp: () => ipcRenderer.invoke("clear-app"),
+    showSaveDialog: (options) =>
+        ipcRenderer.invoke("show-save-dialog", options),
     getDroppedFilePath: (file) => ipcRenderer.invoke("get-dropped-file-path", file),
     openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
     readFile: (path) => ipcRenderer.invoke("read-file", path),
@@ -18,5 +22,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     startStaticServer: (folder) => ipcRenderer.invoke("start-static-server", folder),
     clearStaticServerCache: () => ipcRenderer.invoke("clear-static-cache"),
+
+    saveAppState: (state) =>
+        ipcRenderer.invoke("save-app-state", state),
+
+    loadAppState: () =>
+        ipcRenderer.invoke("load-app-state"),
+
+
 
 });

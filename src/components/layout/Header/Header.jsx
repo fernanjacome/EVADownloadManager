@@ -1,48 +1,37 @@
 import React, { useState } from "react";
-import { FaUpload, FaTrash } from "react-icons/fa";
+import { FaUpload, FaTrash, FaLink } from "react-icons/fa";
 import "./Header.css";
 import ConfirmModal from "../../utils/ConfirmModal";
 import { MdScreenshotMonitor } from "react-icons/md";
 import { IoBuild, IoCodeSlash } from "react-icons/io5";
-import { FaRegSnowflake } from "react-icons/fa6";
 
 export default function Header({
   fileInfo,
+  filePath,
   onLoadClick,
   onDeleteXml,
   hasXml,
   viewMode,
   setViewMode,
-
-  snowEnabled,
-  toggleSnow,
 }) {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-
+  console.log(fileInfo);
   return (
     <header className="header-bar">
       <div className="header-title">
         <div className="header-title-group">
-          <FaRegSnowflake
+          {/* <FaRegSnowflake
             className={`xmas-icon ${snowEnabled ? "active" : ""}`}
             title="Feliz navidad 2025"
             onClick={toggleSnow}
-          />
+          /> */}
 
-          <h2 className="header-title-text">EVA Download Manager</h2>
+          <h2 className="header-title-text">EVA Studio 2026</h2>
         </div>
         {fileInfo ? (
           <div className="header-file-info">
             <span>
-              <strong>Archivo:</strong> {fileInfo.name}
-            </span>{" "}
-            |{" "}
-            <span>
-              <strong>Tamaño:</strong> {fileInfo.size}
-            </span>{" "}
-            |{" "}
-            <span>
-              <strong>Última modificación:</strong> {fileInfo.lastModified}
+              <strong>Archivo:</strong> {filePath}
             </span>
           </div>
         ) : (
@@ -83,6 +72,15 @@ export default function Header({
             onClick={() => setViewMode("compiler")}
           >
             <IoBuild /> Compilador
+          </button>
+          <button
+            className={`mode-btn remote ${
+              viewMode === "remote" ? "active" : ""
+            }`}
+            onClick={() => setViewMode("remote")}
+          >
+            <FaLink />
+            Remoto
           </button>
         </div>
 

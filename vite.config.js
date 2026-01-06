@@ -6,5 +6,9 @@ export default defineConfig({
   base: "./",
   build: {
     outDir: "dist",
+    target: "esnext",
+  },
+  optimizeDeps: {
+    exclude: ["@novnc/novnc"],
   },
 });

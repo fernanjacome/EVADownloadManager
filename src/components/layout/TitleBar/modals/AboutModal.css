@@ -15,13 +15,13 @@
 
 /* Caja del modal */
 .about-modal {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
+  background: var(--c-fondo);
+  border: 1px solid var(--border-general);
   border-radius: 10px;
   padding: 1.5rem;
   width: 420px;
   max-width: 92%;
-  color: #e4e4e4;
+  color: var(--txt-normal);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   animation: slideUp 0.25s ease;
   font-size: 13px;
@@ -33,7 +33,7 @@
   font-size: 15px;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #ffffff;
+  color: var(--txt-normal);
 }
 
 /* Listas */
@@ -47,11 +47,11 @@
 }
 
 .about-modal strong {
-  color: #f5f5f5;
+  color: var(--txt-normal);
 }
 
 .about-modal code {
-  background: #2a2a2a;
+  background: var(--c-fondo-code);
   padding: 2px 4px;
   border-radius: 4px;
   font-size: 12px;
@@ -143,7 +143,7 @@
 .about-header h2 {
   font-size: 16px;
   font-weight: bold;
-  color: var(--txt-normald);
+  color: var(--txt-normal);
   margin: 0;
 }
 

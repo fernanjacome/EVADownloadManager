@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./TitleBar.css";
-import expand from "../../../assets/expand.png";
-import minus from "../../../assets/minus.png";
-import equis from "../../../assets/equis.png";
 import AboutModal from "./modals/AboutModal";
 import FormatModal from "./modals/FormatModal";
 import TipsModal from "./modals/TipsModal";
@@ -16,6 +13,8 @@ import { FaWindowMinimize } from "react-icons/fa6";
 import { FaMoon, FaRegWindowRestore, FaSun } from "react-icons/fa";
 import ScreensInfoModal from "./modals/ScreensInfoModal";
 import CompilerInfoModal from "./modals/CompileInfoModal";
+import { TbReload } from "react-icons/tb";
+import { GiLargePaintBrush } from "react-icons/gi";
 
 export default function TitleBar({
   fileName,
@@ -23,6 +22,7 @@ export default function TitleBar({
   setTheme,
   snowEnabled,
   toggleSnow,
+  onResetApp,
 }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [showModal, setShowModal] = useState(null); // 👈 ahora null | "about" | "format" | "validations" | "tips"
@@ -59,7 +59,7 @@ export default function TitleBar({
         {/* Logo + menú */}
         <div className="title-left">
           <img src="favicon.ico" alt="logo" className="title-logo" />
-          <div className="menu-bar">
+          <div className="menu-bar" ref={menuRef}>
             <div className="menu-item" onClick={() => toggleMenu("file")}>
               Archivo
               {activeMenu === "file" && (
@@ -76,6 +76,26 @@ export default function TitleBar({
                   >
                     {theme === "dark" ? <FaSun /> : <FaMoon />}{" "}
                     {theme === "dark" ? "Modo Claro" : "Modo Oscuro"}{" "}
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={async () => {
+                      await window.electronAPI.clearAppCache();
+                    }}
+                  >
+                    <TbReload />
+                    Recargar ventana
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={async () => {
+                      setActiveMenu(null);
+                      await onResetApp();
+                      //await window.electronAPI.clearApp();
+                    }}
+                  >
+                    <GiLargePaintBrush />
+                    Restablecer
                   </div>
                 </div>
               )}
@@ -175,9 +195,7 @@ export default function TitleBar({
 
         {/* 🔹 Título del archivo al centro */}
         <div className="title-center">
-          {fileName
-            ? `${fileName} - EVA Download Manager`
-            : "EVA Download Manager"}
+          {fileName ? `${fileName} - EVA Studio 2026` : "EVA Studio 2026"}
         </div>
 
         {/* Botones de control */}

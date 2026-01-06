@@ -1,9 +1,25 @@
-# EVA Download Manager
+# EVA Studio 2026
 
-Versión: 1.0.5
-Última actualización: 9 de diciembre de 2025
+Versión: 1.1.0
+Última actualización: 29 de diciembre de 2025
 
 ---
+
+## Actualizaciones v1.1.0 [EVA Studio 2026]
+
+- Cambio de nombre EVA Download Manager -> EVA Studio 2026
+  - Se agrego persistencia de estado de sesion mediante archivo en appdata.
+  - Compilador ahora responde mediante WebSocket para respuesta de la consola en timepo real.
+  - Nueva imagen de icono.
+  - Nuevo Modulo Remoto, utilizando la tecnologia VNC y el cliente noVNC para el frontend. El backend se encarga de levantar un websocket conectado al VNC Server.
+  - Se quito el modo de arrastrar archivos XML (Causaba bugs, en un futuro se podria reintegrar).
+  - Se agrego al menu "Archivo" boton de Recargar ventana -> Se encarga de hacer un recarga completa, borrando el cache.
+  - Se agrego al menu "Archivo" boton de Restablecer -> Restablece todos los estados a su valor por defecto y borra el cache.
+  - Se quito Easter Egg de navidad.
+    [PENDIENTE]
+  - Agregar pantalla completa para el Remote.
+  - Agregar uso de teclado optimizado (mientras el Remote Viewer tenga el foco, las teclas solo se transmitiran al viewer, no al host).
+  - Agregar sistema de traslado de archivos (Solo Pages?)
 
 ## Actualizaciones v1.0.5
 
@@ -56,7 +72,7 @@ Versión: 1.0.5
 
 ## Descripción General
 
-EVA Download Manager es una aplicación para gestionar archivos XML de configuración para cajeros integrados con EVA. Permite importar, editar, validar y organizar archivos XML con una interfaz moderna y funcionalidades avanzadas.
+EVA Studio 2026 es una aplicación para gestionar archivos XML de configuración para cajeros integrados con EVA. Permite importar, editar, validar y organizar archivos XML con una interfaz moderna y funcionalidades avanzadas.
 
 ---
 

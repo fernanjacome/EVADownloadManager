@@ -109,7 +109,6 @@
 .button-row {
     display: flex;
     gap: 10px;
-    margin-top: auto;
     justify-content: end;
     padding: 10px 12px;
 }
@@ -120,8 +119,11 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    height: 36px;
-    padding: 0 16px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 4px 12px;
 }
 
 .compile-btn:disabled {
@@ -135,8 +137,8 @@
 
 /* ================= PANEL DERECHO ================= */
 .compiler-console {
-    background: #0a0a0a;
-    border: 1px solid #333;
+    background: var(--c-fondo-code);
+    border-left: 1px solid var(--border-general);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -145,8 +147,8 @@
 
 .console-header {
 
-    border-bottom: 1px solid #333;
-    background: #141414;
+    border-bottom: 1px solid var(--border-general);
+    background: var(--c-fondo-code);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -165,20 +167,48 @@
     font-size: 11px;
     border-radius: 40px;
     font-weight: 600;
+    min-width: 95px;
+    text-align: center;
 }
 
-.retry-btn {
-    color: white;
-    background-color: #333;
-    padding: 3px 4px 0px 4px;
-    font-size: 1rem;
-    border-radius: 40px;
-    border: none;
-    font-weight: 600;
+
+.play-btn,
+.stop-btn,
+.wait {
+    height: 25px;
+    width: 25px;
+    padding: 0 4px;
+    font-size: 15px;
+    background: var(--c-fondo-btn);
+    border: 1px solid var(--border-general);
+    border-radius: 6px;
     cursor: pointer;
-    transition: 0.2s;
+    color: var(--txt-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
 }
 
+.stop-btn {
+    background: #393939;
+    border: 1px solid #515151;
+    color: #adadad;
+}
+
+.wait {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.play-btn {
+    background: var(--c-principal);
+    border-color: var(--c-principal);
+    color: white;
+}
+
+.stop-btn {}
 
 
 .console-header .pill.connecting {
@@ -218,15 +248,15 @@
 
 /* Colores por tipo */
 .console-line.info {
-    color: #4da3ff;
+    color: #2467af;
 }
 
 .console-line.output {
-    color: #7CFC00;
+    color: #5dbb00;
 }
 
 .console-line.error {
-    color: #ff5555;
+    color: #d62e2e;
     font-weight: bold;
 }
 
@@ -252,24 +282,59 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
-.compiler-console::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.04),
-            transparent);
-    animation: shine 6s linear infinite;
-    pointer-events: none;
+
+
+.img-list {
+    border: 1px solid var(--border-general);
+    max-height: 500px;
+    margin: -0.2rem 0 0 -0.4rem;
+    overflow-y: auto;
 }
 
-@keyframes shine {
-    from {
-        transform: translateX(-100%);
-    }
+.img-item {
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-general);
+    display: flex;
+    gap: 0.6rem;
+}
 
-    to {
-        transform: translateX(100%);
-    }
+.img-item.header {
+    justify-content: space-around;
+}
+
+
+.img-item.header .img-desc {
+    font-weight: bold;
+}
+
+
+.img-item:last-child {
+    border-bottom: none;
+}
+
+
+.img-item:hover {
+    background: var(--c-fondo-btn);
+}
+
+
+
+.img-id {
+    font-weight: bold;
+    color: var(--c-principal);
+    min-width: 55px;
+    font-size: 0.8rem;
+}
+
+.img-desc {
+    flex: 1;
+    font-size: 0.8rem;
+
+}
+
+.img-loading,
+.img-empty {
+    padding: 0.8rem;
+    color: var(--txt-normalf);
 }

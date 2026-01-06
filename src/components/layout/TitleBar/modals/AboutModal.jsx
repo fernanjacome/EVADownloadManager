@@ -20,16 +20,17 @@ export default function AboutModal({
 
         <div className="about-body">
           <p>
-            <strong>EVA Download Manager</strong> es una aplicación diseñada
-            para gestionar y organizar <em>downloads</em> específicamente
-            construidos para integrarse con <strong>EVA</strong>.
+            <strong>EVA Studio 2026</strong> es una aplicación diseñada para
+            gestionar y organizar <em>downloads</em> específicamente construidos
+            para integrarse con <strong>EVA</strong>. Integra modulos como
+            <strong> Pantallas</strong>, <strong>Compilador</strong> y{" "}
+            <strong>Remoto</strong> para facilitar el desarrollo en el
+            ecosistema EVA.
           </p>
         </div>
 
         <div className="about-footer">
-          <p className="about-version">
-            Versión <span onClick={toggleSnow}>Navideña</span> 1.0.5
-          </p>
+          <p className="about-version">Versión 1.1.0</p>
           <p className="about-signature">Extreme Visual Appliance</p>
         </div>
 

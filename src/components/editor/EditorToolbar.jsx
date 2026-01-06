@@ -1,21 +1,10 @@
 import React, { useState } from "react";
-import {
-  FaSave,
-  FaUndo,
-  FaAlignLeft,
-  FaCog,
-  FaRegCommentDots,
-  FaRegComment,
-} from "react-icons/fa";
+import { FaSave, FaUndo, FaAlignLeft, FaCog } from "react-icons/fa";
 import "./EditorToolbar.css";
 import GeneralConfigPanel from "./GeneralConfigPanel";
 import ConfirmModal from "../utils/ConfirmModal";
 import { BsLayoutSplit } from "react-icons/bs";
 import ToolbarButton from "./ToolbarButton";
-import {
-  MdOutlineCommentsDisabled,
-  MdOutlineInsertComment,
-} from "react-icons/md";
 
 export default function EditorToolbar({
   viewMode,
@@ -28,13 +17,9 @@ export default function EditorToolbar({
   xmlDoc,
   setXmlDoc,
   setCode,
-  markDirty,
   setNotification,
   setSplitView,
   splitView,
-  theme,
-  setTheme,
-  toggleComment,
 }) {
   const [openPanel, setOpenPanel] = useState(false);
   const [showConfirmRestore, setShowConfirmRestore] = useState(false);

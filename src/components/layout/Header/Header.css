@@ -47,7 +47,6 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  cursor: pointer;
 }
 
 .header-btn {
@@ -67,7 +66,8 @@
 
 .header-btn:hover:not(:disabled) {
   background: var(--c-principal);
-  color: var(--txt-normald);
+  color: white;
+  border: 1px solid white;
 }
 
 .header-btn:disabled {
@@ -130,11 +130,16 @@
   border: none;
   color: var(--txt-normal);
   cursor: pointer;
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
 }
+
+
 
 .mode-btn.active {
   background: var(--c-principal);
-  color: #000;
+  color: white;
 }
 
 /* 🎄 Header con luces navideñas cuando la nieve está activa */

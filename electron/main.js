@@ -6,9 +6,10 @@ import express from "express";
 
 let staticServer = null;
 let staticPort = 0;
-
+const APP_STATE_FILE = path.join(app.getPath("userData"), "app-state.json");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+app.commandLine.appendSwitch("ignore-certificate-errors");
 
 /* ===========================================================
    🔥 PUERTO DINÁMICO PARA EVITAR BLOQUEOS
@@ -147,6 +148,10 @@ ipcMain.handle("get-dropped-file-path", async (_, file) => {
     return null;
 });
 
+ipcMain.handle("get-main-pid", () => {
+    return process.pid;
+});
+
 ipcMain.handle("open-file-dialog", async () => {
     const result = await dialog.showOpenDialog({
         properties: ["openFile"],
@@ -176,6 +181,88 @@ ipcMain.handle("open-folder-dialog", async () => {
     });
 
     return result.canceled ? null : result.filePaths[0];
+});
+
+ipcMain.handle("save-app-state", async (_event, state) => {
+    try {
+        fs.writeFileSync(
+            APP_STATE_FILE,
+            JSON.stringify(state, null, 2),
+            "utf-8"
+        );
+        console.log(JSON.stringify(state, null, 2))
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+ipcMain.handle("load-app-state", async () => {
+    try {
+        if (!fs.existsSync(APP_STATE_FILE)) {
+            return { success: true, data: null };
+        }
+
+        const raw = fs.readFileSync(APP_STATE_FILE, "utf-8");
+        const data = JSON.parse(raw);
+        console.log(data);
+        return { success: true, data };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+
+ipcMain.handle("clear-app-cache", async () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (!win) return;
+
+    const ses = win.webContents.session;
+
+    // 🧹 1. Cache Chromium
+    await ses.clearCache();
+
+    // 🧹 2. Storage web
+    // await ses.clearStorageData({
+    //     storages: [
+    //         "localstorage",
+    //         "sessionstorage",
+    //         "indexdb",
+    //         "cachestorage",
+    //         "serviceworkers",
+    //         "websql",
+    //     ],
+    // });
+
+    // 🔄 3. Reload fuerte
+    win.webContents.reloadIgnoringCache();
+});
+
+ipcMain.handle("clear-app", async () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (!win) return;
+
+    const ses = win.webContents.session;
+
+    // 🧹 1. Cache Chromium
+    await ses.clearCache();
+
+    //🧹 2. Storage web
+    await ses.clearStorageData({
+        storages: [
+            "localstorage",
+            "sessionstorage",
+            "indexdb",
+            "cachestorage",
+            "serviceworkers",
+            "websql",
+        ],
+    });
+
+    // 🔄 3. Reload fuerte
+    win.webContents.reloadIgnoringCache();
+});
+ipcMain.handle("show-save-dialog", async (_, options) => {
+    const { canceled, filePath } = await dialog.showSaveDialog(options);
+    return canceled ? null : filePath;
 });
 
 

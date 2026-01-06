@@ -30,8 +30,9 @@
 
 .empty-state h2 {
   margin: 0;
+
   font-size: 18px;
-  color: var(--txt-normab);
+  color: var(--txt-norma);
   user-select: none;
 }
 
@@ -67,23 +68,11 @@
   background: #444;
 }
 
-.drop-zone {
-  border: 2px dashed var(--border-general);
-  transition: all 0.2s ease;
+
+
+.empty-hint {
+
   user-select: none;
-}
-
-.drop-zone.dragging {
-  border: 2px dashed #05916e;
-  background: #05916e1c;
-}
-
-.drag-hint {
-  display: block;
-  margin-top: 6px;
-  font-weight: 600;
-  color: #05916e;
-  animation: pulse 1s infinite alternate;
 }
 
 @keyframes pulse {

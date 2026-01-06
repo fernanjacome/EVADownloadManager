@@ -1,6 +1,6 @@
 // Sidebar.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { sidebarConfig } from "../../../utils/sidebarConfig";
+import { groupOrder, sidebarConfig } from "../../../utils/sidebarConfig";
 import "./Sidebar.css";
 import {
   FaCogs,
@@ -13,16 +13,6 @@ import {
   FaSearch,
 } from "react-icons/fa";
 
-const groupOrder = [
-  "General",
-  "States",
-  "Screens",
-  "Fits",
-  "Transactions",
-  "TranMaps",
-  "Errors",
-];
-
 const groupIcons = {
   General: <FaCogs />,
   States: <FaProjectDiagram />,
@@ -33,15 +23,21 @@ const groupIcons = {
   Errors: <FaExclamationTriangle />,
 };
 
-export default function Sidebar({ xmlDoc, onSelect, style }) {
-  const [collapsed, setCollapsed] = useState(
-    Object.fromEntries(groupOrder.map((g) => [g, true]))
-  );
+export default function Sidebar({
+  xmlDoc,
+  onSelect,
+  style,
+  setCollapsed,
+  collapsed,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef(null);
 
   const toggleGroup = (group) => {
-    setCollapsed((prev) => ({ ...prev, [group]: !prev[group] }));
+    setCollapsed((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }));
   };
 
   useEffect(() => {
@@ -62,8 +58,9 @@ export default function Sidebar({ xmlDoc, onSelect, style }) {
     setCollapsed((prev) => {
       const newState = { ...prev };
       if (!searchTerm) {
-        groupOrder.forEach((g) => (newState[g] = true));
-        return newState;
+        // groupOrder.forEach((g) => (newState[g] = true));
+        // return newState;
+        return prev;
       }
       const term = searchTerm.toLowerCase();
       groupOrder.forEach((group) => {

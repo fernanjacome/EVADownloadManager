@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./compiler.css";
 import { PiPaintBrushHouseholdBold } from "react-icons/pi";
-import { FaGear } from "react-icons/fa6";
+import { FaBug, FaGear, FaLink, FaList, FaPlay } from "react-icons/fa6";
 import { GrPowerReset } from "react-icons/gr";
+import { MdCancel } from "react-icons/md";
+import Spinner from "../utils/Spinner";
 
 export default function CompilerForm({
   xmlCode,
   notify,
+  hasXml,
   xmlName,
   title,
   dirty,
@@ -19,6 +22,7 @@ export default function CompilerForm({
   // -----------------------------
   const loadCfg = (key, def) =>
     localStorage.getItem(key) !== null ? localStorage.getItem(key) : def;
+  const [autoConnect, setAutoConnect] = useState(false);
 
   const saveCfg = (key, value) => localStorage.setItem(key, value);
 
@@ -27,10 +31,22 @@ export default function CompilerForm({
   );
   const [port, setPort] = useState(loadCfg("compiler_port", "5007"));
   const [tls, setTLS] = useState(loadCfg("compiler_tls", "https"));
-  const [statusWS, setStatusWS] = useState("connecting");
+  const [statusWS, setStatusWS] = useState("disconnected");
+  const [imagenes, setImagenes] = useState([]);
+  const [loadingImagenes, setLoadingImagenes] = useState(false);
 
-  const retryTimerRef = useRef(null);
   const wsRef = useRef(null);
+  const normalizeBatName = (name) => {
+    if (!name) return "";
+    return name.trim().replace(/\s+/g, "_");
+  };
+
+  const extractImageName = (desc) => {
+    if (!desc) return "";
+
+    // Quita: "EMV:Imagen <numero> "
+    return desc.replace(/^.*?Imagen\s+\d+\s+/i, "").trim();
+  };
 
   const connectWS = () => {
     if (wsRef.current) {
@@ -42,89 +58,72 @@ export default function CompilerForm({
     const wsUrl = `${protocol}://${server}:${port}/ws`;
 
     setStatusWS("connecting");
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-    ws.onopen = () => {
-      ws.send("FRONTEND_COMPILER");
-      setStatusWS("connected");
-    };
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+      ws.onopen = () => {
+        ws.send("FRONTEND_COMPILER");
+        setStatusWS("connected");
+      };
 
-    ws.onmessage = (msg) => {
-      let data;
+      ws.onmessage = (msg) => {
+        console.log("WS RAW:", msg.data);
 
-      try {
-        data = JSON.parse(msg.data);
-      } catch {
-        log("output", msg.data);
-        return;
-      }
+        let data;
+        try {
+          data = JSON.parse(msg.data);
+        } catch {
+          log("output", msg.data);
+          return;
+        }
 
-      const type = data.Type || data.type || "output";
-      const text = data.Payload?.text || data.payload?.text || "";
+        log("output", JSON.stringify(data.Payload.text));
+      };
 
-      if (!text.trim()) return;
+      // ws.onerror = (e) => {
+      //   setStatusWS("disconnected");
+      //   log("error", e);
+      //   console.log(e);
+      // };
 
-      log(type.toLowerCase(), text);
-    };
-
-    // ws.onerror = () => {
-    //   setStatusWS("disconnected");
-    //   log("error", "[WebSocket error]");
-    // };
-
-    ws.onclose = () => {
-      setStatusWS("disconnected");
-      log("error", "[WebSocket cerrado]");
-    };
+      ws.onclose = () => {
+        setStatusWS("disconnected");
+        log("", "[WebSocket cerrado]");
+      };
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
-    connectWS();
-
     return () => {
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-      if (wsRef.current) wsRef.current.close();
+      wsRef.current?.close();
+      wsRef.current = null;
     };
-  }, [server, port, tls]);
-
-  const retryConnection = () => {
-    if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current);
-    }
-
-    connectWS();
-  };
-
+  }, []);
   useEffect(() => saveCfg("compiler_server", server), [server]);
   useEffect(() => saveCfg("compiler_port", port), [port]);
   useEffect(() => saveCfg("compiler_tls", tls), [tls]);
-
   const baseUrl = `${tls}://${server}:${port}`;
   useEffect(() => {
     setBatName(title);
     setImageName(title);
   }, [title]);
-
   const {
     batName = xmlName,
     imageName = xmlName,
     imageId = "",
     consoleLines = [],
   } = compilerState || {};
-
   const setBatName = (v) => setCompilerState((s) => ({ ...s, batName: v }));
-
   const setImageName = (v) => setCompilerState((s) => ({ ...s, imageName: v }));
-
   const setImageId = (v) => setCompilerState((s) => ({ ...s, imageId: v }));
-
   const setConsoleLines = (updater) =>
     setCompilerState((s) => ({
       ...s,
       consoleLines:
         typeof updater === "function" ? updater(s.consoleLines || []) : updater,
     }));
-
   // -----------------------------
   // Control de ejecución
   // -----------------------------
@@ -132,24 +131,49 @@ export default function CompilerForm({
   const [abortCtrl, setAbortCtrl] = useState(null);
   const consoleRef = useRef(null);
   const ts = () => new Date().toLocaleTimeString();
-
   const log = (type, msg) => {
     const line = `${ts()} - ${msg}`;
     setConsoleLines((prev) => [...prev, { type, msg: line }]);
   };
-
   const clearConsole = () => setConsoleLines([]);
-
   useEffect(() => {
     if (consoleRef.current) {
       consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
     }
   }, [consoleLines]);
+  const getImagenes = async () => {
+    try {
+      setLoadingImagenes(true);
+
+      const resp = await fetch(`${baseUrl}/api/eva-image/configs`);
+      if (!resp.ok) throw new Error("Error cargando imágenes");
+
+      const data = await resp.json();
+      setImagenes(data);
+    } catch (e) {
+      notify("error", "No se pudo cargar la lista de imágenes");
+      setImagenes("");
+      console.error(e);
+    } finally {
+      setLoadingImagenes(false);
+    }
+  };
 
   // -----------------------------
   // 🔥 COMPILACIÓN
   // -----------------------------
   const handleCompile = async () => {
+    if (!hasXml) {
+      notify(
+        "warning",
+        "Debes cargar un archivo XML en el editor antes de compilar."
+      );
+      return;
+    }
+    if (!xmlCode || !xmlCode.trim()) {
+      notify("error", "El contenido XML está vacío o no es válido.");
+      return;
+    }
     if (!batName || !imageName || !imageId) {
       notify("error", "Completa todos los campos.");
       return;
@@ -173,30 +197,26 @@ export default function CompilerForm({
     log("info", "Enviando petición al servidor...");
 
     try {
-      const body = {
-        BatName: batName,
-        ImageName: imageName,
-        ImageId: imageId,
-        XmlContent: xmlCode,
-      };
+      const finalBatName = normalizeBatName(batName);
 
       const resp = await fetch(`${baseUrl}/api/compiler/build`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          BatName: finalBatName,
+          ImageName: finalBatName,
+          ImageId: Number(imageId),
+          XmlContent: xmlCode,
+        }),
         signal: controller.signal,
       });
 
       log("info", `HTTP Status = ${resp.status}`);
 
       if (!resp.ok) {
-        const err = await resp.text();
-        log("error", err);
-        notify("error", err);
+        log("error", "Hubo un error al intentar conectarse al servidor.");
+        notify("error", "Hubo un error al intentar conectarse al servidor.");
       }
-
-      // ✅ YA NO SE LEE output NI error AQUÍ
-      // TODO se recibe por WebSocket
     } catch (err) {
       if (err.name === "AbortError") {
         log("error", "Proceso abortado.");
@@ -217,6 +237,50 @@ export default function CompilerForm({
     setLoading(false);
     setAbortCtrl(null);
   };
+
+  function ImagenList({ items, onSelect, selectedId, loading }) {
+    if (loading) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            width: "100%",
+            flexDirection: "column",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <div className="img-loading">Cargando imágenes...</div>
+          <Spinner />
+        </div>
+      );
+    }
+
+    if (!items.length) {
+      return <div className="img-empty">No hay imágenes disponibles</div>;
+    }
+
+    return (
+      <div className="img-list">
+        <div className={`img-item header`}>
+          <div className="img-id">Id</div>
+          <div className="img-desc"> Descripción</div>
+        </div>
+        {items.map((img) => (
+          <div
+            key={img.atmConfID}
+            className={`img-item ${
+              selectedId === img.atmConfID ? "selected" : ""
+            }`}
+            onClick={() => onSelect(img)}
+          >
+            <div className="img-id">#{img.atmConfID}</div>
+            <div className="img-desc">{img.confDescription}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="compiler-layout">
@@ -271,15 +335,23 @@ export default function CompilerForm({
               <label>BAT</label>
               <input
                 value={batName}
-                onChange={(e) => setBatName(e.target.value)}
+                onChange={(e) => setBatName(normalizeBatName(e.target.value))}
                 title="Nombre del .bat que se generara"
               />
               <span>.bat</span>
             </div>
           </div>
         </div>
-
         <div className="button-row">
+          <button
+            className={"compile-btn"}
+            onClick={() => {
+              getImagenes();
+            }}
+          >
+            <FaList />
+            Listar imagenes
+          </button>
           <button
             className="compile-btn cancel-btn"
             onClick={handleCancel}
@@ -290,23 +362,80 @@ export default function CompilerForm({
           <button
             className="compile-btn"
             onClick={handleCompile}
-            disabled={loading}
+            disabled={loading || !hasXml}
+            title={
+              !hasXml
+                ? "Carga un XML en el editor para poder compilar"
+                : "Iniciar compilación"
+            }
           >
+            <FaPlay />
             {loading ? "Compilando..." : "Compilar"}
           </button>
         </div>
+        <ImagenList
+          items={imagenes}
+          loading={loadingImagenes}
+          selectedId={imageId}
+          onSelect={(img) => {
+            const cleanName = extractImageName(img.confDescription);
+            const batSafeName = normalizeBatName(cleanName);
+
+            setBatName(batSafeName);
+            setImageName(batSafeName);
+            setImageId(img.atmConfID);
+
+            log("info", `Imagen seleccionada: ${batSafeName}`);
+          }}
+        />
       </div>
 
       {/* ================= PANEL DERECHO ================= */}
       <div className="compiler-console">
         <div className="console-header">
           <h3>Consola</h3>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
-            {statusWS === "disconnected" && (
-              <button className="retry-btn" onClick={retryConnection}>
-                <GrPowerReset />
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            {statusWS === "connecting" && (
+              <button
+                className="stop-btn"
+                title="Cancelar conexión"
+                onClick={() => {
+                  wsRef.current?.close();
+                  wsRef.current = null;
+                  setStatusWS("disconnected");
+                  log("", "Conexión WebSocket cancelada.");
+                }}
+              >
+                <MdCancel />
               </button>
             )}
+            <button
+              className={
+                statusWS === "connected"
+                  ? "stop-btn"
+                  : statusWS === "disconnected"
+                  ? "play-btn"
+                  : "wait"
+              }
+              title={
+                statusWS === "connected"
+                  ? "Desconectar WebSocket"
+                  : "Conectar WebSocket"
+              }
+              onClick={() => {
+                if (statusWS === "connected" || statusWS === "connecting") {
+                  wsRef.current?.close();
+                  wsRef.current = null;
+                  setStatusWS("disconnected");
+                  log("info", "WebSocket desconectado manualmente.");
+                } else {
+                  connectWS();
+                }
+              }}
+            >
+              {statusWS === "connected" ? <MdCancel /> : <FaLink />}
+            </button>
 
             <p
               className={`pill ${

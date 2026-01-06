@@ -69,6 +69,11 @@
     transition: border-color 0.15s;
 }
 
+.folder-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .folder-input:focus {
     outline: none;
     border-color: var(--c-principal);
@@ -151,7 +156,7 @@
     overflow: hidden;
     padding: 24px;
     /* ✅ ESPACIADO GENERAL */
-    background: radial-gradient(circle at top, #1b1b1b, #0f0f0f);
+    background-color: var(--c-fondo);
 }
 
 /* Contenedor principal */
@@ -164,7 +169,7 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    background: #0c0c0c;
+    background-color: var(--c-fondo);
     border-radius: 10px;
     /* ✅ ESPACIADO ENTRE CONTROLES Y PANTALLA */
 }
@@ -245,7 +250,43 @@
 
 
 .screens-info {
-    color: var(--txt-normalc);
+    color: var(--txt-normal);
     font-size: 14px;
     opacity: 0.8;
+}
+
+.screens-recent-dropdown {
+    position: absolute;
+    top: 6%;
+    left: 0%;
+    color: var(--txt-normal);
+    background: var(--c-fondo);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    z-index: 50;
+    overflow: hidden;
+    user-select: none;
+}
+
+.dropdown-title {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: var(--txt-normal);
+    transition: background 0.15s ease;
+}
+
+.dropdown-item:hover {
+    background: rgba(45, 212, 191, 0.15);
+}
+
+.dropdown-item.active {
+    background: rgba(45, 212, 191, 0.25);
 }

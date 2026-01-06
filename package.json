@@ -1,6 +1,6 @@
 {
   "name": "eva-download-manager",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Gestor de Downloads XML para EVA",
   "author": "Fernando Jácome",
   "license": "MIT",
@@ -15,7 +15,7 @@
   },
   "build": {
     "appId": "com.eva.downloadmanager",
-    "productName": "EVA Download Manager",
+    "productName": "EVA Studio 2026",
     "files": [
       "dist/**",
       "electron/**"
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@codemirror/lang-xml": "^6.1.0",
+    "@novnc/novnc": "^1.6.0",
     "@uiw/codemirror-theme-eclipse": "^4.25.2",
     "@uiw/react-codemirror": "^4.25.2",
     "express": "^5.2.1",

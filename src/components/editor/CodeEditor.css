@@ -6,8 +6,10 @@
   min-width: 0;
   min-height: 0;
   overflow: auto;
+  max-height: 87dvh;
   /* el wrapper oculta */
 }
+
 
 .editor-container .cm-editor {
   flex: 1;
@@ -79,6 +81,7 @@
   height: 100%;
   min-width: 0;
   min-height: 0;
+  max-height: 87px;
 }
 
 .editor-wrapper.full {
@@ -86,7 +89,13 @@
   max-height: 1080px;
 }
 
-.editor-wrapper.split {
+.editor-div {
+  max-height: 87vh;
+}
+
+.editor-div.split {
+  display: flex;
+  flex: 1;
   flex-direction: row;
   gap: 10px;
 }
@@ -163,4 +172,14 @@
 
 .cm-activeLineGutter {
   background-color: var(--c-fondo-code) !important;
+}
+
+@media (max-width: 1366px) and (max-height: 768px) {
+  .editor-div.split {
+    max-height: 81vh;
+  }
+
+  .editor-container {
+    max-height: 600px;
+  }
 }

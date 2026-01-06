@@ -10,6 +10,7 @@
   --c-fondo: #121212;
   --c-fondo-code: #202020;
   --c-fondo-secundario: #1e1e1e;
+  --c-fondo-opacity: #12121291;
   --c-fondo-btn: #2a2a2a;
   --txt-code: #e0e0e0;
   --txt-normal: #aaa;
@@ -22,6 +23,7 @@
   --border-sidebar: 1px solid #1e1e1e;
   --hover-general: #313131;
   --iframe-scale: 1;
+  --color-pill: #c9fff1;
 
 }
 
@@ -86,6 +88,7 @@ body.light-theme {
   --button-sidebar-bg: #ffffff;
   --border-sidebar: 1px solid #999;
   --hover-general: #dfdfdf;
+  --color-pill: #ffffff;
 }
 
 body.light-theme .app {
@@ -307,5 +310,55 @@ body.light-theme .toolbar-btn {
   100% {
     transform: translateX(120vw) translateY(0) scale(0.95);
     opacity: 0;
+  }
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid var(--txt-code);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  position: relative;
+  animation: pulse 1s linear infinite;
+}
+
+.loader:after {
+  content: '';
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border: 5px solid var(--c-principal);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation: scaleUp 1s linear infinite;
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: translate(-50%, -50%) scale(0)
+  }
+
+  60%,
+  100% {
+    transform: translate(-50%, -50%) scale(1)
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  60%,
+  100% {
+    transform: scale(1)
+  }
+
+  80% {
+    transform: scale(1.2)
   }
 }

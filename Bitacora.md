@@ -1,5 +1,13 @@
 ## EVA XML MANAGER
 
+[17/12/2025]
+Corregir arrastre de archivos.
+Implementar guardado de sesión y boton para cerrar nodos.
+
+[10/12/2025]
+No es viable un modulo de conexion remota desde 0.
+Probablemente haga uso de ThightVNC para este proposito.
+
 [9/12/2025]
 Probando conexion remota
 {
