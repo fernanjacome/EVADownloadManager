@@ -64,3 +64,64 @@ export const notepadPlus = [
     notepadPlusTheme,
     syntaxHighlighting(notepadPlusHighlightStyle),
 ];
+
+export const evaXmlDarkTheme = EditorView.theme(
+    {
+        "&": {
+            color: "#dce6e2",
+            backgroundColor: "#161c1b",
+            fontFamily: "Consolas, 'Courier New', monospace",
+            height: "100%",
+        },
+
+        ".cm-content": {
+            caretColor: "#bde7d7",
+        },
+
+        "&.cm-focused .cm-cursor": {
+            borderLeftColor: "#bde7d7",
+        },
+
+        ".cm-selectionBackground": {
+            backgroundColor: "rgba(0, 200, 150, 0.18) !important",
+        },
+        "&.cm-focused .cm-selectionBackground": {
+            backgroundColor: "rgba(0, 200, 150, 0.24) !important",
+        },
+        "&.cm-focused ::selection": {
+            backgroundColor: "rgba(0, 200, 150, 0.24) !important",
+        },
+
+        ".cm-gutters": {
+            backgroundColor: "#1b2322",
+            color: "#7f918c",
+            borderRight: "1px solid #2d3836",
+        },
+
+        ".cm-activeLine": {
+            backgroundColor: "rgba(0, 200, 150, 0.07)",
+        },
+
+        ".cm-activeLineGutter": {
+            backgroundColor: "#1b2322",
+        },
+    },
+    { dark: true }
+);
+
+export const evaXmlDarkHighlightStyle = HighlightStyle.define([
+    { tag: t.tagName, color: "#77d7b4" },
+    { tag: t.attributeName, color: "#cfe37f" },
+    { tag: [t.attributeValue, t.string], color: "#d9b980" },
+    { tag: t.comment, color: "#6e857e", fontStyle: "italic" },
+    { tag: t.number, color: "#9bcfbc" },
+    { tag: t.keyword, color: "#7fd0aa" },
+    { tag: t.operator, color: "#dce6e2" },
+    { tag: t.angleBracket, color: "#7b8d88" },
+    { tag: [t.null, t.variableName, t.invalid, t.meta], color: "#c9d5d1" },
+]);
+
+export const evaXmlDark = [
+    evaXmlDarkTheme,
+    syntaxHighlighting(evaXmlDarkHighlightStyle),
+];

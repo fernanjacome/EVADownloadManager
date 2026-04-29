@@ -13,8 +13,10 @@ import { FaWindowMinimize } from "react-icons/fa6";
 import { FaMoon, FaRegWindowRestore, FaSun } from "react-icons/fa";
 import ScreensInfoModal from "./modals/ScreensInfoModal";
 import CompilerInfoModal from "./modals/CompileInfoModal";
+import FlowsInfoModal from "./modals/FlowsInfoModal";
 import { TbReload } from "react-icons/tb";
 import { GiLargePaintBrush } from "react-icons/gi";
+import { MdCheckBox, MdCheckBoxOutlineBlank } from "react-icons/md";
 
 export default function TitleBar({
   fileName,
@@ -23,32 +25,40 @@ export default function TitleBar({
   snowEnabled,
   toggleSnow,
   onResetApp,
+  visibleModules,
+  setVisibleModules,
 }) {
   const [activeMenu, setActiveMenu] = useState(null);
-  const [showModal, setShowModal] = useState(null); // 👈 ahora null | "about" | "format" | "validations" | "tips"
+  const [showModal, setShowModal] = useState(null);
   const menuRef = useRef(null);
+
   const handleAction = (action) => {
-    if (window.electronAPI) {
-      window.electronAPI.windowControl(action);
-    }
+    window.electronAPI?.windowControl(action);
   };
 
   const toggleMenu = (menu) => {
-    setActiveMenu(activeMenu === menu ? null : menu);
+    setActiveMenu((prev) => (prev === menu ? null : menu));
   };
 
-  const handleNewWindow = () => {
-    if (window.electronAPI) {
-      window.electronAPI.openNewWindow();
-    }
+  const closeMenus = () => {
     setActiveMenu(null);
   };
+
+  const moduleOptions = [
+    { key: "code", label: "XML" },
+    { key: "flows", label: "Flujos" },
+    { key: "screens", label: "Pantallas" },
+    { key: "compiler", label: "Compilador" },
+    { key: "remote", label: "Remoto" },
+  ];
+
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setActiveMenu(null);
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        closeMenus();
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -56,47 +66,84 @@ export default function TitleBar({
   return (
     <>
       <div className="title-bar">
-        {/* Logo + menú */}
         <div className="title-left">
           <img src="favicon.ico" alt="logo" className="title-logo" />
           <div className="menu-bar" ref={menuRef}>
             <div className="menu-item" onClick={() => toggleMenu("file")}>
               Archivo
               {activeMenu === "file" && (
-                <div className="dropdown">
-                  <div className="dropdown-item" onClick={handleNewWindow}>
+                <div className="dropdown" onClick={(event) => event.stopPropagation()}>
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
+                      window.electronAPI?.openNewWindow?.();
+                      closeMenus();
+                    }}
+                  >
+                    <span>Nueva ventana</span>
                     <FaRegWindowRestore />
-                    Nueva ventana
                   </div>
                   <div
                     className="dropdown-item"
-                    onClick={() =>
-                      setTheme(theme === "dark" ? "light" : "dark")
-                    }
+                    onClick={() => {
+                      setTheme(theme === "dark" ? "light" : "dark");
+                      closeMenus();
+                    }}
                   >
-                    {theme === "dark" ? <FaSun /> : <FaMoon />}{" "}
-                    {theme === "dark" ? "Modo Claro" : "Modo Oscuro"}{" "}
+                    <span>{theme === "dark" ? "Modo Claro" : "Modo Oscuro"}</span>
+                    {theme === "dark" ? <FaSun /> : <FaMoon />}
                   </div>
                   <div
                     className="dropdown-item"
                     onClick={async () => {
-                      await window.electronAPI.clearAppCache();
+                      closeMenus();
+                      await window.electronAPI?.clearAppCache?.();
                     }}
                   >
+                    <span>Recargar ventana</span>
                     <TbReload />
-                    Recargar ventana
                   </div>
                   <div
                     className="dropdown-item"
                     onClick={async () => {
-                      setActiveMenu(null);
+                      closeMenus();
                       await onResetApp();
-                      //await window.electronAPI.clearApp();
                     }}
                   >
+                    <span>Restablecer esta ventana</span>
                     <GiLargePaintBrush />
-                    Restablecer
                   </div>
+                </div>
+              )}
+            </div>
+
+            <div className="menu-item" onClick={() => toggleMenu("modules")}>
+              Modulos
+              {activeMenu === "modules" && (
+                <div className="dropdown" onClick={(event) => event.stopPropagation()}>
+                  {moduleOptions.map((module) => {
+                    const enabled = visibleModules?.[module.key] !== false;
+                    const enabledCount = Object.values(visibleModules || {}).filter(Boolean).length;
+                    return (
+                      <div
+                        key={module.key}
+                        className={`dropdown-item module-toggle ${
+                          !enabled && enabledCount === 1 ? "disabled" : ""
+                        }`}
+                        onClick={() => {
+                          if (enabled && enabledCount === 1) return;
+                          setActiveMenu("modules");
+                          setVisibleModules((prev) => ({
+                            ...prev,
+                            [module.key]: !enabled,
+                          }));
+                        }}
+                      >
+                        <span>{module.label}</span>
+                        {enabled ? <MdCheckBox /> : <MdCheckBoxOutlineBlank />}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -104,12 +151,12 @@ export default function TitleBar({
             <div className="menu-item" onClick={() => toggleMenu("help")}>
               Ayuda
               {activeMenu === "help" && (
-                <div className="dropdown">
+                <div className="dropdown" onClick={(event) => event.stopPropagation()}>
                   <div
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("compiler");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
                     Compilador
@@ -118,7 +165,7 @@ export default function TitleBar({
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("screens");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
                     Pantallas
@@ -126,8 +173,17 @@ export default function TitleBar({
                   <div
                     className="dropdown-item"
                     onClick={() => {
+                      setShowModal("flows");
+                      closeMenus();
+                    }}
+                  >
+                    Flujos
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
                       setShowModal("format");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
                     Formato XML
@@ -136,17 +192,16 @@ export default function TitleBar({
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("validations");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
                     Validaciones
                   </div>
-
                   <div
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("shortcuts");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
                     Atajos de teclado
@@ -155,16 +210,16 @@ export default function TitleBar({
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("files");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
-                    Gestión de archivos
+                    Gestion de archivos
                   </div>
                   <div
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("errors");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
                     Errores comunes
@@ -173,7 +228,7 @@ export default function TitleBar({
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("tips");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
                     Recomendaciones
@@ -182,10 +237,10 @@ export default function TitleBar({
                     className="dropdown-item"
                     onClick={() => {
                       setShowModal("about");
-                      setActiveMenu(null);
+                      closeMenus();
                     }}
                   >
-                    Versión
+                    Version
                   </div>
                 </div>
               )}
@@ -193,75 +248,44 @@ export default function TitleBar({
           </div>
         </div>
 
-        {/* 🔹 Título del archivo al centro */}
         <div className="title-center">
           {fileName ? `${fileName} - EVA Studio 2026` : "EVA Studio 2026"}
         </div>
 
-        {/* Botones de control */}
         <div className="title-right">
-          <button
-            className="win-btn min"
-            onClick={() => handleAction("minimize")}
-          >
-            <FaWindowMinimize
-              style={{ color: theme === "dark" ? "#fff" : "#000" }}
-            />
+          <button className="win-btn min" onClick={() => handleAction("minimize")}>
+            <FaWindowMinimize style={{ color: theme === "dark" ? "#fff" : "#000" }} />
           </button>
-          <button
-            className="win-btn max"
-            onClick={() => handleAction("maximize")}
-          >
+          <button className="win-btn max" onClick={() => handleAction("maximize")}>
             <FiMaximize style={{ color: theme === "dark" ? "#fff" : "#000" }} />
           </button>
-          <button
-            className="win-btn close"
-            onClick={() => window.dispatchEvent(new Event("tryAppClose"))}
-          >
+          <button className="win-btn close" onClick={() => window.dispatchEvent(new Event("tryAppClose"))}>
             <IoClose style={{ color: theme === "dark" ? "#fff" : "#000" }} />
           </button>
         </div>
       </div>
 
-      {/* Modales (solo se muestra el seleccionado) */}
       <AboutModal
         isOpen={showModal === "about"}
         onClose={() => setShowModal(null)}
         snowEnabled={snowEnabled}
         toggleSnow={toggleSnow}
       />
-      <FormatModal
-        isOpen={showModal === "format"}
-        onClose={() => setShowModal(null)}
-      />
-      <TipsModal
-        isOpen={showModal === "tips"}
-        onClose={() => setShowModal(null)}
-      />
+      <FormatModal isOpen={showModal === "format"} onClose={() => setShowModal(null)} />
+      <TipsModal isOpen={showModal === "tips"} onClose={() => setShowModal(null)} />
       <ValidationsModal
         isOpen={showModal === "validations"}
         onClose={() => setShowModal(null)}
       />
-      <ShortcutsModal
-        isOpen={showModal === "shortcuts"}
-        onClose={() => setShowModal(false)}
-      />
-      <FilesModal
-        isOpen={showModal === "files"}
-        onClose={() => setShowModal(false)}
-      />
-      <ErrorsModal
-        isOpen={showModal === "errors"}
-        onClose={() => setShowModal(false)}
-      />
-      <ScreensInfoModal
-        isOpen={showModal === "screens"}
-        onClose={() => setShowModal(false)}
-      />
+      <ShortcutsModal isOpen={showModal === "shortcuts"} onClose={() => setShowModal(null)} />
+      <FilesModal isOpen={showModal === "files"} onClose={() => setShowModal(null)} />
+      <ErrorsModal isOpen={showModal === "errors"} onClose={() => setShowModal(null)} />
+      <ScreensInfoModal isOpen={showModal === "screens"} onClose={() => setShowModal(null)} />
       <CompilerInfoModal
         isOpen={showModal === "compiler"}
-        onClose={() => setShowModal(false)}
+        onClose={() => setShowModal(null)}
       />
+      <FlowsInfoModal isOpen={showModal === "flows"} onClose={() => setShowModal(null)} />
     </>
   );
 }

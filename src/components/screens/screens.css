@@ -1,133 +1,146 @@
-/* =======================================
-   🎨 Estilos modernos para Screens Panel
-   ======================================= */
-
 .screens-layout {
     display: flex;
     height: 100%;
     background: var(--c-fondo);
+    font-family: "Segoe UI Variable Text", "Inter", "Segoe UI", system-ui, sans-serif;
+    color: var(--txt-normald);
 }
 
-/* ===== Sidebar ===== */
 .screens-sidebar {
-    width: 318px;
     background: var(--c-fondo-secundario);
     border-right: 1px solid var(--border-general);
-    padding: 7px 0 7px 7px;
+    padding: 8px 0 8px 8px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
+    min-width: 220px;
+    max-width: 520px;
+    flex: 0 0 auto;
 }
 
-/* ===== Selector de carpeta ===== */
+.screens-sidebar-resizer {
+    width: 6px;
+    cursor: col-resize;
+    background: transparent;
+    flex: 0 0 auto;
+    position: relative;
+}
+
+.screens-sidebar-resizer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 2px;
+    width: 1px;
+    background: color-mix(in srgb, var(--border-general) 76%, transparent 24%);
+}
+
+.screens-sidebar-resizer:hover::after {
+    background: var(--c-principal);
+}
+
 .folder-selector {
     display: flex;
     gap: 6px;
     align-items: center;
-    padding-right: 7px;
+    padding-right: 8px;
+    position: relative;
 }
 
 .folder-btn {
-    height: 30px;
-    width: 45px;
-    padding: 0 10px;
-    font-size: 10px;
+    height: 32px;
+    width: 36px;
+    font-size: 11px;
     background: var(--c-fondo-btn);
-    border: 1px solid var(--border-general);
-    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--border-general) 84%, transparent 16%);
+    border-radius: 8px;
     cursor: pointer;
-    color: var(--txt-normal);
+    color: var(--txt-normald);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
 
 .folder-btn:hover {
     border-color: var(--c-principal);
+    transform: translateY(-1px);
 }
 
 .load-btn {
-    background: #102f28;
-    border-color: var(--c-principal);
-    color: #00c896;
+    background: linear-gradient(180deg, #22cb78, #15aa61);
+    border-color: rgba(27, 193, 113, 0.48);
+    color: #ffffff;
 }
 
 .load-btn:hover {
-    background: #144238;
+    background: linear-gradient(180deg, #2fda86, #17b768);
 }
-
 
 .folder-input {
     flex: 1;
     background: var(--c-fondo);
     border: 1px solid var(--border-general);
     padding: 7px 10px;
-    border-radius: 6px;
-    color: var(--txt-normal);
-    font-size: 13px;
-    transition: border-color 0.15s;
+    border-radius: 8px;
+    color: var(--txt-normald);
+    font-size: 12.5px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.folder-input::placeholder {
+    color: var(--txt-normalf);
 }
 
 .folder-input:disabled {
-    opacity: 0.5;
+    opacity: 0.55;
     cursor: not-allowed;
 }
 
 .folder-input:focus {
     outline: none;
     border-color: var(--c-principal);
+    box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.1);
 }
 
-/* ===== Lista de pantallas ===== */
-
-/* Contenedor scrollable */
 .screen-selector {
     flex: 1;
     overflow-y: auto;
     padding-right: 6px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
-/* Cada ítem */
 .screen-item {
     background: var(--c-fondo);
-    border: 1px solid var(--border-general);
-    padding: 6px 12px;
-    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--border-general) 84%, transparent 16%);
+    padding: 8px 11px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
-    transition: background .15s ease, border-color .15s ease, transform .12s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
 
 .screen-item:hover {
-    color: var(--txt-normald);
-    background: var(--c-fondo);
-    border-color: var(--txt-normald);
+    border-color: var(--c-principal);
     transform: translateX(2px);
 }
 
 .screen-item.active {
-    background: #0d2a24;
+    background: color-mix(in srgb, var(--c-principal) 12%, var(--c-fondo) 88%);
     border-color: var(--c-principal);
-    box-shadow: 0 0 8px #00c89650;
+    box-shadow: 0 8px 18px rgba(0, 200, 150, 0.12);
 }
 
-.screen-item.active .screen-text .screen-name {
-    color: white;
-}
-
-/* Icono */
 .screen-icon {
-    font-size: 16px;
+    font-size: 15px;
     color: var(--c-principal);
 }
 
-/* Textos */
 .screen-text {
     display: flex;
     flex-direction: column;
@@ -135,135 +148,239 @@
 }
 
 .screen-name {
-    font-size: 13px;
-    color: var(--txt-normalb);
+    font-size: 12.5px;
+    color: var(--txt-normald);
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* ===== Panel Viewer ===== */
-
-/* Área general */
-/* Área donde debe encajar la pantalla (CUADRO ROJO) */
-/* Área donde debe encajar la pantalla */
 .screens-viewer-area {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
     overflow: hidden;
-    padding: 24px;
-    /* ✅ ESPACIADO GENERAL */
-    background-color: var(--c-fondo);
+    padding: 10px;
+    background:
+        radial-gradient(circle at top right, rgba(0, 200, 150, 0.04), transparent 24%),
+        var(--c-fondo);
 }
 
-/* Contenedor principal */
 .screen-fit-wrapper {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    /* ✅ AHORA TIENE TOOLBAR + VIEW */
-    align-items: center;
-    justify-content: center;
+    gap: 8px;
+    align-items: stretch;
+    justify-content: stretch;
     position: relative;
-    background-color: var(--c-fondo);
-    border-radius: 10px;
-    /* ✅ ESPACIADO ENTRE CONTROLES Y PANTALLA */
+    min-height: 0;
 }
 
-/* Barra de controles */
 .screen-toolbar {
+    align-self: center;
+    display: inline-flex;
     align-items: center;
-    z-index: 9999;
-    display: flex;
+    gap: 6px;
+    padding: 5px 6px;
+    border: 1px solid color-mix(in srgb, var(--border-general) 72%, transparent 28%);
+    background: color-mix(in srgb, var(--c-fondo-secundario) 96%, white 4%);
     border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 20px rgba(16, 29, 23, 0.12);
 }
 
-/* Botones */
-.screen-tool-btn {
-    background: #202020;
-    border: 1px solid var(--border-general);
+.screens-tools-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 8px;
+}
 
-    color: #ffffff;
-    padding: 6px 10px;
-    font-size: 12px;
+.screens-search-toggle {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--border-general) 82%, transparent 18%);
+    background: var(--c-fondo-btn);
+    color: var(--txt-normald);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
     transition: all 0.15s ease;
 }
 
-/* Primer botón */
-.screen-tool-btn:first-of-type {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
+.screens-search-toggle:hover,
+.screens-search-toggle.active {
+    border-color: var(--c-principal);
+    color: var(--c-principal);
 }
 
-/* Último botón */
-.screen-tool-btn:last-of-type {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+.screens-search-box {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--border-general) 82%, transparent 18%);
+    background: var(--c-fondo);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.screens-search-icon {
+    color: var(--txt-normalf);
+    font-size: 13px;
+    flex: 0 0 auto;
+}
+
+.screens-search-box input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--txt-normald);
+    font-size: 12.5px;
+}
+
+.screens-search-box input::placeholder {
+    color: var(--txt-normalf);
+}
+
+.screens-search-clear {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--txt-normalc);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.screens-search-clear:hover {
+    color: var(--c-principal);
+    background: color-mix(in srgb, var(--c-principal) 10%, transparent 90%);
+}
+
+.screen-toolbar-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.screen-tool-btn {
+    min-height: 31px;
+    border: 1px solid color-mix(in srgb, var(--border-general) 82%, transparent 18%);
+    background: var(--c-fondo);
+    color: var(--txt-normald);
+    padding: 0 11px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.screen-tool-btn.icon {
+    width: 30px;
+    padding: 0;
+    font-size: 13px;
+}
+
+.screen-tool-btn.value {
+    min-width: 58px;
+}
+
+.screen-tool-btn.fit {
+    background: color-mix(in srgb, var(--c-principal) 8%, var(--c-fondo) 92%);
 }
 
 .screen-tool-btn:hover {
-    background: #444444;
-    color: #00e0b8;
+    border-color: var(--c-principal);
+    color: var(--c-principal);
+    transform: translateY(-1px);
 }
 
-/* Contenedor que define el área visible */
+.screen-zoom-readout {
+    min-width: 54px;
+    height: 31px;
+    padding: 0 10px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--txt-normalc);
+    background: color-mix(in srgb, var(--c-fondo) 82%, var(--c-fondo-secundario) 18%);
+    border: 1px solid color-mix(in srgb, var(--border-general) 74%, transparent 26%);
+}
+
 .screen-fit-canvas {
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    height: 100%;
-    max-height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     border-radius: 14px;
-    background: #0c0c0c;
-    padding: 16px;
-    /* ✅ AIRE INTERNO */
+    background:
+        radial-gradient(circle at top, rgba(0, 200, 150, 0.035), transparent 42%),
+        color-mix(in srgb, var(--c-fondo-secundario) 94%, black 6%);
+    padding: 8px;
 }
 
-/* Contenedor que se escala */
 .screen-fit-inner {
     width: 1024px;
     height: 768px;
     transform-origin: center center;
-    box-shadow: 0 0 45px rgba(0, 0, 0, 0.6);
-    /* ✅ SENSACIÓN DE MONITOR */
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
 }
 
-/* Iframe REAL */
 .screen-iframe {
     width: 1024px;
     height: 768px;
     border: 0;
     display: block;
-    background: var(--c-fondo);
+    background: #ffffff;
     border-radius: 10px;
 }
 
-
-
-
 .screens-info {
-    color: var(--txt-normal);
+    color: var(--txt-normald);
     font-size: 14px;
-    opacity: 0.8;
+    opacity: 0.92;
 }
 
 .screens-recent-dropdown {
+    width: min(760px, calc(100vw - 90px));
+    min-width: 460px;
     position: absolute;
-    top: 6%;
-    left: 0%;
-    color: var(--txt-normal);
+    top: calc(100% + 6px);
+    left: 0;
+    color: #22342d;
     background: var(--c-fondo);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(71, 71, 71, 0.671);
+    border-radius: 10px;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
     z-index: 50;
     overflow: hidden;
     user-select: none;
@@ -271,16 +388,26 @@
 
 .dropdown-title {
     font-size: 0.75rem;
-    padding: 6px 10px;
+    padding: 7px 10px;
     background: rgba(255, 255, 255, 0.03);
+    color: #21322c;
 }
 
 .dropdown-item {
     padding: 8px 10px;
     cursor: pointer;
     font-size: 0.75rem;
-    color: var(--txt-normal);
+    color: #203029;
     transition: background 0.15s ease;
+    overflow: hidden;
+}
+
+.dropdown-item strong,
+.dropdown-sub {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dropdown-item:hover {
@@ -289,4 +416,75 @@
 
 .dropdown-item.active {
     background: rgba(45, 212, 191, 0.25);
+}
+
+.dropdown-sub {
+    color: #60726b;
+    opacity: 0.95;
+}
+
+body.light-theme .screens-layout {
+    color: #1d2d27;
+}
+
+body.light-theme .folder-btn {
+    color: #28453b;
+}
+
+body.light-theme .folder-input {
+    color: #20312a;
+}
+
+body.light-theme .folder-input::placeholder,
+body.light-theme .screens-search-icon,
+body.light-theme .screens-search-box input::placeholder {
+    color: #70827b;
+}
+
+body.light-theme .screen-name,
+body.light-theme .screens-info,
+body.light-theme .screen-tool-btn,
+body.light-theme .screens-search-toggle,
+body.light-theme .screens-search-box input {
+    color: #20312a;
+}
+
+body.light-theme .screen-zoom-readout {
+    color: #5f746c;
+}
+
+body.light-theme .screens-search-clear {
+    color: #5f746c;
+}
+
+body.light-theme .screens-sidebar,
+body.light-theme .screen-item,
+body.light-theme .folder-input,
+body.light-theme .screen-tool-btn,
+body.light-theme .screens-recent-dropdown,
+body.light-theme .screens-search-box {
+    box-shadow: none;
+}
+
+body.light-theme .screen-fit-canvas {
+    background:
+        radial-gradient(circle at top, rgba(0, 200, 150, 0.045), transparent 44%),
+        linear-gradient(180deg, #f7fbf9, #eef5f2);
+}
+
+body:not(.light-theme) .folder-input,
+body:not(.light-theme) .screen-name,
+body:not(.light-theme) .screen-tool-btn,
+body:not(.light-theme) .screens-info,
+body:not(.light-theme) .screens-search-toggle,
+body:not(.light-theme) .screens-search-box input {
+    color: #e6efeb;
+}
+
+body:not(.light-theme) .folder-input::placeholder,
+body:not(.light-theme) .screen-zoom-readout,
+body:not(.light-theme) .screens-search-icon,
+body:not(.light-theme) .screens-search-box input::placeholder,
+body:not(.light-theme) .screens-search-clear {
+    color: #a8bbb3;
 }

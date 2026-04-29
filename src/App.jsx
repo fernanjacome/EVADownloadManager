@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 
 import "./App.css";
 import { formatXml } from "./utils/xmlUtils";
@@ -12,6 +12,7 @@ import NotificationContainer from "./components/utils/NotificationContainer";
 import ScreensPanel from "./components/screens/ScreensPanel";
 import CompilerForm from "./components/compiler/CompilerForm";
 import RemoteViewer from "./components/remote/RemoteViewer";
+import FlowsPanel from "./components/flows/FlowsPanel";
 import { useSnowEffect } from "./hooks/useSnowEffect";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSidebarResize } from "./hooks/useSidebarResize";
@@ -28,6 +29,8 @@ const DEFAULT_STATE = {
   screensFolderInput: "",
   viewMode: "code",
   sidebarWidth: 240,
+  sidebarCollapsed: false,
+  selectedSidebarItem: null,
   editorViewState: { cursor: 0, scrollTop: 0 },
   compilerState: {
     batName: "",
@@ -35,16 +38,43 @@ const DEFAULT_STATE = {
     imageId: "",
     consoleLines: [],
   },
-  theme: "dark",
+  selectedScreen: null,
+  screensViewState: { scale: 1 },
+  flowViewState: {
+    instances: [],
+    selectedInstanceId: null,
+    horizontalScale: 1,
+    verticalScale: 1,
+    cardScale: 1,
+    canvasZoom: 1,
+    showControls: false,
+    showAppearance: false,
+    showSearch: false,
+    showCanvasZoom: false,
+    searchTerm: "",
+    scrollLeft: 0,
+    scrollTop: 0,
+  },
+  theme: "light",
+  visibleModules: {
+    code: true,
+    screens: true,
+    compiler: true,
+    flows: true,
+    remote: true,
+  },
 };
 
 export default function App() {
+  const [isRestoringWorkspace, setIsRestoringWorkspace] = useState(true);
   const [notifications, setNotifications] = useState([]);
-  const [highlightId, setHighlightId] = useState(null);
+  const [editorNavigation, setEditorNavigation] = useState(null);
   const [splitView, setSplitView] = useState(DEFAULT_STATE.splitView);
   const [activeEditor, setActiveEditor] = useState(DEFAULT_STATE.activeEditor);
   const [snowEnabled, setSnowEnabled] = useState(DEFAULT_STATE.snowEnabled);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_STATE.sidebarWidth);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(DEFAULT_STATE.sidebarCollapsed);
+  const [selectedSidebarItem, setSelectedSidebarItem] = useState(DEFAULT_STATE.selectedSidebarItem);
   const [editorViewState, setEditorViewState] = useState(
     DEFAULT_STATE.editorViewState
   );
@@ -58,7 +88,16 @@ export default function App() {
   const [compilerState, setCompilerState] = useState(
     DEFAULT_STATE.compilerState
   );
+  const [selectedScreen, setSelectedScreen] = useState(DEFAULT_STATE.selectedScreen);
+  const [screensViewState, setScreensViewState] = useState(DEFAULT_STATE.screensViewState);
+  const [flowViewState, setFlowViewState] = useState(DEFAULT_STATE.flowViewState);
   const [theme, setTheme] = useState(DEFAULT_STATE.theme);
+  const [visibleModules, setVisibleModules] = useState(
+    DEFAULT_STATE.visibleModules
+  );
+  const restoredSidebarSelectionRef = useRef(false);
+  const [flowFocusRequest, setFlowFocusRequest] = useState(null);
+  const navigationSeqRef = useRef(1);
 
   const [collapsedGroups, setCollapsedGroups] = useState(
     Object.fromEntries(groupOrder.map((g) => [g, true]))
@@ -80,6 +119,49 @@ export default function App() {
   };
   const xml = useXmlEditor({ notify: addNotification });
   const persistenceEnabledRef = useRef(false);
+  const persistedAppState = useMemo(
+    () => ({
+      xmlState: xml.getPersistableState(),
+      theme,
+      collapsedGroups,
+      splitView,
+      activeEditor,
+      snowEnabled,
+      editorViewState,
+      sidebarWidth,
+      sidebarCollapsed,
+      selectedSidebarItem,
+      viewMode,
+      screensFolder,
+      screensFolderInput,
+      compilerState,
+      selectedScreen,
+      screensViewState,
+      flowViewState,
+      visibleModules,
+    }),
+    [
+      xml,
+      theme,
+      collapsedGroups,
+      splitView,
+      activeEditor,
+      snowEnabled,
+      editorViewState,
+      sidebarWidth,
+      sidebarCollapsed,
+      selectedSidebarItem,
+      viewMode,
+      screensFolder,
+      screensFolderInput,
+      compilerState,
+      selectedScreen,
+      screensViewState,
+      flowViewState,
+      visibleModules,
+    ]
+  );
+
   useAppPersistence({
     enabledRef: persistenceEnabledRef,
 
@@ -96,12 +178,18 @@ export default function App() {
         setSnowEnabled(!!s.snowEnabled);
         setEditorViewState(s.editorViewState ?? DEFAULT_STATE.editorViewState);
         setSidebarWidth(s.sidebarWidth ?? DEFAULT_STATE.sidebarWidth);
+        setSidebarCollapsed(!!(s.sidebarCollapsed ?? DEFAULT_STATE.sidebarCollapsed));
+        setSelectedSidebarItem(s.selectedSidebarItem ?? DEFAULT_STATE.selectedSidebarItem);
         setViewMode(s.viewMode ?? DEFAULT_STATE.viewMode);
         setScreensFolder(s.screensFolder ?? DEFAULT_STATE.screensFolder);
         setScreensFolderInput(
           s.screensFolderInput ?? DEFAULT_STATE.screensFolderInput
         );
         setCompilerState(s.compilerState ?? DEFAULT_STATE.compilerState);
+        setSelectedScreen(s.selectedScreen ?? DEFAULT_STATE.selectedScreen);
+        setScreensViewState(s.screensViewState ?? DEFAULT_STATE.screensViewState);
+        setFlowViewState(s.flowViewState ?? DEFAULT_STATE.flowViewState);
+        setVisibleModules(s.visibleModules ?? DEFAULT_STATE.visibleModules);
         setCollapsedGroups(
           s.collapsedGroups ??
             Object.fromEntries(groupOrder.map((g) => [g, true]))
@@ -114,21 +202,11 @@ export default function App() {
         ...s,
       };
     },
-
-    buildState: () => ({
-      xmlState: xml.getPersistableState(),
-      theme,
-      collapsedGroups,
-      splitView,
-      activeEditor,
-      snowEnabled,
-      editorViewState,
-      sidebarWidth,
-      viewMode,
-      screensFolder,
-      screensFolderInput,
-      compilerState,
-    }),
+    state: persistedAppState,
+    debounceMs: 220,
+    onLoaded: () => {
+      setIsRestoringWorkspace(false);
+    },
   });
 
   useSnowEffect(snowEnabled);
@@ -163,8 +241,107 @@ export default function App() {
     localStorage.setItem("app_theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (visibleModules[viewMode]) return;
+
+    const fallbackMode =
+      Object.entries(visibleModules).find(([, enabled]) => enabled)?.[0] ??
+      DEFAULT_STATE.viewMode;
+    setViewMode(fallbackMode);
+  }, [viewMode, visibleModules]);
+
+  const resolveXmlPosition = (target) => {
+    const source = xml.code || "";
+    if (!target || !source) return null;
+
+    let regex = null;
+    if (typeof target === "object" && target?.type === "param") {
+      regex = new RegExp(
+        `<State\\b[^>]*Id=["']${String(target.stateId).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>[\\s\\S]*?<Param[^>]*Key=["']${String(target.key).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>`,
+        "i"
+      );
+    } else if (typeof target === "object" && target?.type === "sidebar") {
+      const escapedValue = String(target.value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      switch (target.section) {
+        case "General":
+          regex = new RegExp(
+            `<General\\b[^>]*>[\\s\\S]*?<Param[^>]*Key=["']${escapedValue}["'][^>]*>`,
+            "i"
+          );
+          break;
+        case "State":
+          regex = new RegExp(`<State\\b[^>]*Id=["']${escapedValue}["'][^>]*>`, "i");
+          break;
+        case "Screen":
+          regex = new RegExp(`<Screen\\b[^>]*Id=["']${escapedValue}["'][^>]*>`, "i");
+          break;
+        case "Fit":
+          regex = new RegExp(`<Fit\\b[^>]*Id=["']${escapedValue}["'][^>]*>`, "i");
+          break;
+        case "Tran":
+          regex = new RegExp(`<Tran\\b[^>]*Code=["']${escapedValue}["'][^>]*>`, "i");
+          break;
+        case "TranMap":
+          regex = new RegExp(`<TranMap\\b[^>]*Id=["']${escapedValue}["'][^>]*>`, "i");
+          break;
+        case "Error":
+          regex = new RegExp(`<Error\\b[^>]*RetCode=["']${escapedValue}["'][^>]*>`, "i");
+          break;
+        default:
+          break;
+      }
+    } else {
+      const stateId = String(target).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      regex = new RegExp(`<State\\b[^>]*Id=["']${stateId}["'][^>]*>`, "i");
+    }
+
+    const match = source.match(regex);
+    return match?.index ?? null;
+  };
+
+  const resolveSidebarTarget = (itemId) => {
+    if (!itemId) return null;
+    if (itemId.startsWith("General-")) {
+      return {
+        type: "sidebar",
+        section: "General",
+        value: itemId.slice(8),
+      };
+    }
+
+    const [section, ...rest] = String(itemId).split("-");
+    const value = rest.join("-");
+    if (!section || !value) return null;
+
+    const allowedSections = new Set(["State", "Screen", "Fit", "Tran", "TranMap", "Error"]);
+    if (!allowedSections.has(section)) return null;
+
+    return {
+      type: "sidebar",
+      section,
+      value,
+    };
+  };
+
+  useEffect(() => {
+    if (!xml.xmlDoc || !selectedSidebarItem) return;
+    if (restoredSidebarSelectionRef.current) return;
+    if (viewMode !== "code") return;
+
+    const editorTarget = splitView ? activeEditor : "left";
+    const position = resolveXmlPosition(resolveSidebarTarget(selectedSidebarItem));
+    if (position == null) return;
+
+    restoredSidebarSelectionRef.current = true;
+    setEditorNavigation({
+      seq: navigationSeqRef.current++,
+      target: editorTarget,
+      pos: position,
+      sidebarId: selectedSidebarItem,
+    });
+  }, [xml.xmlDoc, xml.code, selectedSidebarItem, viewMode, activeEditor, splitView]);
+
   const [screensList, setScreensList] = useState([]);
-  const [selectedScreen, setSelectedScreen] = useState(null);
   useEffect(() => {
     if (!screensFolder) {
       setScreensList([]);
@@ -193,7 +370,6 @@ export default function App() {
   }, []);
 
   const resetAppState = async () => {
-    localStorage.clear();
     xml.reset();
     setSplitView(DEFAULT_STATE.splitView);
     setActiveEditor(DEFAULT_STATE.activeEditor);
@@ -205,9 +381,18 @@ export default function App() {
 
     setViewMode(DEFAULT_STATE.viewMode);
     setSidebarWidth(DEFAULT_STATE.sidebarWidth);
+    setSidebarCollapsed(DEFAULT_STATE.sidebarCollapsed);
+    setSelectedSidebarItem(DEFAULT_STATE.selectedSidebarItem);
     setEditorViewState(DEFAULT_STATE.editorViewState);
     setCompilerState(DEFAULT_STATE.compilerState);
+    setSelectedScreen(DEFAULT_STATE.selectedScreen);
+    setScreensViewState(DEFAULT_STATE.screensViewState);
+    setFlowViewState(DEFAULT_STATE.flowViewState);
     setTheme(DEFAULT_STATE.theme);
+    setVisibleModules(DEFAULT_STATE.visibleModules);
+    setFlowFocusRequest(null);
+    setEditorNavigation(null);
+    restoredSidebarSelectionRef.current = false;
 
     setNotifications([]);
 
@@ -219,6 +404,129 @@ export default function App() {
 
   console.log(xml);
 
+  const getEffectiveEditorTarget = () => (splitView ? activeEditor : "left");
+
+  const navigateToXmlTarget = (target) => {
+    const editorTarget = getEffectiveEditorTarget();
+    const position = resolveXmlPosition(target);
+    if (position == null) {
+      addNotification("error", "No se pudo ubicar el destino exacto en el XML.");
+      return;
+    }
+
+    setViewMode("code");
+
+    if (typeof target === "object" && target?.type === "param") {
+      const sidebarId = `State-${target.stateId}`;
+      setSelectedSidebarItem(sidebarId);
+      setEditorNavigation({
+        seq: navigationSeqRef.current++,
+        target: editorTarget,
+        pos: position,
+        sidebarId,
+      });
+      return;
+    }
+
+    const sidebarId = `State-${target}`;
+    setSelectedSidebarItem(sidebarId);
+    setEditorNavigation({
+      seq: navigationSeqRef.current++,
+      target: editorTarget,
+      pos: position,
+      sidebarId,
+    });
+  };
+
+  const openScreenForState = (stateOrScreenTarget) => {
+    if (!xml.xmlDoc) return;
+
+    if (
+      stateOrScreenTarget &&
+      typeof stateOrScreenTarget === "object" &&
+      stateOrScreenTarget.screenId
+    ) {
+      const screenId = String(stateOrScreenTarget.screenId);
+      const screenNode = Array.from(xml.xmlDoc.querySelectorAll("Screens > Screen")).find(
+        (node) => node.getAttribute("Id") === screenId
+      );
+      const resourceParam = Array.from(screenNode?.children || []).find(
+        (child) => child.tagName === "Param" && child.getAttribute("Key") === "Resource"
+      );
+      const resource = resourceParam?.textContent?.trim?.();
+      if (!resource) {
+        addNotification("info", `La Screen ${screenId} no tiene recurso HTML asociado.`);
+        return;
+      }
+
+      const match = screensList.find(
+        (screen) => String(screen.resource || "").toLowerCase() === String(resource).toLowerCase()
+      );
+      if (!match) {
+        addNotification("info", `La pantalla ${resource} no esta cargada en el modulo Pantallas.`);
+        return;
+      }
+
+      setViewMode("screens");
+      setSelectedScreen(match);
+      return;
+    }
+
+    const stateId = String(stateOrScreenTarget);
+
+    const stateNode = Array.from(xml.xmlDoc.querySelectorAll("States > State")).find(
+      (node) => node.getAttribute("Id") === stateId
+    );
+    if (!stateNode) {
+      addNotification("error", `No se encontro el State ${stateId} en el XML.`);
+      return;
+    }
+
+    const screenParam = Array.from(stateNode.children || []).find(
+      (child) => child.tagName === "Param" && child.getAttribute("Key") === "Screen"
+    );
+    const screenId = screenParam?.textContent?.trim?.();
+    if (!screenId) {
+      addNotification("info", `El State ${stateId} no tiene pantalla asociada.`);
+      return;
+    }
+
+    const screenNode = Array.from(xml.xmlDoc.querySelectorAll("Screens > Screen")).find(
+      (node) => node.getAttribute("Id") === screenId
+    );
+    const resourceParam = Array.from(screenNode?.children || []).find(
+      (child) => child.tagName === "Param" && child.getAttribute("Key") === "Resource"
+    );
+    const resource = resourceParam?.textContent?.trim?.();
+    if (!resource) {
+      addNotification("info", `La Screen ${screenId} no tiene recurso HTML asociado.`);
+      return;
+    }
+
+    const match = screensList.find(
+      (screen) => String(screen.resource || "").toLowerCase() === String(resource).toLowerCase()
+    );
+    if (!match) {
+      addNotification("info", `La pantalla ${resource} no esta cargada en el modulo Pantallas.`);
+      return;
+    }
+
+    setViewMode("screens");
+    setSelectedScreen(match);
+  };
+
+  if (isRestoringWorkspace) {
+    return (
+      <div className="app-loader-shell">
+        <div className="app-loader-card">
+          <div className="app-loader-spinner" />
+          <div className="app-loader-title">Restaurando workspace</div>
+          <div className="app-loader-subtitle">Cargando tu ultima sesion automatica...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <TitleBar
@@ -228,6 +536,28 @@ export default function App() {
         snowEnabled={snowEnabled}
         toggleSnow={() => setSnowEnabled((v) => !v)}
         onResetApp={resetAppState}
+        visibleModules={visibleModules}
+        setVisibleModules={setVisibleModules}
+        getCurrentAppState={() => ({
+          xmlState: xml.getPersistableState(),
+          theme,
+          collapsedGroups,
+          splitView,
+          activeEditor,
+          snowEnabled,
+          editorViewState,
+          sidebarWidth,
+          sidebarCollapsed,
+          selectedSidebarItem,
+          viewMode,
+          screensFolder,
+          screensFolderInput,
+          compilerState,
+          selectedScreen,
+          screensViewState,
+          flowViewState,
+          visibleModules,
+        })}
       />
       {snowEnabled && <div className="xmas-cable-lights" />}
       {snowEnabled && <div className="xmas-cable-lights-down" />}
@@ -244,6 +574,7 @@ export default function App() {
         hasXml={!!xml.xmlDoc}
         viewMode={viewMode}
         setViewMode={setViewMode}
+        visibleModules={visibleModules}
         xmlDoc={xml.xmlDoc}
         snowEnabled={snowEnabled}
         toggleSnow={() => setSnowEnabled((v) => !v)}
@@ -254,27 +585,36 @@ export default function App() {
           xmlDoc={xml.xmlDoc}
           collapsed={collapsedGroups}
           setCollapsed={setCollapsedGroups}
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
+          selectedItem={selectedSidebarItem}
           onSelect={(id) => {
-            if (viewMode !== "code") {
+            restoredSidebarSelectionRef.current = true;
+            setSelectedSidebarItem(id);
+            const navigationTarget = resolveSidebarTarget(id);
+            if (!navigationTarget) {
               setViewMode("code");
+              return;
             }
-            setHighlightId({ target: activeEditor, id });
-
-            setTimeout(() => setHighlightId(null), 0);
+            const position = resolveXmlPosition(navigationTarget);
+            if (position == null) return;
+            setViewMode("code");
+            setEditorNavigation({
+              seq: navigationSeqRef.current++,
+              target: getEffectiveEditorTarget(),
+              pos: position,
+              sidebarId: id,
+            });
           }}
-          style={{ width: sidebarWidth }}
+          style={{ width: sidebarCollapsed ? 54 : sidebarWidth }}
         />
 
-        <div className="sidebar-resizer" onMouseDown={startResize} />
+        {!sidebarCollapsed && <div className="sidebar-resizer" onMouseDown={startResize} />}
 
         <div className="editor-wrapper full">
           {/* ======================= CODE ======================= */}
-          <div
-            style={{
-              display: viewMode === "code" ? "block" : "none",
-              height: "100%",
-            }}
-          >
+          {visibleModules.code && viewMode === "code" && (
+            <div style={{ height: "100%" }}>
             {!xml.xmlDoc ? (
               <EmptyState onLoadClick={xml.openFile} onNewClick={xml.newXml} />
             ) : (
@@ -308,7 +648,7 @@ export default function App() {
                   <CodeEditor
                     code={xml.code}
                     onChange={xml.setCode}
-                    highlightId={highlightId}
+                    navigationRequest={editorNavigation}
                     onSave={xml.saveXml}
                     canSave={xml.dirty}
                     editable={true}
@@ -318,13 +658,22 @@ export default function App() {
                     theme={theme}
                     editorViewState={editorViewState}
                     setEditorViewState={setEditorViewState}
+                    xmlDoc={xml.xmlDoc}
+                    onOpenFlowState={(stateId) => {
+                      setFlowFocusRequest({
+                        id: String(stateId),
+                        seq: Date.now() + Math.random(),
+                      });
+                      setViewMode("flows");
+                    }}
+                    onOpenScreenForState={openScreenForState}
                   />
 
                   {splitView && (
                     <CodeEditor
                       code={xml.code}
                       onChange={xml.setCode}
-                      highlightId={highlightId}
+                      navigationRequest={editorNavigation}
                       editable={true}
                       viewMode={viewMode}
                       onFocus={(key) => setActiveEditor(key)}
@@ -332,20 +681,26 @@ export default function App() {
                       theme={theme}
                       editorViewState={editorViewState}
                       setEditorViewState={setEditorViewState}
+                      xmlDoc={xml.xmlDoc}
+                      onOpenFlowState={(stateId) => {
+                        setFlowFocusRequest({
+                          id: String(stateId),
+                          seq: Date.now() + Math.random(),
+                        });
+                        setViewMode("flows");
+                      }}
+                      onOpenScreenForState={openScreenForState}
                     />
                   )}
                 </div>
               </div>
             )}
-          </div>
+            </div>
+          )}
 
           {/* ======================= SCREENS ======================= */}
-          <div
-            style={{
-              display: viewMode === "screens" ? "block" : "none",
-              height: "100%",
-            }}
-          >
+          {visibleModules.screens && viewMode === "screens" && (
+            <div style={{ height: "100%" }}>
             <ScreensPanel
               screensFolder={screensFolder}
               setScreensFolder={setScreensFolder}
@@ -354,17 +709,16 @@ export default function App() {
               screensList={screensList}
               selectedScreen={selectedScreen}
               onSelectScreen={setSelectedScreen}
+              screensViewState={screensViewState}
+              onScreensViewStateChange={setScreensViewState}
               setScreensList={setScreensList}
             />
-          </div>
+            </div>
+          )}
 
           {/* ======================= COMPILER ======================= */}
-          <div
-            style={{
-              display: viewMode === "compiler" ? "block" : "none",
-              height: "100%",
-            }}
-          >
+          {visibleModules.compiler && viewMode === "compiler" && (
+            <div style={{ height: "100%" }}>
             <CompilerForm
               xmlCode={xml.code}
               notify={addNotification}
@@ -376,17 +730,43 @@ export default function App() {
               title={xml.title}
               setCompilerState={setCompilerState}
             />
-          </div>
+            </div>
+          )}
 
           {/* ======================= REMOTE ======================= */}
-          <div
-            style={{
-              display: viewMode === "remote" ? "block" : "none",
-              height: "100%",
-            }}
-          >
+          {visibleModules.remote && viewMode === "remote" && (
+            <div style={{ height: "100%" }}>
             <RemoteViewer apiBaseUrl="https://192.168.10.241:5007" />
-          </div>
+            </div>
+          )}
+
+          {/* ======================= FLOWS ======================= */}
+          {visibleModules.flows && viewMode === "flows" && (
+            <div style={{ height: "100%" }}>
+            {xml.xmlDoc ? (
+              <FlowsPanel
+                xmlDoc={xml.xmlDoc}
+                focusStateId={flowFocusRequest?.id || null}
+                focusStateKey={flowFocusRequest?.seq || null}
+                flowViewState={flowViewState}
+                onFlowViewStateChange={setFlowViewState}
+                screensLoaded={!!screensFolder}
+                screensList={screensList}
+                onSelectState={(target) => {
+                  restoredSidebarSelectionRef.current = true;
+                  navigateToXmlTarget(target);
+                }}
+                onOpenScreen={(screen) => {
+                  if (!screen) return;
+                  setViewMode("screens");
+                  setSelectedScreen(screen);
+                }}
+              />
+            ) : (
+              <EmptyState onLoadClick={xml.openFile} onNewClick={xml.newXml} />
+            )}
+            </div>
+          )}
         </div>
       </div>
 

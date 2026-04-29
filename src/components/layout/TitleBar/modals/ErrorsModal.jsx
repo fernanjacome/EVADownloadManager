@@ -8,23 +8,24 @@ export default function ErrorsModal({ isOpen, onClose }) {
     <div className="about-overlay" onClick={onClose}>
       <div className="about-modal" onClick={(e) => e.stopPropagation()}>
         <h2>Errores comunes</h2>
-        <ul>
-          <li>
-            <strong>IDs duplicados</strong> → Cambia el valor del atributo{" "}
-            <code>Id</code> o <code>Code</code>.
-          </li>
-          <li>
-            <strong>XML inválido en línea X, columna Y</strong> → Revisa
-            etiquetas mal cerradas o mal formateadas.
-          </li>
-          <li>
-            <strong>Falta estructura raíz</strong> → Asegúrate de que el XML
-            empiece con <code>&lt;Download&gt;</code>.
-          </li>
-        </ul>
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
+
+        <div className="about-body">
+          <p>
+            Los errores mas tipicos suelen venir de XML mal cerrado, IDs repetidos o referencias que apuntan a algo que ya no existe.
+          </p>
+
+          <ul>
+            <li>Si te habla de linea y columna, casi siempre es estructura XML.</li>
+            <li>Si algo no navega bien, revisa IDs y estados destino.</li>
+            <li>Si una pantalla no abre, revisa que el recurso HTML exista y este cargado.</li>
+          </ul>
+
+          <p className="about-note">
+            Cuando no estes seguro, lo mas util suele ser revisar primero el XML y luego el modulo Flujos.
+          </p>
+        </div>
+
+        <button className="about-close" onClick={onClose}>Cerrar</button>
       </div>
     </div>
   );

@@ -11,21 +11,44 @@
     "dev": "vite",
     "electron:dev": "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron electron/main.js",
     "build": "vite build",
-    "electron:build": "electron-builder"
+    "electron:build": "vite build --emptyOutDir false && electron-builder --publish never"
   },
   "build": {
     "appId": "com.eva.downloadmanager",
     "productName": "EVA Studio 2026",
+    "asar": true,
+    "compression": "maximum",
     "files": [
-      "dist/**",
-      "electron/**"
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!dist/win-unpacked{,/**}",
+      "!dist/*.exe",
+      "!dist/*.blockmap",
+      "!dist/*.yml"
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "assets",
+      "output": "release"
     },
+    "electronLanguages": [
+      "en-US",
+      "es"
+    ],
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "public/favicon.ico"
+    },
+    "nsis": {
+      "artifactName": "${productName} Setup ${version}.${ext}",
+      "deleteAppDataOnUninstall": false
     }
   },
   "dependencies": {

@@ -1,5 +1,4 @@
 TO DO LIST
--Actualizar instantaneamente
--Ampliar arbol de archivos
--Tooltips
--Comentar / Descomentar
+-snipetts para xml
+-toolbox para xml
+-Fold/unfold por states en xml

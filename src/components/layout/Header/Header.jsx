@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaUpload, FaTrash, FaLink } from "react-icons/fa";
+import { FaUpload, FaTrash, FaLink, FaProjectDiagram } from "react-icons/fa";
 import "./Header.css";
 import ConfirmModal from "../../utils/ConfirmModal";
 import { MdScreenshotMonitor } from "react-icons/md";
@@ -13,6 +13,7 @@ export default function Header({
   hasXml,
   viewMode,
   setViewMode,
+  visibleModules,
 }) {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   console.log(fileInfo);
@@ -54,34 +55,50 @@ export default function Header({
           <FaTrash /> Eliminar
         </button>
         <div className="mode-switch">
-          <button
-            className={`mode-btn ${viewMode === "code" ? "active" : ""}`}
-            onClick={() => setViewMode("code")}
-          >
-            <IoCodeSlash /> XML
-          </button>
+          {visibleModules?.code !== false && (
+            <button
+              className={`mode-btn ${viewMode === "code" ? "active" : ""}`}
+              onClick={() => setViewMode("code")}
+            >
+              <IoCodeSlash /> XML
+            </button>
+          )}
 
-          <button
-            className={`mode-btn ${viewMode === "screens" ? "active" : ""}`}
-            onClick={() => setViewMode("screens")}
-          >
-            <MdScreenshotMonitor /> Pantallas
-          </button>
-          <button
-            className={`mode-btn ${viewMode === "compiler" ? "active" : ""}`}
-            onClick={() => setViewMode("compiler")}
-          >
-            <IoBuild /> Compilador
-          </button>
-          <button
-            className={`mode-btn remote ${
-              viewMode === "remote" ? "active" : ""
-            }`}
-            onClick={() => setViewMode("remote")}
-          >
-            <FaLink />
-            Remoto
-          </button>
+          {visibleModules?.screens !== false && (
+            <button
+              className={`mode-btn ${viewMode === "screens" ? "active" : ""}`}
+              onClick={() => setViewMode("screens")}
+            >
+              <MdScreenshotMonitor /> Pantallas
+            </button>
+          )}
+          {visibleModules?.compiler !== false && (
+            <button
+              className={`mode-btn ${viewMode === "compiler" ? "active" : ""}`}
+              onClick={() => setViewMode("compiler")}
+            >
+              <IoBuild /> Compilador
+            </button>
+          )}
+          {visibleModules?.flows !== false && (
+            <button
+              className={`mode-btn ${viewMode === "flows" ? "active" : ""}`}
+              onClick={() => setViewMode("flows")}
+            >
+              <FaProjectDiagram /> Flujos
+            </button>
+          )}
+          {visibleModules?.remote !== false && (
+            <button
+              className={`mode-btn remote ${
+                viewMode === "remote" ? "active" : ""
+              }`}
+              onClick={() => setViewMode("remote")}
+            >
+              <FaLink />
+              Remoto
+            </button>
+          )}
         </div>
 
         <ConfirmModal

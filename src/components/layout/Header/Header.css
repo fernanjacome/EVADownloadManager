@@ -135,7 +135,9 @@
   align-items: center;
 }
 
-
+.mode-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
 
 .mode-btn.active {
   background: var(--c-principal);

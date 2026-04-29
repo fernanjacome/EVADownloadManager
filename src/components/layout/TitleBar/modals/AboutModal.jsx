@@ -2,12 +2,7 @@ import React from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import "./AboutModal.css";
 
-export default function AboutModal({
-  isOpen,
-  onClose,
-  snowEnabled,
-  toggleSnow,
-}) {
+export default function AboutModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
@@ -20,23 +15,21 @@ export default function AboutModal({
 
         <div className="about-body">
           <p>
-            <strong>EVA Studio 2026</strong> es una aplicación diseñada para
-            gestionar y organizar <em>downloads</em> específicamente construidos
-            para integrarse con <strong>EVA</strong>. Integra modulos como
-            <strong> Pantallas</strong>, <strong>Compilador</strong> y{" "}
-            <strong>Remoto</strong> para facilitar el desarrollo en el
-            ecosistema EVA.
+            <strong>EVA Studio 2026</strong> te deja trabajar el XML, revisar el flujo,
+            ver las pantallas y compilar, todo sin estar saltando entre varias herramientas.
+          </p>
+          <p>
+            La idea es simple: cargas un download, lo editas, navegas entre sus partes y vuelves
+            a abrir la app justo como la dejaste.
           </p>
         </div>
 
         <div className="about-footer">
-          <p className="about-version">Versión 1.1.0</p>
+          <p className="about-version">Version 1.1.0</p>
           <p className="about-signature">Extreme Visual Appliance</p>
         </div>
 
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
+        <button className="about-close" onClick={onClose}>Cerrar</button>
       </div>
     </div>
   );

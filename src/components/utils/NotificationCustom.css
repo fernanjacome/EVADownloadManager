@@ -44,10 +44,15 @@
 .notification .close-btn {
   background: transparent;
   border: none;
-  color: inherit;
+  color: #ffffff;
   font-size: 14px;
   cursor: pointer;
   margin-left: 12px;
+  opacity: 0.96;
+}
+
+.notification .close-btn:hover {
+  opacity: 1;
 }
 
 @keyframes fadeIn {

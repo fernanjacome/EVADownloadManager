@@ -1,69 +1,68 @@
 import React from "react";
+import { FaCheckCircle, FaPlayCircle, FaServer } from "react-icons/fa";
 import "./AboutModal.css";
 
-export default function CompilerInfoModal({ isOpen, onClose }) {
+export default function CompileInfoModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
     <div className="about-overlay" onClick={onClose}>
-      <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Información del módulo de Compilación</h2>
+      <div className="about-modal module-help-modal" onClick={(e) => e.stopPropagation()}>
+        <h2>Compilador</h2>
 
-        <ul>
-          <li>
-            Este módulo permite <strong>compilar el XML activo</strong> contra
-            un servidor remoto.
-          </li>
+        <div className="about-body module-help-body">
+          <p className="about-intro">
+            Este modulo envia el XML actual al servicio de compilacion. Se usa cuando el
+            archivo ya esta revisado y quieres generar la imagen o validar el resultado
+            final desde el servidor.
+          </p>
 
-          <li>
-            Para que la compilación funcione, en el servidor debe estar activo
-            la API <strong>Extreme.EVA.APICompiler</strong>.
-          </li>
+          <div className="about-module-grid">
+            <div className="about-section">
+              <h3 className="about-section-title">
+                <FaCheckCircle className="about-section-icon" />
+                <span>Antes de compilar</span>
+              </h3>
+              <ul>
+                <li>Debes tener un XML abierto.</li>
+                <li>Servidor y puerto deben apuntar al compilador correcto.</li>
+                <li>La API <code>Extreme.EVA.APICompiler</code> debe estar disponible.</li>
+              </ul>
+            </div>
 
-          <li>
-            El campo <strong>Servidor</strong> define la IP o hostname donde se
-            ejecuta el compilador.
-          </li>
+            <div className="about-section">
+              <h3 className="about-section-title">
+                <FaServer className="about-section-icon" />
+                <span>Campos principales</span>
+              </h3>
+              <ul>
+                <li><strong>Servidor</strong>: equipo donde corre el compilador.</li>
+                <li><strong>Puerto</strong>: puerto del servicio.</li>
+                <li><strong>BAT</strong>: proceso o script remoto.</li>
+                <li><strong>ID</strong>: identificador de la imagen o compilacion.</li>
+              </ul>
+            </div>
+          </div>
 
-          <li>
-            El campo <strong>Puerto</strong> indica el puerto HTTP del servicio
-            de compilación.
-          </li>
+          <div className="about-section about-section-wide">
+            <h3 className="about-section-title">
+              <FaPlayCircle className="about-section-icon" />
+              <span>Como usarlo</span>
+            </h3>
+            <ol className="about-steps">
+              <li>Revisa el XML y asegurate de que ya este listo.</li>
+              <li>Confirma servidor, puerto, BAT e ID.</li>
+              <li>Ejecuta la compilacion.</li>
+              <li>Si algo falla, revisa la consola del modulo.</li>
+            </ol>
+          </div>
 
-          <li>
-            El campo <strong>BAT</strong> define el nombre del archivo batch que
-            se generará en el servidor.
-          </li>
+          <p className="about-note">
+            Si hay cambios sin guardar, la aplicacion intenta guardarlos antes de compilar.
+          </p>
+        </div>
 
-          <li>
-            El campo <strong>ID</strong> representa el identificador único de la
-            imagen a compilar.
-          </li>
-
-          <li>
-            El botón <strong>Compilar</strong> envía el XML actual al servidor y
-            ejecuta el proceso completo de build.
-          </li>
-
-          <li>
-            Si el XML tiene cambios sin guardar, el sistema{" "}
-            <strong>guarda automáticamente antes de compilar</strong>.
-          </li>
-
-          <li>
-            El botón <strong>Cancelar</strong> interrumpe una compilación en
-            curso.
-          </li>
-
-          <li>
-            La <strong>consola lateral</strong> muestra en tiempo real la salida
-            del compilador y los errores del servidor.
-          </li>
-        </ul>
-
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
+        <button className="about-close" onClick={onClose}>Cerrar</button>
       </div>
     </div>
   );

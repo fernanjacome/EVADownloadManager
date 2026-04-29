@@ -7,27 +7,25 @@ export default function ValidationsModal({ isOpen, onClose }) {
   return (
     <div className="about-overlay" onClick={onClose}>
       <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Validaciones que realiza la aplicación</h2>
-        <ul>
-          <li>
-            Verifica que el XML esté bien formado y sin errores de sintaxis.
-          </li>
-          <li>
-            Controla que no existan <strong>IDs duplicados</strong> en secciones
-            como <code>States</code>, <code>Screens</code> o <code>Fits</code>.
-          </li>
-          <li>
-            Asegura que cada archivo tenga la estructura raíz{" "}
-            <code>&lt;Download&gt;</code>.
-          </li>
-          <li>
-            Confirma que se puedan exportar los cambios sin corromper el
-            archivo.
-          </li>
-        </ul>
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
+        <h2>Validaciones</h2>
+
+        <div className="about-body">
+          <p>
+            La app revisa lo basico para ayudarte a no romper el XML sin darte cuenta.
+          </p>
+
+          <ul>
+            <li>Que el XML este bien formado.</li>
+            <li>Que exista la estructura base esperada.</li>
+            <li>Que no tengas IDs duplicados en secciones importantes.</li>
+          </ul>
+
+          <p className="about-note">
+            Esto ayuda bastante, pero no reemplaza revisar el flujo real y las pantallas cuando el cambio es grande.
+          </p>
+        </div>
+
+        <button className="about-close" onClick={onClose}>Cerrar</button>
       </div>
     </div>
   );

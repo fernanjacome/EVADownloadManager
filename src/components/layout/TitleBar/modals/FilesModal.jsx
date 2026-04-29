@@ -7,26 +7,26 @@ export default function FilesModal({ isOpen, onClose }) {
   return (
     <div className="about-overlay" onClick={onClose}>
       <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Gestión de archivos</h2>
-        <ul>
-          <li>
-            <strong>Nuevo XML </strong> → Genera un archivo base{" "}
-            <code>default.xml</code>.
-          </li>
-          <li>
-            <strong>Cargar XML / Importar</strong> → Abre un archivo local
-            válido.
-          </li>
-          <li>
-            <strong>Eliminar XML</strong> → Limpia el área de trabajo.
-          </li>
-        </ul>
-        <p className="about-note">
-          El nombre del archivo cargado siempre aparece en la barra superior.
-        </p>
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
+        <h2>Archivos</h2>
+
+        <div className="about-body">
+          <p>
+            Desde aqui cargas un XML, empiezas uno nuevo o limpias lo que tienes abierto en la ventana actual.
+          </p>
+
+          <ul>
+            <li><strong>Nuevo XML</strong> te crea una base para empezar rapido.</li>
+            <li><strong>Cargar XML</strong> abre un archivo existente.</li>
+            <li><strong>Guardar</strong> escribe los cambios reales en disco.</li>
+            <li><strong>Eliminar XML</strong> limpia solo esta ventana.</li>
+          </ul>
+
+          <p className="about-note">
+            Aunque cierres la app, el workspace intenta volver a abrirse como lo dejaste.
+          </p>
+        </div>
+
+        <button className="about-close" onClick={onClose}>Cerrar</button>
       </div>
     </div>
   );

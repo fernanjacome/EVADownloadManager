@@ -1,16 +1,19 @@
-// Sidebar.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { groupOrder, sidebarConfig } from "../../../utils/sidebarConfig";
 import "./Sidebar.css";
 import {
+  FaAngleLeft,
+  FaAngleRight,
+  FaChevronDown,
+  FaChevronRight,
   FaCogs,
-  FaProjectDiagram,
   FaDesktop,
-  FaPuzzlePiece,
   FaExchangeAlt,
-  FaSitemap,
   FaExclamationTriangle,
+  FaProjectDiagram,
+  FaPuzzlePiece,
   FaSearch,
+  FaSitemap,
 } from "react-icons/fa";
 
 const groupIcons = {
@@ -29,6 +32,9 @@ export default function Sidebar({
   style,
   setCollapsed,
   collapsed,
+  sidebarCollapsed,
+  setSidebarCollapsed,
+  selectedItem,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef(null);
@@ -44,22 +50,24 @@ export default function Sidebar({
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "b") {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        if (sidebarCollapsed) {
+          setSidebarCollapsed?.(false);
+          setTimeout(() => searchInputRef.current?.focus(), 0);
+        } else {
+          searchInputRef.current?.focus();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [sidebarCollapsed, setSidebarCollapsed]);
 
-  // --- Expandir/cerrar según búsqueda ---
   useEffect(() => {
-    if (!xmlDoc) return; // evitar errores cuando no hay XML
+    if (!xmlDoc) return;
 
     setCollapsed((prev) => {
       const newState = { ...prev };
       if (!searchTerm) {
-        // groupOrder.forEach((g) => (newState[g] = true));
-        // return newState;
         return prev;
       }
       const term = searchTerm.toLowerCase();
@@ -90,18 +98,15 @@ export default function Sidebar({
       });
       return newState;
     });
-  }, [searchTerm, xmlDoc]);
+  }, [searchTerm, xmlDoc, setCollapsed]);
 
   return (
-    <aside className="sidebar" style={style}>
-      {!xmlDoc ? (
-        // 🔹 Estado vacío cuando no hay XML
-        <div className="empty-state">
-          <h2 style={{ width: "60%" }}>No hay XML cargado</h2>
-        </div>
-      ) : (
-        <>
-          {/* 🔹 Buscador */}
+    <aside
+      className={`sidebar ${sidebarCollapsed ? "collapsed-shell" : ""}`}
+      style={style}
+    >
+      <div className="sidebar-topbar">
+        {!sidebarCollapsed && (
           <div className="sidebar-search">
             <div className="search-box">
               <FaSearch className="search-icon" />
@@ -114,8 +119,26 @@ export default function Sidebar({
               />
             </div>
           </div>
+        )}
 
-          {/* 🔹 Grupos */}
+        <button
+          type="button"
+          className="sidebar-collapse-btn"
+          onClick={() => setSidebarCollapsed?.((prev) => !prev)}
+          title={sidebarCollapsed ? "Expandir arbol XML" : "Colapsar arbol XML"}
+        >
+          {sidebarCollapsed ? <FaAngleRight /> : <FaAngleLeft />}
+        </button>
+      </div>
+
+      {!xmlDoc ? (
+        <div className="empty-state">
+          {!sidebarCollapsed && <h2 style={{ width: "60%" }}>No hay XML cargado</h2>}
+        </div>
+      ) : (
+        <>
+          {sidebarCollapsed ? null : (
+            <>
           {groupOrder.map((group) => {
             const config = sidebarConfig[group];
             const section = xmlDoc.querySelector(group);
@@ -125,10 +148,9 @@ export default function Sidebar({
               (child) => child.tagName === config.childTag
             );
 
-            // 🔹 Filtrado
             if (searchTerm) {
               const term = searchTerm.toLowerCase();
-              const groupMatches = group.toLowerCase().includes(term); // ✅ Coincidencia por nombre de grupo
+              const groupMatches = group.toLowerCase().includes(term);
 
               children = children.filter((child) => {
                 const idVal = child.getAttribute(config.idAttr) || "";
@@ -147,7 +169,6 @@ export default function Sidebar({
                 );
               });
 
-              // ✅ Si no hay hijos pero el grupo coincide con la búsqueda, mantenlo
               if (children.length === 0 && groupMatches) {
                 children = Array.from(section.children).filter(
                   (child) => child.tagName === config.childTag
@@ -159,14 +180,23 @@ export default function Sidebar({
 
             return (
               <div key={group} className="sidebar-group">
-                <div
-                  className="sidebar-title"
-                  onClick={() => toggleGroup(group)}
-                >
-                  <span className="sidebar-icon">{groupIcons[group]}</span>
-                  {config.label} ({children.length})
+                <div className="sidebar-title" onClick={() => toggleGroup(group)} title={config.label}>
+                  <div className="sidebar-title-main">
+                    <span className="sidebar-icon">{groupIcons[group]}</span>
+                    {!sidebarCollapsed && (
+                      <span className="sidebar-title-label">
+                        {config.label} ({children.length})
+                      </span>
+                    )}
+                  </div>
+                  {!sidebarCollapsed && (
+                    <span className="sidebar-chevron">
+                      {collapsed[group] ? <FaChevronRight /> : <FaChevronDown />}
+                    </span>
+                  )}
                 </div>
-                {!collapsed[group] && (
+
+                {!sidebarCollapsed && !collapsed[group] && (
                   <ul className="sidebar-list">
                     {children.map((child, idx) => {
                       if (group === "General") {
@@ -174,24 +204,24 @@ export default function Sidebar({
                         return (
                           <li
                             key={`${group}-${key}-${idx}`}
-                            className="sidebar-item"
+                            className={`sidebar-item ${selectedItem === `General-${key}` ? "active" : ""}`}
                             onClick={() => onSelect(`General-${key}`)}
                           >
                             {key}
                           </li>
                         );
                       }
+
                       const idVal = child.getAttribute(config.idAttr);
-                      const comment =
-                        child.getAttribute("Comment") || "No Comment";
+                      const comment = child.getAttribute("Comment") || "No Comment";
                       return (
                         <li
                           key={`${group}-${idVal || `idx${idx}`}`}
-                          className="sidebar-item"
+                          className={`sidebar-item ${
+                            selectedItem === `${config.childTag}-${idVal || `idx${idx}`}` ? "active" : ""
+                          }`}
                           onClick={() =>
-                            onSelect(
-                              `${config.childTag}-${idVal || `idx${idx}`}`
-                            )
+                            onSelect(`${config.childTag}-${idVal || `idx${idx}`}`)
                           }
                           title={comment}
                         >
@@ -204,6 +234,8 @@ export default function Sidebar({
               </div>
             );
           })}
+            </>
+          )}
         </>
       )}
     </aside>

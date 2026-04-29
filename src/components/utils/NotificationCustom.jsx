@@ -17,7 +17,7 @@ export default function NotificationCustom({
     <div className={`notification ${type}`}>
       <span>{message}</span>
       <button className="close-btn" onClick={onClose}>
-        ✖
+       x
       </button>
     </div>
   );

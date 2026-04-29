@@ -7,24 +7,27 @@ export default function FormatModal({ isOpen, onClose }) {
   return (
     <div className="about-overlay" onClick={onClose}>
       <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Formato válido para XML</h2>
-        <p>El archivo debe respetar esta estructura mínima:</p>
-        <pre className="xml-sample">
-          {`<?xml version="1.0" encoding="utf-8"?>
+        <h2>Formato XML</h2>
+
+        <div className="about-body">
+          <p>
+            Este apartado es para recordarte la base minima que la app espera en un download.
+          </p>
+
+          <pre className="xml-sample">{`<?xml version="1.0" encoding="utf-8"?>
 <Download>
   <States>...</States>
   <Screens>...</Screens>
   <Fits>...</Fits>
   <General>...</General>
-</Download>`}
-        </pre>
-        <p>
-          Siempre debe comenzar con la cabecera <code>&lt;?xml ... ?&gt;</code>{" "}
-          y contener el nodo raíz <code>&lt;Download&gt;</code>.
-        </p>
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
+</Download>`}</pre>
+
+          <p>
+            No hace falta que todo tenga exactamente el mismo orden siempre, pero si conviene mantenerlo limpio y bien cerrado para que la navegacion no se rompa.
+          </p>
+        </div>
+
+        <button className="about-close" onClick={onClose}>Cerrar</button>
       </div>
     </div>
   );

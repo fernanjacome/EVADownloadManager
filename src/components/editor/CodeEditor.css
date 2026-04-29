@@ -7,20 +7,18 @@
   min-height: 0;
   overflow: auto;
   max-height: 87dvh;
-  /* el wrapper oculta */
 }
-
 
 .editor-container .cm-editor {
   flex: 1;
   height: 100% !important;
   overflow: auto !important;
-  /* 🔹 cada CodeMirror scrollea de forma independiente */
   font-family: Consolas, monospace;
   font-size: 13px;
   background: var(--c-fondo-code) !important;
   color: var(--txt-code) !important;
   line-height: 1.5;
+  border-right: 1px solid color-mix(in srgb, var(--border-general) 68%, transparent 32%);
 }
 
 .cm-gutters {
@@ -33,27 +31,20 @@
   color: var(--c-fondo-secundario);
   padding: 2px 8px;
   border-radius: 999px;
-  /* forma de píldora */
   font-size: 12px;
   font-weight: 600;
   align-self: center;
 }
 
-/* Estilo normal */
 .editor-code {
   transition: all 0.2s ease;
 }
 
-/* Modo lectura */
 .editor-code.read-only {
   opacity: 0.7;
-  /* más tenue */
   filter: grayscale(0.5);
-  /* ligero gris */
   cursor: not-allowed;
-  /* cursor bloqueado */
   background: #111 !important;
-  /* fondo un poco más oscuro */
 }
 
 .editor-code.read-only::after {
@@ -66,10 +57,11 @@
   font-size: 48px;
   font-weight: bold;
   pointer-events: none;
-  /* no bloquea clics */
 }
 
-.ͼo .cm-panels.cm-panels-bottom {
+.cm-panels,
+.cm-panels.cm-panels-top,
+.cm-panels.cm-panels-bottom {
   display: none !important;
 }
 
@@ -114,7 +106,6 @@
   border-bottom: 2px solid orange;
 }
 
-
 .editor-fontsize button {
   background: #333;
   border: 1px solid #444;
@@ -137,8 +128,66 @@
   transform: scale(0.9);
 }
 
+.editor-context-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 200px;
+  background: var(--c-fondo);
+  border: 1px solid var(--border-general);
+  border-radius: 10px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.editor-context-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--txt-normald);
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-context-item:hover {
+  background: var(--hover-general);
+  color: var(--c-principal);
+}
+
+.editor-context-separator {
+  height: 1px;
+  background: var(--border-general);
+  margin: 4px 6px;
+}
+
+body.light-theme .editor-context-menu {
+  background: #ffffff;
+  border-color: #cfd7d3;
+}
+
+body.light-theme .editor-context-item {
+  color: #1f312b;
+}
+
+body.light-theme .editor-context-item:hover {
+  background: #edf5f1;
+  color: #137a57;
+}
+
 .cm-activeLine {
-  background-color: #00c8961f !important;
+  background-color: color-mix(in srgb, var(--c-principal) 10%, transparent 90%) !important;
+}
+
+body:not(.light-theme) .cm-activeLine {
+  background-color: rgba(0, 200, 150, 0.07) !important;
 }
 
 .editor-folding {
@@ -172,6 +221,16 @@
 
 .cm-activeLineGutter {
   background-color: var(--c-fondo-code) !important;
+}
+
+body:not(.light-theme) .editor-container .cm-editor {
+  background: #161c1b !important;
+  color: #dce6e2 !important;
+}
+
+body:not(.light-theme) .cm-gutters {
+  background: #1b2322 !important;
+  color: #7f918c !important;
 }
 
 @media (max-width: 1366px) and (max-height: 768px) {

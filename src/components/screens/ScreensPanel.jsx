@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ScreenSelector from "./ScreenSelector";
 import ScreenViewer from "./ScreenViewer";
 import "./screens.css";
 import { FaFolderOpen, FaPlay } from "react-icons/fa";
 import { FaRotateRight, FaStop } from "react-icons/fa6";
+import { FiSearch, FiX } from "react-icons/fi";
 
 export default function ScreensPanel({
   screensFolder,
@@ -13,12 +14,19 @@ export default function ScreensPanel({
   screensList,
   selectedScreen,
   onSelectScreen,
+  screensViewState,
+  onScreensViewStateChange,
   setScreensList,
 }) {
   const [showRecent, setShowRecent] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sidebarWidth, setSidebarWidth] = useState(300);
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const resizeRef = useRef(null);
   const [recentFolders, setRecentFolders] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("screens_recent_folders")) || [];
@@ -27,6 +35,40 @@ export default function ScreensPanel({
     }
   });
   const shouldShowDropdown = showRecent && recentFolders.length > 0;
+  const filteredScreens = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return screensList;
+
+    return screensList.filter((screen) =>
+      String(screen.resource || "").toLowerCase().includes(query)
+    );
+  }, [screensList, searchTerm]);
+
+  useEffect(() => {
+    if (!showSearch) return;
+    setTimeout(() => searchInputRef.current?.focus(), 0);
+  }, [showSearch]);
+
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      if (!resizeRef.current) return;
+      const nextWidth = Math.max(220, Math.min(520, event.clientX - resizeRef.current.left));
+      setSidebarWidth(nextWidth);
+    };
+
+    const handleMouseUp = () => {
+      resizeRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
 
   const handleSelectFolder = async () => {
     const folder = await window.electronAPI.openFolderDialog();
@@ -115,7 +157,7 @@ export default function ScreensPanel({
 
   return (
     <div className="screens-layout">
-      <div className="screens-sidebar">
+      <div className="screens-sidebar" style={{ width: sidebarWidth }}>
         {/* Selector de carpeta con input + botones */}
         <div className="folder-selector">
           <input
@@ -230,12 +272,68 @@ export default function ScreensPanel({
           </button>
         </div>
 
+        <div className="screens-tools-row">
+          <button
+            type="button"
+            className={`screens-search-toggle ${showSearch ? "active" : ""}`}
+            onClick={() => {
+              setShowSearch((prev) => {
+                const next = !prev;
+                if (!next) {
+                  setSearchTerm("");
+                }
+                return next;
+              });
+            }}
+            title="Buscar pantalla"
+          >
+            <FiSearch />
+            <span>Buscar</span>
+          </button>
+
+          {showSearch ? (
+            <div className="screens-search-box">
+              <FiSearch className="screens-search-icon" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Filtrar pantallas..."
+              />
+              {searchTerm ? (
+                <button
+                  type="button"
+                  className="screens-search-clear"
+                  onClick={() => setSearchTerm("")}
+                  title="Limpiar"
+                >
+                  <FiX />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
         <ScreenSelector
-          screens={screensList}
+          screens={filteredScreens}
           selected={selectedScreen}
           onSelect={onSelectScreen}
         />
       </div>
+
+      <div
+        className="screens-sidebar-resizer"
+        onMouseDown={(event) => {
+          const bounds = event.currentTarget.parentElement?.getBoundingClientRect();
+          resizeRef.current = {
+            left: bounds?.left ?? 0,
+          };
+          document.body.style.cursor = "col-resize";
+          document.body.style.userSelect = "none";
+          event.preventDefault();
+        }}
+      />
 
       <div className="screens-viewer-area">
         {!screensFolder && (
@@ -250,6 +348,8 @@ export default function ScreensPanel({
           <ScreenViewer
             folder={screensFolder}
             resource={selectedScreen.resource}
+            viewState={screensViewState}
+            onViewStateChange={onScreensViewStateChange}
           />
         )}
       </div>
