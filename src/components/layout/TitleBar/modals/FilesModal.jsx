@@ -11,22 +11,32 @@ export default function FilesModal({ isOpen, onClose }) {
 
         <div className="about-body">
           <p>
-            Desde aqui cargas un XML, empiezas uno nuevo o limpias lo que tienes abierto en la ventana actual.
+            Desde aqui cargas un XML, empiezas uno nuevo o limpias lo que tienes
+            abierto en la ventana actual.
           </p>
 
           <ul>
-            <li><strong>Nuevo XML</strong> te crea una base para empezar rapido.</li>
-            <li><strong>Cargar XML</strong> abre un archivo existente.</li>
-            <li><strong>Guardar</strong> escribe los cambios reales en disco.</li>
-            <li><strong>Eliminar XML</strong> limpia solo esta ventana.</li>
+            <li>
+              <strong>Importar</strong> te permite cargar un archivo XML.
+            </li>
+            <li>
+              <strong>Guardar</strong> escribe los cambios en el archivo.
+            </li>
+            <li>
+              <strong>Eliminar</strong> limpia el archivo de esta ventana.
+            </li>
           </ul>
 
           <p className="about-note">
-            Aunque cierres la app, el workspace intenta volver a abrirse como lo dejaste.
+            La aplicación guarda el estado del usuario automáticamente, al
+            cerrar la aplicación y volver a abrirla, el workspace se cargara
+            como estaba.
           </p>
         </div>
 
-        <button className="about-close" onClick={onClose}>Cerrar</button>
+        <button className="about-close" onClick={onClose}>
+          Cerrar
+        </button>
       </div>
     </div>
   );

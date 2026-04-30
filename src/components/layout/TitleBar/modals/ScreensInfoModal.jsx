@@ -7,37 +7,40 @@ export default function ScreensInfoModal({ isOpen, onClose }) {
 
   return (
     <div className="about-overlay" onClick={onClose}>
-      <div className="about-modal module-help-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="about-modal module-help-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2>Pantallas</h2>
 
         <div className="about-body module-help-body">
           <p className="about-intro">
-            Este modulo muestra los HTML reales de una carpeta. Sirve para revisar si una
-            pantalla existe, si abre bien y si corresponde con lo que esta usando el XML.
+            Aquí puedes ver los HTML reales desde una carpeta y validar si
+            coinciden con el XML.
           </p>
 
           <div className="about-module-grid">
             <div className="about-section">
               <h3 className="about-section-title">
                 <FaFolderOpen className="about-section-icon" />
-                <span>Como trabajar aqui</span>
+                <span>Uso</span>
               </h3>
               <ol className="about-steps">
-                <li>Selecciona la carpeta donde estan las pantallas.</li>
-                <li>Revisa la lista y elige la que quieres abrir.</li>
-                <li>Usa el visor para validar contenido, tamano y estilo general.</li>
+                <li>Selecciona la carpeta.</li>
+                <li>Elige una pantalla.</li>
+                <li>Revisa su contenido en el visor.</li>
               </ol>
             </div>
 
             <div className="about-section">
               <h3 className="about-section-title">
                 <FaSyncAlt className="about-section-icon" />
-                <span>Cuando refrescar</span>
+                <span>Refrescar</span>
               </h3>
               <ul>
-                <li>Si cambiaste la ruta manualmente.</li>
-                <li>Si editaste HTML, CSS o JS fuera de la app.</li>
-                <li>Si parece que estas viendo una version anterior.</li>
+                <li>Si cambiaste la ruta.</li>
+                <li>Si editaste archivos fuera de la app.</li>
+                <li>Si ves una versión desactualizada.</li>
               </ul>
             </div>
           </div>
@@ -45,17 +48,19 @@ export default function ScreensInfoModal({ isOpen, onClose }) {
           <div className="about-section about-section-wide">
             <h3 className="about-section-title">
               <FaImages className="about-section-icon" />
-              <span>Importante</span>
+              <span>Notas</span>
             </h3>
             <ul>
-              <li>La lista depende de la carpeta cargada, no del XML.</li>
-              <li>Puedes revisar pantallas aunque todavia no esten referenciadas en el flujo.</li>
-              <li>Si llegas desde XML o Flujos, la app intenta abrir directamente la pantalla asociada.</li>
+              <li>La lista depende de la carpeta, no del XML.</li>
+              <li>Puedes abrir pantallas sin referencia en el flujo.</li>
+              <li>Desde XML o Flujos se intenta abrir la pantalla asociada.</li>
             </ul>
           </div>
         </div>
 
-        <button className="about-close" onClick={onClose}>Cerrar</button>
+        <button className="about-close" onClick={onClose}>
+          Cerrar
+        </button>
       </div>
     </div>
   );

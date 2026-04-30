@@ -15,21 +15,25 @@ export default function AboutModal({ isOpen, onClose }) {
 
         <div className="about-body">
           <p>
-            <strong>EVA Studio 2026</strong> te deja trabajar el XML, revisar el flujo,
-            ver las pantallas y compilar, todo sin estar saltando entre varias herramientas.
+            <strong>EVA Studio 2026</strong> te permite trabajar el XML, revisar
+            el flujo, ver las pantallas y compilar, todo sin estar saltando
+            entre varias herramientas.
           </p>
           <p>
-            La idea es simple: cargas un download, lo editas, navegas entre sus partes y vuelves
-            a abrir la app justo como la dejaste.
+            La idea es simple: cargas un download, lo editas, navegas entre sus
+            <code>states</code>, visualizas los <code>screens</code> y validas
+            con el flujo.
           </p>
         </div>
 
         <div className="about-footer">
-          <p className="about-version">Version 1.1.0</p>
+          <p className="about-version">Version 1.2.1</p>
           <p className="about-signature">Extreme Visual Appliance</p>
         </div>
 
-        <button className="about-close" onClick={onClose}>Cerrar</button>
+        <button className="about-close" onClick={onClose}>
+          Cerrar
+        </button>
       </div>
     </div>
   );

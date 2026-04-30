@@ -2,3 +2,5 @@ TO DO LIST
 -snipetts para xml
 -toolbox para xml
 -Fold/unfold por states en xml
+-control + click en *States y *Screen
+

@@ -204,6 +204,7 @@ function getTransactions(xmlDoc) {
                 operCodeKey,
                 nextState,
                 params,
+                paramsList: Object.entries(params).map(([key, value]) => ({ key, value })),
             };
         })
         .filter((tran) => tran.operCodeKey && tran.nextState);
@@ -229,6 +230,7 @@ function getTranMaps(xmlDoc) {
                 id: tranMapNode.getAttribute("Id") || "",
                 comment: tranMapNode.getAttribute("Comment") || "",
                 operationCodeKey: params.OperationCodeKey || "",
+                params: Object.entries(params).map(([key, value]) => ({ key, value })),
                 fields,
             };
         })
@@ -308,6 +310,7 @@ function getMatchedTranMap(tranMapsByOperCode, ancestorSetValues) {
 }
 
 function buildTransactionEdgeLabelMeta({ bufferName, bufferValue, tran, tranMap = null }) {
+    const transactionParams = tran.paramsList || Object.entries(tran.params || {}).map(([key, value]) => ({ key, value }));
     const matchedFields = tranMap?.fields?.length
         ? tranMap.fields
             .map((field) => (field.value ? `${field.name}=${field.value}` : field.name))
@@ -326,6 +329,12 @@ function buildTransactionEdgeLabelMeta({ bufferName, bufferValue, tran, tranMap 
             operCodeKey: tran.operCodeKey,
             tranMapId: tranMap.id || "",
             tranMapComment: tranMap.comment || "",
+            tranMapOperationCodeKey: tranMap.operationCodeKey || "",
+            tranMapParams: tranMap.params || [],
+            tranMapFields: tranMap.fields || [],
+            transactionOperCodeKey: tran.operCodeKey,
+            transactionNextState: tran.nextState || "",
+            transactionParams,
             matchedFields,
         };
     }
@@ -337,6 +346,9 @@ function buildTransactionEdgeLabelMeta({ bufferName, bufferValue, tran, tranMap 
         labelWidth: matchedFields ? 168 : 132,
         sourceKind: "transaction-continuation",
         operCodeKey: tran.operCodeKey,
+        transactionOperCodeKey: tran.operCodeKey,
+        transactionNextState: tran.nextState || "",
+        transactionParams,
         matchedFields,
     };
 }
@@ -626,6 +638,7 @@ export function buildFlowGraph(xmlDoc) {
                 source,
                 target,
                 label: displayLabel || key,
+                transitionKey: key,
                 sourceKind: "state",
             });
         });
@@ -733,7 +746,9 @@ export function buildFlowGraph(xmlDoc) {
 
     positionedEdges.forEach((edge) => {
         outgoingCount.set(edge.source, (outgoingCount.get(edge.source) || 0) + 1);
-        incomingCount.set(edge.target, (incomingCount.get(edge.target) || 0) + 1);
+        if (edge.sourceKind === "state") {
+            incomingCount.set(edge.target, (incomingCount.get(edge.target) || 0) + 1);
+        }
     });
 
     const startNodeIds = positionedNodes

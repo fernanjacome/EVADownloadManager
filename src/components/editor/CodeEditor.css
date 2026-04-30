@@ -224,12 +224,12 @@ body:not(.light-theme) .cm-activeLine {
 }
 
 body:not(.light-theme) .editor-container .cm-editor {
-  background: #161c1b !important;
+  background: #1e1e1e !important;
   color: #dce6e2 !important;
 }
 
 body:not(.light-theme) .cm-gutters {
-  background: #1b2322 !important;
+  background: #1e1e1e !important;
   color: #7f918c !important;
 }
 

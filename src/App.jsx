@@ -51,6 +51,8 @@ const DEFAULT_STATE = {
     showAppearance: false,
     showSearch: false,
     showCanvasZoom: false,
+    showSideExits: false,
+    autoFocusOnExpand: true,
     searchTerm: "",
     scrollLeft: 0,
     scrollTop: 0,
@@ -261,7 +263,7 @@ export default function App() {
         "i"
       );
     } else if (typeof target === "object" && target?.type === "sidebar") {
-      const escapedValue = String(target.value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const escapedValue = String(target.value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       switch (target.section) {
         case "General":
           regex = new RegExp(
@@ -418,6 +420,21 @@ export default function App() {
 
     if (typeof target === "object" && target?.type === "param") {
       const sidebarId = `State-${target.stateId}`;
+      setSelectedSidebarItem(sidebarId);
+      setEditorNavigation({
+        seq: navigationSeqRef.current++,
+        target: editorTarget,
+        pos: position,
+        sidebarId,
+      });
+      return;
+    }
+
+    if (typeof target === "object" && target?.type === "sidebar") {
+      const sidebarId =
+        target.section === "General"
+          ? `General-${target.value}`
+          : `${target.section}-${target.value}`;
       setSelectedSidebarItem(sidebarId);
       setEditorNavigation({
         seq: navigationSeqRef.current++,

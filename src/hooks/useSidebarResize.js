@@ -12,6 +12,7 @@ export function useSidebarResize(setWidth, { min = 160, max = 500 } = {}) {
 
         const onUp = () => {
             isResizingRef.current = false;
+            document.body.classList.remove("resizing-sidebar");
         };
 
         window.addEventListener("mousemove", onMove);
@@ -20,10 +21,15 @@ export function useSidebarResize(setWidth, { min = 160, max = 500 } = {}) {
         return () => {
             window.removeEventListener("mousemove", onMove);
             window.removeEventListener("mouseup", onUp);
+            document.body.classList.remove("resizing-sidebar");
         };
     }, [setWidth, min, max]);
 
     return {
-        startResize: () => (isResizingRef.current = true),
+        startResize: (event) => {
+            event?.preventDefault?.();
+            isResizingRef.current = true;
+            document.body.classList.add("resizing-sidebar");
+        },
     };
 }

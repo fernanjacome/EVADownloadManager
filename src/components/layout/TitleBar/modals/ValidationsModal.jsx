@@ -10,22 +10,25 @@ export default function ValidationsModal({ isOpen, onClose }) {
         <h2>Validaciones</h2>
 
         <div className="about-body">
-          <p>
-            La app revisa lo basico para ayudarte a no romper el XML sin darte cuenta.
+          <p className="about-intro">
+            Estas validaciones revisan lo básico para evitar errores en el XML.
           </p>
 
           <ul>
-            <li>Que el XML este bien formado.</li>
-            <li>Que exista la estructura base esperada.</li>
-            <li>Que no tengas IDs duplicados en secciones importantes.</li>
+            <li>El XML está bien formado.</li>
+            <li>La estructura base existe.</li>
+            <li>No hay IDs duplicados en secciones importantes.</li>
           </ul>
 
           <p className="about-note">
-            Esto ayuda bastante, pero no reemplaza revisar el flujo real y las pantallas cuando el cambio es grande.
+            Sirve como apoyo, pero no reemplaza revisar el flujo completo cuando
+            el cambio es grande.
           </p>
         </div>
 
-        <button className="about-close" onClick={onClose}>Cerrar</button>
+        <button className="about-close" onClick={onClose}>
+          Cerrar
+        </button>
       </div>
     </div>
   );
