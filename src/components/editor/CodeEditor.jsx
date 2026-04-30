@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { EditorSelection } from "@codemirror/state";
 import { xml } from "@codemirror/lang-xml";
+import { foldEffect, foldedRanges, unfoldEffect } from "@codemirror/language";
 import {
   SearchQuery,
   findNext,
@@ -23,10 +24,67 @@ import {
 import { MdContentPaste, MdOutlineSelectAll, MdOutlineSmartDisplay } from "react-icons/md";
 import SearchBar from "../utils/SearchBar";
 import { evaXmlDark, notepadPlus } from "../../utils/notepadPlusTheme";
+import { groupOrder, sidebarConfig } from "../../utils/sidebarConfig";
 import "./CodeEditor.css";
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getPresentXmlFoldGroups(xmlDoc) {
+  if (!xmlDoc) return [];
+
+  return groupOrder
+    .map((parentTag) => {
+      const config = sidebarConfig[parentTag];
+      if (!config?.childTag) return null;
+
+      const count = xmlDoc.querySelectorAll(`${parentTag} > ${config.childTag}`).length;
+      if (!count) return null;
+
+      return {
+        parentTag,
+        childTag: config.childTag,
+        label: config.label || parentTag,
+        count,
+      };
+    })
+    .filter(Boolean);
+}
+
+function findXmlChildFoldRanges(source, group) {
+  const text = String(source || "");
+  const parentPattern = new RegExp(`<${group.parentTag}\\b[^>]*>[\\s\\S]*?<\\/${group.parentTag}>`, "gi");
+  const ranges = [];
+  let parentMatch;
+
+  while ((parentMatch = parentPattern.exec(text))) {
+    const parentStart = parentMatch.index;
+    const parentText = parentMatch[0];
+    const childPattern = new RegExp(
+      `<${group.childTag}\\b[^>]*(?:\\/>|>[\\s\\S]*?<\\/${group.childTag}>)`,
+      "gi"
+    );
+    let childMatch;
+
+    while ((childMatch = childPattern.exec(parentText))) {
+      const childText = childMatch[0];
+      if (/\/>\s*$/i.test(childText)) continue;
+
+      const openMatch = childText.match(new RegExp(`^<${group.childTag}\\b[^>]*>`, "i"));
+      const closeTag = `</${group.childTag}>`;
+      const closeIndex = childText.toLowerCase().lastIndexOf(closeTag.toLowerCase());
+      if (!openMatch || closeIndex === -1) continue;
+
+      const blockFrom = parentStart + childMatch.index;
+      const blockTo = blockFrom + childText.length;
+      const from = blockFrom + openMatch[0].length;
+      const to = blockFrom + closeIndex;
+      if (to > from) ranges.push({ from, to, blockFrom, blockTo });
+    }
+  }
+
+  return ranges;
 }
 
 export default function CodeEditor({
@@ -65,6 +123,82 @@ export default function CodeEditor({
   });
   const [searchMetrics, setSearchMetrics] = useState({ total: 0, current: 0 });
   const [contextMenu, setContextMenu] = useState(null);
+  const foldGroups = useMemo(() => getPresentXmlFoldGroups(xmlDoc), [xmlDoc]);
+
+  const getXmlFoldRanges = (group = null) => {
+    const source = viewRef.current?.state.doc.toString() || code || "";
+    const groups = group ? [group] : foldGroups;
+    return groups.flatMap((item) => findXmlChildFoldRanges(source, item));
+  };
+
+  const foldXmlRanges = (ranges) => {
+    const view = viewRef.current;
+    const effects = ranges
+      .filter((range) => range?.to > range?.from)
+      .map((range) => foldEffect.of({ from: range.from, to: range.to }));
+    if (!view || effects.length === 0) return;
+
+    view.dispatch({ effects });
+    view.focus();
+    setContextMenu(null);
+  };
+
+  const unfoldXmlRanges = (ranges) => {
+    const view = viewRef.current;
+    const effects = ranges
+      .filter((range) => range?.to > range?.from)
+      .map((range) => unfoldEffect.of({ from: range.from, to: range.to }));
+    if (!view || effects.length === 0) return;
+
+    view.dispatch({ effects });
+    view.focus();
+    setContextMenu(null);
+  };
+
+  const hasFoldedXmlRange = (ranges) => {
+    const view = viewRef.current;
+    if (!view || !ranges.length) return false;
+
+    let hasFolded = false;
+    foldedRanges(view.state).between(0, view.state.doc.length, (from, to) => {
+      if (hasFolded) return;
+      hasFolded = ranges.some((range) => range.from === from && range.to === to);
+    });
+
+    return hasFolded;
+  };
+
+  const toggleXmlFoldGroup = (group) => {
+    const ranges = getXmlFoldRanges(group);
+    if (!ranges.length) return;
+
+    if (hasFoldedXmlRange(ranges)) {
+      unfoldXmlRanges(ranges);
+      return;
+    }
+
+    foldXmlRanges(ranges);
+  };
+
+  const openEditorContextMenu = (event) => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const pos =
+      view.posAtCoords({ x: event.clientX, y: event.clientY }) ??
+      view.state.selection.main.from;
+    const stateContext = getXmlContextAtPosition(code, pos);
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      pos,
+      stateContext,
+      submenuSide: event.clientX > window.innerWidth - 560 ? "left" : "right",
+    });
+  };
 
   const getXmlContextAtPosition = (source, position) => {
     const text = String(source || "");
@@ -437,18 +571,7 @@ export default function CodeEditor({
     if (!view) return;
 
     const handleContextMenu = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const pos =
-        view.posAtCoords({ x: event.clientX, y: event.clientY }) ??
-        view.state.selection.main.from;
-      const stateContext = getXmlContextAtPosition(code, pos);
-      setContextMenu({
-        x: event.clientX,
-        y: event.clientY,
-        pos,
-        stateContext,
-      });
+      openEditorContextMenu(event);
     };
 
     view.dom.addEventListener("contextmenu", handleContextMenu, true);
@@ -459,20 +582,7 @@ export default function CodeEditor({
     <div
       className="editor-container"
       onContextMenuCapture={(event) => {
-        const view = viewRef.current;
-        if (!view) return;
-        event.preventDefault();
-        event.stopPropagation();
-        const pos =
-          view.posAtCoords({ x: event.clientX, y: event.clientY }) ??
-          view.state.selection.main.from;
-        const stateContext = getXmlContextAtPosition(code, pos);
-        setContextMenu({
-          x: event.clientX,
-          y: event.clientY,
-          pos,
-          stateContext,
-        });
+        openEditorContextMenu(event);
       }}
     >
       {showSearch && (
@@ -598,9 +708,11 @@ export default function CodeEditor({
       {contextMenu && (
         <div
           ref={contextMenuRef}
-          className="editor-context-menu"
+          className={`editor-context-menu ${
+            contextMenu.submenuSide === "left" ? "submenu-left" : ""
+          }`}
           style={{
-            left: Math.min(contextMenu.x, window.innerWidth - 220),
+            left: Math.min(contextMenu.x, window.innerWidth - 280),
             top: Math.min(contextMenu.y, window.innerHeight - 240),
           }}
           onClick={(event) => event.stopPropagation()}
@@ -666,6 +778,32 @@ export default function CodeEditor({
             <FaSearch />
             Buscar...
           </button>
+
+          {foldGroups.length ? (
+            <>
+              <div className="editor-context-separator" />
+              <div className="editor-context-submenu-wrap">
+                <button type="button" className="editor-context-item editor-context-submenu-trigger">
+                  <span>Plegar / Desplegar</span>
+                  <small>{">"}</small>
+                </button>
+                <div className="editor-context-submenu">
+                  {foldGroups.map((group) => (
+                    <button
+                      type="button"
+                      className="editor-context-item editor-fold-group"
+                      key={`${group.parentTag}-${group.childTag}`}
+                      onClick={() => toggleXmlFoldGroup(group)}
+                      title={`Plegar o desplegar ${group.label}`}
+                    >
+                      <span>{group.label}</span>
+                      <small>{group.count}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : null}
 
           {contextMenu.stateContext?.stateId ? (
             <>

@@ -891,15 +891,15 @@ function isScreenParamKey(key) {
 }
 
 function NodeBadges({ node, graph, hiddenExitCount }) {
+  const isEndState =
+    graph.endNodeIds.includes(node.id) ||
+    String(node?.type || "").toUpperCase() === "END";
   return (
     <div className="flow-node-badges">
-      {graph.startNodeIds.includes(node.id) && (
+      {graph.startNodeIds.includes(node.id) && !isEndState && (
         <span className="flow-screen-chip start">Inicio</span>
       )}
-      {!graph.startNodeIds.includes(node.id) &&
-        graph.endNodeIds.includes(node.id) && (
-          <span className="flow-screen-chip end">Fin</span>
-        )}
+      {isEndState && <span className="flow-screen-chip end">Fin</span>}
       {hiddenExitCount > 0 && (
         <span className="flow-side-exit-chip" title="Excepciones ocultas">
           +{hiddenExitCount}

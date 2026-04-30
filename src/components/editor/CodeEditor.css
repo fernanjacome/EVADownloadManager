@@ -131,7 +131,8 @@
 .editor-context-menu {
   position: fixed;
   z-index: 60;
-  min-width: 200px;
+  min-width: 260px;
+  max-width: 340px;
   background: var(--c-fondo);
   border: 1px solid var(--border-general);
   border-radius: 10px;
@@ -162,6 +163,91 @@
   color: var(--c-principal);
 }
 
+.editor-context-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.editor-context-item:disabled:hover {
+  background: transparent;
+  color: var(--txt-normald);
+}
+
+.editor-context-submenu-wrap {
+  position: relative;
+}
+
+.editor-context-submenu-trigger {
+  justify-content: space-between;
+}
+
+.editor-context-submenu-trigger small {
+  color: var(--txt-normalc);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.editor-context-submenu {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: -5px;
+  min-width: 190px;
+  max-height: 260px;
+  overflow: auto;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px;
+  border: 1px solid var(--border-general);
+  border-radius: 10px;
+  background: var(--c-fondo);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.editor-context-menu.submenu-left .editor-context-submenu {
+  left: auto;
+  right: calc(100% + 6px);
+}
+
+.editor-context-submenu-wrap:hover .editor-context-submenu,
+.editor-context-submenu-wrap:focus-within .editor-context-submenu {
+  display: flex;
+}
+
+.editor-fold-group {
+  justify-content: space-between;
+}
+
+.editor-fold-group span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-fold-group small {
+  min-width: 18px;
+  color: var(--txt-normalc);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.editor-fold-group:hover span,
+.editor-fold-group:hover small {
+  color: var(--c-principal);
+}
+
+.cm-foldPlaceholder {
+  border: 1px solid color-mix(in srgb, var(--border-general) 70%, transparent 30%) !important;
+  border-radius: 4px !important;
+  background: color-mix(in srgb, var(--c-fondo-secundario) 80%, transparent 20%) !important;
+  color: var(--txt-normalc) !important;
+  padding: 0 4px !important;
+  margin: 0 2px !important;
+  cursor: pointer;
+}
+
 .editor-context-separator {
   height: 1px;
   background: var(--border-general);
@@ -180,6 +266,16 @@ body.light-theme .editor-context-item {
 body.light-theme .editor-context-item:hover {
   background: #edf5f1;
   color: #137a57;
+}
+
+body.light-theme .editor-context-item:disabled:hover {
+  color: #1f312b;
+}
+
+body.light-theme .cm-foldPlaceholder {
+  background: #eef4f1 !important;
+  border-color: #cdd8d4 !important;
+  color: #50615b !important;
 }
 
 .cm-activeLine {
