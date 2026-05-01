@@ -683,13 +683,14 @@ body:not(.light-theme) .flow-stage-edge.tone-key {
 
 .flow-edge-pill {
   position: absolute;
-  min-height: 26px;
+  --flow-edge-label-scale: 1;
+  min-height: calc(26px * var(--flow-edge-label-scale));
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   border-radius: 999px;
-  font-size: 9.8px;
+  font-size: calc(9.8px * var(--flow-edge-label-scale));
   font-weight: 650;
   letter-spacing: 0;
   line-height: 1.1;
@@ -700,7 +701,7 @@ body:not(.light-theme) .flow-stage-edge.tone-key {
   box-shadow:
     0 6px 14px rgba(76, 92, 124, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  padding: 0 11px;
+  padding: 0 calc(11px * var(--flow-edge-label-scale));
   pointer-events: auto;
   cursor: pointer;
   backdrop-filter: blur(6px);
@@ -725,9 +726,12 @@ body:not(.light-theme) .flow-stage-edge.tone-key {
 }
 
 .flow-edge-pill.has-secondary {
-  min-height: 36px;
-  border-radius: 12px;
-  padding: 4px 11px 5px;
+  min-height: calc(36px * var(--flow-edge-label-scale));
+  border-radius: calc(12px * var(--flow-edge-label-scale));
+  padding:
+    calc(4px * var(--flow-edge-label-scale))
+    calc(11px * var(--flow-edge-label-scale))
+    calc(5px * var(--flow-edge-label-scale));
 }
 
 .flow-edge-pill-main {
@@ -742,8 +746,8 @@ body:not(.light-theme) .flow-stage-edge.tone-key {
 .flow-edge-pill-sub {
   display: block;
   width: 100%;
-  margin-top: 3px;
-  font-size: 8.6px;
+  margin-top: calc(3px * var(--flow-edge-label-scale));
+  font-size: calc(8.6px * var(--flow-edge-label-scale));
   font-weight: 500;
   opacity: 0.76;
   white-space: nowrap;

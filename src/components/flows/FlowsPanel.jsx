@@ -8,9 +8,12 @@ import React, {
 import {
   FaBullseye,
   FaCreditCard,
+  FaDownload,
   FaEquals,
   FaExternalLinkAlt,
   FaExpandArrowsAlt,
+  FaFastBackward,
+  FaFastForward,
   FaKeyboard,
   FaLayerGroup,
   FaMapMarkerAlt,
@@ -25,6 +28,7 @@ import {
   FaTimes,
   FaVectorSquare,
 } from "react-icons/fa";
+import { toPng } from "html-to-image";
 import { IoCodeSlash } from "react-icons/io5";
 import "./flows.css";
 import { buildFlowGraph } from "../../utils/xmlUtils";
@@ -84,6 +88,23 @@ function getStartCategory(node) {
   if (type === "SWITCH") return "SWITCH";
   if (type === "SELECT") return "SELECT";
   return "OTROS";
+}
+
+function downloadDataUrl(dataUrl, filename) {
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function getExportTimestamp() {
+  return new Date()
+    .toISOString()
+    .replace(/[:.]/g, "-")
+    .replace("T", "_")
+    .slice(0, 19);
 }
 
 function getStartCategoryOrder(node) {
@@ -1336,14 +1357,15 @@ export default function FlowsPanel({
 
   const nextIdRef = useRef(1);
   const scrollRef = useRef(null);
+  const canvasStageRef = useRef(null);
   const pendingCenterRef = useRef(false);
   const pendingFocusModeRef = useRef("center");
+  const pendingFocusBehaviorRef = useRef("smooth");
   const pendingCategoryFocusRef = useRef(null);
   const pendingScrollRestoreRef = useRef(false);
   const restoredViewportRef = useRef(false);
   const skipScrollPersistRef = useRef(false);
   const skipScrollPersistTimerRef = useRef(null);
-  const lastViewSignatureRef = useRef("");
   const dragRef = useRef(null);
   const searchInputRef = useRef(null);
   const canvasZoomRef = useRef(
@@ -1356,6 +1378,7 @@ export default function FlowsPanel({
   const layoutMotionFrameRef = useRef(null);
   const layoutMotionSettleFrameRef = useRef(null);
   const layoutAnimationTimerRef = useRef(null);
+  const suppressLayoutMotionRef = useRef(false);
   const scrollAnimationFrameRef = useRef(null);
   const latestScrollRef = useRef({
     left: initialViewStateRef.current.scrollLeft ?? 0,
@@ -1403,6 +1426,7 @@ export default function FlowsPanel({
   const [paramMenu, setParamMenu] = useState(null);
   const [edgeMenu, setEdgeMenu] = useState(null);
   const [sendMenu, setSendMenu] = useState(null);
+  const [exportBusy, setExportBusy] = useState(false);
   const inspectorRef = useRef(null);
   const paramMenuRef = useRef(null);
   const edgeMenuRef = useRef(null);
@@ -1482,6 +1506,13 @@ export default function FlowsPanel({
     });
 
     previousLayoutPositionRef.current = current;
+
+    if (suppressLayoutMotionRef.current) {
+      suppressLayoutMotionRef.current = false;
+      setLayoutMotionById({});
+      setLayoutAnimating(false);
+      return;
+    }
 
     if (!Object.keys(motions).length) return;
 
@@ -1680,6 +1711,15 @@ export default function FlowsPanel({
   ]);
 
   const setLayoutPreset = (preset) => {
+    const prepareViewLayoutChange = (behavior = "smooth") => {
+      suppressLayoutMotionRef.current = true;
+      pendingFocusModeRef.current = "center";
+      pendingFocusBehaviorRef.current = behavior;
+      pendingCenterRef.current = Boolean(selectedInstanceId);
+      temporarilySkipScrollPersist(240);
+    };
+
+    prepareViewLayoutChange();
     if (preset === "compacta") {
       setHorizontalScale(0.95);
       setVerticalScale(0.95);
@@ -1695,6 +1735,15 @@ export default function FlowsPanel({
     setHorizontalScale(1.12);
     setVerticalScale(1.08);
     setCardScale(1);
+  };
+
+  const updateViewScale = (setter, value) => {
+    suppressLayoutMotionRef.current = true;
+    pendingFocusModeRef.current = "center";
+    pendingFocusBehaviorRef.current = "auto";
+    pendingCenterRef.current = Boolean(selectedInstanceId);
+    temporarilySkipScrollPersist(180);
+    setter(value);
   };
 
   const selectedInstance = selectedInstanceId
@@ -1770,8 +1819,14 @@ export default function FlowsPanel({
           incomingTransitionKey: instance.incomingTransitionKey,
         });
 
+        const labelScale = Math.max(0.9, Math.min(cardScale, 1.7));
+        const baseLabelWidth =
+          instance.incomingLabelWidth || edgeMeta?.labelWidth || EDGE_LABEL_WIDTH;
+
         return {
           id: `${instance.parentInstanceId}-${instance.instanceId}`,
+          sourceInstanceId: source.instanceId,
+          targetInstanceId: target.instanceId,
           source: {
             ...source,
             bounds: getNodeShapeMetrics(
@@ -1797,10 +1852,8 @@ export default function FlowsPanel({
           label: instance.incomingLabel || "",
           primaryLabel: readable.primaryLabel,
           secondaryLabel: readable.secondaryLabel,
-          labelWidth:
-            instance.incomingLabelWidth ||
-            edgeMeta?.labelWidth ||
-            EDGE_LABEL_WIDTH,
+          labelWidth: Math.round(baseLabelWidth * labelScale),
+          labelScale,
           tone: getEdgeTone(
             instance.incomingTransitionKey ||
               edgeMeta?.transitionKey ||
@@ -2017,6 +2070,7 @@ export default function FlowsPanel({
   const centerCurrentView = () => {
     if (!selectedInstanceId && scaledLayout.positioned[0]?.instanceId) {
       pendingFocusModeRef.current = "center";
+      pendingFocusBehaviorRef.current = "smooth";
       pendingCenterRef.current = true;
       setSelectedInstanceId(scaledLayout.positioned[0].instanceId);
       return;
@@ -2024,6 +2078,192 @@ export default function FlowsPanel({
 
     pendingFocusModeRef.current = "center";
     focusOnSelectedInstance("center", "smooth");
+  };
+
+  const focusInstanceById = (instanceId, behavior = "smooth") => {
+    if (!instanceId) return;
+    pendingFocusModeRef.current = "center";
+    pendingFocusBehaviorRef.current = behavior;
+    pendingCenterRef.current = true;
+
+    if (instanceId === selectedInstanceId) {
+      pendingCenterRef.current = false;
+      focusOnSelectedInstance("center", behavior);
+      return;
+    }
+
+    setSelectedInstanceId(instanceId);
+  };
+
+  const getCurrentBranchItems = () => {
+    const itemById = new Map(
+      scaledLayout.positioned.map((item) => [item.instanceId, item]),
+    );
+    const selectedItem =
+      (selectedInstanceId && itemById.get(selectedInstanceId)) ||
+      scaledLayout.positioned[0];
+    const rootId = getRootInstanceId(selectedItem, itemById);
+    const branchIds = new Set([
+      rootId,
+      ...collectDescendants(rootId, scaledLayout.positioned),
+    ]);
+
+    return {
+      rootId,
+      branchItems: scaledLayout.positioned.filter((item) =>
+        branchIds.has(item.instanceId),
+      ),
+    };
+  };
+
+  const goToFlowStart = () => {
+    const { rootId } = getCurrentBranchItems();
+    focusInstanceById(rootId);
+  };
+
+  const goToFlowEnd = () => {
+    const { branchItems } = getCurrentBranchItems();
+    if (!branchItems.length) return;
+
+    const parentIds = new Set(
+      branchItems.map((item) => item.parentInstanceId).filter(Boolean),
+    );
+    const lastItem = branchItems
+      .filter((item) => !parentIds.has(item.instanceId))
+      .sort(
+        (left, right) =>
+          right.level - left.level || right.x - left.x || right.y - left.y,
+      )[0];
+
+    focusInstanceById(lastItem?.instanceId);
+  };
+
+  const getCurrentBranchExport = () => {
+    const itemById = new Map(
+      scaledLayout.positioned.map((item) => [item.instanceId, item]),
+    );
+    const selectedItem =
+      (selectedInstanceId && itemById.get(selectedInstanceId)) ||
+      scaledLayout.positioned[0];
+    const rootId = getRootInstanceId(selectedItem, itemById);
+    const branchIds = new Set([
+      rootId,
+      ...collectDescendants(rootId, scaledLayout.positioned),
+    ]);
+    const branchItems = scaledLayout.positioned.filter((item) =>
+      branchIds.has(item.instanceId),
+    );
+
+    if (!branchItems.length) return null;
+
+    const padding = Math.round(120 * Math.max(1, Math.min(cardScale, 1.45)));
+    const nodeBounds = branchItems.map((item) => ({
+      left: item.x,
+      top: item.y,
+      right: item.x + cardWidth,
+      bottom: item.y + cardHeight,
+    }));
+    const edgeBounds = edgesToRender
+      .filter(
+        (edge) =>
+          branchIds.has(edge.sourceInstanceId) &&
+          branchIds.has(edge.targetInstanceId),
+      )
+      .map((edge) => {
+        const path = getEdgePath(
+          edge.source,
+          edge.target,
+          cardWidth,
+          cardHeight,
+          edge.labelWidth,
+        );
+        const labelHeight = (edge.secondaryLabel ? 40 : 30) * edge.labelScale;
+        return {
+          left: Math.min(path.startX, path.midX, path.labelStartX, path.beforeEndX),
+          top: Math.min(path.startY, path.endY - labelHeight / 2),
+          right: Math.max(path.midX, path.labelEndX, path.beforeEndX),
+          bottom: Math.max(path.startY, path.endY + labelHeight / 2),
+        };
+      });
+    const bounds = [...nodeBounds, ...edgeBounds];
+    const minX = Math.min(...bounds.map((item) => item.left));
+    const minY = Math.min(...bounds.map((item) => item.top));
+    const maxX = Math.max(...bounds.map((item) => item.right));
+    const maxY = Math.max(...bounds.map((item) => item.bottom));
+    const rootItem = rootId ? itemById.get(rootId) : selectedItem;
+
+    return {
+      branchIds,
+      filenameBase: `eva-flujo-rama-${rootItem?.stateId || "actual"}-${getExportTimestamp()}`,
+      width: Math.max(480, Math.ceil(maxX - minX + padding * 2)),
+      height: Math.max(320, Math.ceil(maxY - minY + padding * 2)),
+      style: {
+        transform: `translate(${padding - minX}px, ${padding - minY}px)`,
+        transformOrigin: "top left",
+        overflow: "visible",
+      },
+    };
+  };
+
+  const exportFlow = async () => {
+    const target = canvasStageRef.current;
+    const viewport = scrollRef.current;
+    if (!target || !viewport || exportBusy) return;
+
+    setExportBusy(true);
+
+    try {
+      const backgroundColor =
+        getComputedStyle(viewport).getPropertyValue("--flow-bg").trim() ||
+        (document.body.classList.contains("light-theme") ? "#f5f7fb" : "#111111");
+      const exportConfig = getCurrentBranchExport();
+      if (!exportConfig) return;
+      const { branchIds, filenameBase, width, height, style } = exportConfig;
+      const pixelRatio = Math.max(
+        1,
+        Math.min(2, Math.sqrt(24000000 / Math.max(width * height, 1))),
+      );
+
+      const dataUrl = await toPng(target, {
+        backgroundColor,
+        cacheBust: true,
+        pixelRatio,
+        width,
+        height,
+        style: {
+          ...style,
+          width: `${width}px`,
+          height: `${height}px`,
+        },
+        filter: (node) => {
+          if (node.classList?.contains?.("flow-inspector")) {
+            return false;
+          }
+
+          if (node.classList?.contains?.("flow-start-group-block")) return false;
+          if (node.classList?.contains?.("flow-stage-node")) {
+            return branchIds.has(node.dataset.instanceId);
+          }
+          if (
+            node.classList?.contains?.("flow-edge-pill") ||
+            node.hasAttribute?.("data-flow-edge")
+          ) {
+            return (
+              branchIds.has(node.dataset.sourceInstanceId) &&
+              branchIds.has(node.dataset.targetInstanceId)
+            );
+          }
+
+          return true;
+        },
+      });
+
+      downloadDataUrl(dataUrl, `${filenameBase}.png`);
+    } catch (error) {
+      console.error("No se pudo exportar el flujo", error);
+    } finally {
+      setExportBusy(false);
+    }
   };
 
   const getScreenStatus = (node) => {
@@ -2483,22 +2723,12 @@ export default function FlowsPanel({
     if (!container || !selectedPositionedInstance || !pendingCenterRef.current)
       return;
     pendingCenterRef.current = false;
-    focusOnSelectedInstance(pendingFocusModeRef.current, "smooth");
+    focusOnSelectedInstance(
+      pendingFocusModeRef.current,
+      pendingFocusBehaviorRef.current || "smooth",
+    );
+    pendingFocusBehaviorRef.current = "smooth";
   }, [selectedPositionedInstance, cardWidth, cardHeight]);
-
-  useEffect(() => {
-    if (!restoredViewportRef.current || !selectedPositionedInstance) return;
-
-    const signature = [horizontalScale, verticalScale, cardScale].join("|");
-    if (!lastViewSignatureRef.current) {
-      lastViewSignatureRef.current = signature;
-      return;
-    }
-
-    if (signature === lastViewSignatureRef.current) return;
-    lastViewSignatureRef.current = signature;
-    focusOnSelectedInstance("center", "auto");
-  }, [horizontalScale, verticalScale, cardScale, selectedPositionedInstance]);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -2662,12 +2892,17 @@ export default function FlowsPanel({
   );
   const extraScrollableWidth =
     maxVisibleLevel >= 2 ? 420 + (maxVisibleLevel - 2) * 140 : 0;
+  const canvasVisualWidth = Math.max(
+    scaledLayout.width + extraScrollableWidth,
+    720,
+  );
+  const canvasVisualHeight = Math.max(scaledLayout.height * 2, 720);
   const zoomedCanvasWidth = Math.max(
-    Math.round((scaledLayout.width + extraScrollableWidth) * canvasZoom),
+    Math.round(canvasVisualWidth * canvasZoom),
     720,
   );
   const zoomedCanvasHeight = Math.max(
-    Math.round(scaledLayout.height * canvasZoom),
+    Math.round(canvasVisualHeight * canvasZoom),
     360,
   );
   const selectedStats = selectedNode
@@ -2773,6 +3008,16 @@ export default function FlowsPanel({
           <div className="flows-toolbar-group flows-toolbar-actions">
             <button
               type="button"
+              className="flows-tool-btn"
+              onClick={exportFlow}
+              disabled={exportBusy || !scaledLayout.positioned.length}
+              title="Exportar flujo en PNG"
+            >
+              <FaDownload />
+              <span>{exportBusy ? "Exportando" : "Exportar"}</span>
+            </button>
+            <button
+              type="button"
               className={`flows-tool-btn ${showLayoutPanel ? "active" : ""}`}
               onClick={() => setShowLayoutPanel((prev) => !prev)}
             >
@@ -2848,11 +3093,11 @@ export default function FlowsPanel({
                   <input
                     type="range"
                     min="0.82"
-                    max="1.45"
+                    max="1.8"
                     step="0.02"
                     value={cardScale}
                     onChange={(event) =>
-                      setCardScale(Number(event.target.value))
+                      updateViewScale(setCardScale, Number(event.target.value))
                     }
                   />
                 </label>
@@ -2868,7 +3113,10 @@ export default function FlowsPanel({
                     step="0.05"
                     value={horizontalScale}
                     onChange={(event) =>
-                      setHorizontalScale(Number(event.target.value))
+                      updateViewScale(
+                        setHorizontalScale,
+                        Number(event.target.value),
+                      )
                     }
                   />
                 </label>
@@ -2881,7 +3129,10 @@ export default function FlowsPanel({
                     step="0.05"
                     value={verticalScale}
                     onChange={(event) =>
-                      setVerticalScale(Number(event.target.value))
+                      updateViewScale(
+                        setVerticalScale,
+                        Number(event.target.value),
+                      )
                     }
                   />
                 </label>
@@ -2899,20 +3150,21 @@ export default function FlowsPanel({
             }}
           >
             <div
+              ref={canvasStageRef}
               className={`flow-canvas-stage ${
                 layoutAnimating ? "layout-animating" : ""
               }`}
               style={{
-                width: Math.max(scaledLayout.width + extraScrollableWidth, 720),
-                height: Math.max(scaledLayout.height, 360),
+                width: canvasVisualWidth,
+                height: canvasVisualHeight,
                 transform: `scale(${canvasZoom})`,
                 transformOrigin: "top left",
               }}
             >
               <svg
                 className="flow-canvas-svg"
-                width={Math.max(scaledLayout.width + extraScrollableWidth, 720)}
-                height={Math.max(scaledLayout.height, 360)}
+                width={canvasVisualWidth}
+                height={canvasVisualHeight}
               >
                 <defs>
                   <marker
@@ -2937,7 +3189,12 @@ export default function FlowsPanel({
                     edge.labelWidth,
                   );
                   return (
-                    <g key={edge.id}>
+                    <g
+                      key={edge.id}
+                      data-flow-edge="true"
+                      data-source-instance-id={edge.sourceInstanceId}
+                      data-target-instance-id={edge.targetInstanceId}
+                    >
                       <path
                         d={`M ${path.startX} ${path.startY} H ${path.midX}`}
                         className="flow-stage-edge tone-root"
@@ -2973,9 +3230,14 @@ export default function FlowsPanel({
                       }`}
                       style={{
                         left: path.labelStartX,
-                        top: path.endY - (edge.secondaryLabel ? 20 : 13),
+                        top:
+                          path.endY -
+                          (edge.secondaryLabel ? 20 : 13) * edge.labelScale,
                         width: path.labelWidth,
+                        "--flow-edge-label-scale": edge.labelScale,
                       }}
+                      data-source-instance-id={edge.sourceInstanceId}
+                      data-target-instance-id={edge.targetInstanceId}
                       title={
                         edge.meta?.tranMapComment ||
                         edge.meta?.transactionComment ||
@@ -3049,6 +3311,7 @@ export default function FlowsPanel({
                   <div
                     key={instance.instanceId}
                     className="flow-stage-node"
+                    data-instance-id={instance.instanceId}
                     style={{
                       left: instance.x,
                       top: instance.y,
@@ -3134,6 +3397,24 @@ export default function FlowsPanel({
               title="Centrar seleccion"
             >
               <FaExpandArrowsAlt />
+            </button>
+            <button
+              type="button"
+              className="flow-zoom-step"
+              onClick={goToFlowStart}
+              title="Ir al inicio del flujo"
+              disabled={!scaledLayout.positioned.length}
+            >
+              <FaFastBackward />
+            </button>
+            <button
+              type="button"
+              className="flow-zoom-step"
+              onClick={goToFlowEnd}
+              title="Ir al final del flujo"
+              disabled={!scaledLayout.positioned.length}
+            >
+              <FaFastForward />
             </button>
             <span className="flow-zoom-value">
               {Math.round((canvasZoom / NATURAL_CANVAS_ZOOM) * 100)}%
