@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
-import { EditorSelection } from "@codemirror/state";
+import { EditorSelection, StateEffect, StateField } from "@codemirror/state";
+import { Decoration } from "@codemirror/view";
 import { xml } from "@codemirror/lang-xml";
 import { foldEffect, foldedRanges, unfoldEffect } from "@codemirror/language";
+import { autocompletion, snippet } from "@codemirror/autocomplete";
 import {
   SearchQuery,
   findNext,
@@ -87,6 +89,314 @@ function findXmlChildFoldRanges(source, group) {
   return ranges;
 }
 
+function makeSnippetCompletion({ label, detail, info, type = "snippet", template, tagTemplate }) {
+  return {
+    label,
+    type,
+    detail,
+    info,
+    boost: 4,
+    apply: (view, completion, from, to) => {
+      const before = view.state.doc.sliceString(Math.max(0, from - 1), from);
+      const useTemplate = before === "<" && tagTemplate ? tagTemplate : template;
+      snippet(useTemplate)(view, completion, from, to);
+    },
+  };
+}
+
+function normalizeCompletionText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function getFuzzyScore(query, option) {
+  const normalizedQuery = normalizeCompletionText(query);
+  if (!normalizedQuery) return 0;
+
+  const label = normalizeCompletionText(option.label);
+  const detail = normalizeCompletionText(option.detail);
+  const searchable = `${label}${detail}`;
+
+  if (label.startsWith(normalizedQuery)) return 120 - label.length;
+  if (label.includes(normalizedQuery)) return 90 - label.indexOf(normalizedQuery);
+
+  let cursor = 0;
+  let score = 0;
+  for (const char of normalizedQuery) {
+    const foundAt = searchable.indexOf(char, cursor);
+    if (foundAt === -1) return Number.NEGATIVE_INFINITY;
+    score += foundAt === cursor ? 4 : 1;
+    cursor = foundAt + 1;
+  }
+
+  return score;
+}
+
+function getFilteredXmlSnippets(query) {
+  if (!query) return EVA_XML_SNIPPETS;
+
+  const matches = EVA_XML_SNIPPETS.map((option) => ({
+    option,
+    score: getFuzzyScore(query, option),
+  }))
+    .filter((item) => item.score > Number.NEGATIVE_INFINITY)
+    .sort((a, b) => b.score - a.score)
+    .map(({ option, score }) => ({
+      ...option,
+      boost: score,
+    }));
+
+  return matches.length ? matches : EVA_XML_SNIPPETS;
+}
+
+const EVA_XML_SNIPPETS = [
+  makeSnippetCompletion({
+    label: "State",
+    detail: "Elemento State",
+    info: "State base con Id, Type y Comment.",
+    template: `<State Id="\${id}" Type="\${type}" Comment="\${comment}">\n\t\${}\n</State>`,
+    tagTemplate: `State Id="\${id}" Type="\${type}" Comment="\${comment}">\n\t\${}\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:select",
+    detail: "SELECT con pantalla y botones",
+    template: `<State Id="\${id}" Type="SELECT" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="KeyAState">\${stateA}</Param>\n\t<Param Key="KeyBState">\${stateB}</Param>\n\t<Param Key="CancelState">900</Param>\n\t<Param Key="TimeoutState">900</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:set",
+    detail: "SET Buffer/Valor",
+    template: `<State Id="\${id}" Type="SET" Comment="\${comment}">\n\t<Param Key="BuffName">\${buffer}</Param>\n\t<Param Key="BuffValue">\${value}</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:setwhen",
+    detail: "SETWHEN por valores",
+    template: `<State Id="\${id}" Type="SETWHEN" Comment="\${comment}">\n\t<Param Key="WhenBuffer">\${whenBuffer}</Param>\n\t<Param Key="SetBuffer">\${setBuffer}</Param>\n\t<Param Key="When1">\${whenValue}</Param>\n\t<Param Key="Set1">\${setValue}</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:switch",
+    detail: "SWITCH por Buffer",
+    template: `<State Id="\${id}" Type="SWITCH" Comment="\${comment}">\n\t<Param Key="Buffer">\${buffer}</Param>\n\t<Param Key="Mode">0</Param>\n\t<Param Key="Value1">\${value1}</Param>\n\t<Param Key="State1">\${state1}</Param>\n\t<Param Key="DefaultState">\${defaultState}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:send",
+    detail: "SEND transaccional",
+    template: `<State Id="\${id}" Type="SEND" Comment="\${comment}">\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:entry",
+    detail: "ENTRY captura buffer",
+    template: `<State Id="\${id}" Type="ENTRY" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Buffer">\${buffer}</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="CancelState">900</Param>\n\t<Param Key="TimeoutState">900</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:pin",
+    detail: "PIN desde pinpad",
+    template: `<State Id="\${id}" Type="PIN" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Buffer">PIN</Param>\n\t<Param Key="MinLen">4</Param>\n\t<Param Key="MaxLen">4</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:crd",
+    detail: "CRD lector tarjeta",
+    template: `<State Id="\${id}" Type="CRD" Comment="\${comment}">\n\t<Param Key="ReadFlags">11</Param>\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Timeout">0</Param>\n\t<Param Key="GoodState">\${goodState}</Param>\n\t<Param Key="CardLessState">\${cardLessState}</Param>\n\t<Param Key="NoMatchState">\${noMatchState}</Param>\n\t<Param Key="TimeoutState">998</Param>\n\t<Param Key="ErrorState">900</Param>\n\t<Param Key="InvalidCardScreen">\${invalidCardScreen}</Param>\n\t<Param Key="RemoveCardScreen">\${removeCardScreen}</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:crdsrc",
+    detail: "CRDSRC origen tarjeta",
+    template: `<State Id="\${id}" Type="CRDSRC" Comment="\${comment}">\n\t<Param Key="Chip">\${chipState}</Param>\n\t<Param Key="Track">\${trackState}</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "state:end",
+    detail: "END fin de flujo",
+    template: `<State Id="\${id}" Type="END" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Timeout">5</Param>\n</State>`,
+  }),
+  makeSnippetCompletion({
+    label: "Screen",
+    detail: "Elemento Screen",
+    template: `<Screen Id="\${id}" Comment="\${comment}">\n\t<Param Key="Resource">\${resource}.html</Param>\n</Screen>`,
+    tagTemplate: `Screen Id="\${id}" Comment="\${comment}">\n\t<Param Key="Resource">\${resource}.html</Param>\n</Screen>`,
+  }),
+  makeSnippetCompletion({
+    label: "Tran",
+    detail: "Transaction",
+    template: `<Tran Code="\${code}" Comment="\${comment}">\n\t<Param Key="OperCodeKey">\${operCode}</Param>\n\t<Param Key="NextStateContinue">\${next}</Param>\n</Tran>`,
+    tagTemplate: `Tran Code="\${code}" Comment="\${comment}">\n\t<Param Key="OperCodeKey">\${operCode}</Param>\n\t<Param Key="NextStateContinue">\${next}</Param>\n</Tran>`,
+  }),
+  makeSnippetCompletion({
+    label: "TranMap",
+    detail: "Mapeo de transaccion",
+    template: `<TranMap Id="\${id}" Comment="\${comment}">\n\t<Param Key="OperationCodeKey">\${operCode}</Param>\n\t<Param Key="FieldName1">\${field}</Param>\n\t<Param Key="FieldValue1">\${value}</Param>\n</TranMap>`,
+    tagTemplate: `TranMap Id="\${id}" Comment="\${comment}">\n\t<Param Key="OperationCodeKey">\${operCode}</Param>\n\t<Param Key="FieldName1">\${field}</Param>\n\t<Param Key="FieldValue1">\${value}</Param>\n</TranMap>`,
+  }),
+  makeSnippetCompletion({
+    label: "Error",
+    detail: "Error por RetCode",
+    template: `<Error RetCode="\${retCode}" Comment="\${comment}">\n\t<Param Key="NextState">\${state}</Param>\n</Error>`,
+    tagTemplate: `Error RetCode="\${retCode}" Comment="\${comment}">\n\t<Param Key="NextState">\${state}</Param>\n</Error>`,
+  }),
+  makeSnippetCompletion({
+    label: "Param",
+    detail: "Parametro XML",
+    template: `<Param Key="\${key}">\${value}</Param>`,
+    tagTemplate: `Param Key="\${key}">\${value}</Param>`,
+  }),
+  ...[
+    "Screen",
+    "SelScreen",
+    "GoodState",
+    "ErrorState",
+    "TimeoutState",
+    "CancelState",
+    "NoMatchState",
+    "DefaultState",
+    "Buffer",
+    "BuffName",
+    "BuffValue",
+    "Mode",
+    "WhenBuffer",
+    "SetBuffer",
+    "OperationCodeKey",
+    "OperCodeKey",
+    "NextStateContinue",
+    "FieldName1",
+    "FieldValue1",
+    "Value1",
+    "State1",
+    "KeyAState",
+    "KeyBState",
+    "KeyCState",
+    "KeyDState",
+    "KeyFState",
+    "KeyGState",
+    "KeyHState",
+    "KeyIState",
+  ].map((key) =>
+    makeSnippetCompletion({
+      label: `param:${key}`,
+      detail: "Param comun",
+      template: `<Param Key="${key}">\${value}</Param>`,
+    })
+  ),
+];
+
+function createEvaXmlCompletionSource({ automaticMinLength = 3 } = {}) {
+  return (context) => {
+    const word = context.matchBefore(/[A-Za-z0-9_:-]*/);
+    if (!word || (word.from === word.to && !context.explicit)) return null;
+    const query = context.state.doc.sliceString(word.from, word.to);
+    if (!context.explicit && query.length < automaticMinLength) return null;
+
+    return {
+      from: word.from,
+      options: getFilteredXmlSnippets(query),
+      filter: false,
+    };
+  };
+}
+
+function findXmlDefinitionPosition(source, kind, id) {
+  const escapedId = escapeRegex(id);
+  const tag = kind === "screen" ? "Screen" : "State";
+  const pattern = new RegExp(`<${tag}\\b[^>]*Id=["']${escapedId}["'][^>]*>`, "i");
+  const match = String(source || "").match(pattern);
+  return match?.index ?? null;
+}
+
+function getXmlReferenceAtPosition(source, position) {
+  const text = String(source || "");
+  const safePos = Math.max(0, Math.min(position ?? 0, text.length));
+  const paramPattern = /<Param\b[^>]*Key=["']([^"']+)["'][^>]*>([^<]*)<\/Param>/gi;
+  let match;
+
+  while ((match = paramPattern.exec(text))) {
+    const full = match[0];
+    const key = match[1];
+    const value = match[2]?.trim?.() || "";
+    if (!value) continue;
+
+    const valueStartInMatch = full.indexOf(match[2]);
+    const valueFrom = match.index + valueStartInMatch;
+    const leadingSpace = match[2].search(/\S/);
+    const trimmedFrom = valueFrom + Math.max(0, leadingSpace);
+    const trimmedTo = trimmedFrom + value.length;
+    const linkFrom = match.index;
+    const linkTo = match.index + full.length;
+    if (safePos < linkFrom || safePos > linkTo) continue;
+
+    if (/Screen/i.test(key)) {
+      return { kind: "screen", id: value, from: linkFrom, to: linkTo };
+    }
+
+    if (/State/i.test(key) || /^(Chip|Track)$/i.test(key)) {
+      return { kind: "state", id: value, from: linkFrom, to: linkTo };
+    }
+  }
+
+  return null;
+}
+
+const xmlReferenceLinkEffect = StateEffect.define();
+
+const xmlReferenceLinkDecoration = Decoration.mark({
+  class: "cm-xml-reference-link",
+});
+
+const xmlReferenceLinkField = StateField.define({
+  create() {
+    return Decoration.none;
+  },
+  update(value, transaction) {
+    let next = value.map(transaction.changes);
+    for (const effect of transaction.effects) {
+      if (effect.is(xmlReferenceLinkEffect)) {
+        const range = effect.value;
+        next = range ? Decoration.set([xmlReferenceLinkDecoration.range(range.from, range.to)]) : Decoration.none;
+      }
+    }
+    return next;
+  },
+  provide: (field) => EditorView.decorations.from(field),
+});
+
+function createXmlReferenceLinkHover() {
+  let lastPointer = null;
+
+  const setReferenceLink = (view, pointer, active) => {
+    if (!active || !pointer) {
+      view.dispatch({ effects: xmlReferenceLinkEffect.of(null) });
+      return;
+    }
+
+    const pos = view.posAtCoords(pointer);
+    const reference = pos == null ? null : getXmlReferenceAtPosition(view.state.doc.toString(), pos);
+    view.dispatch({
+      effects: xmlReferenceLinkEffect.of(reference ? { from: reference.from, to: reference.to } : null),
+    });
+  };
+
+  const clearReferenceLink = (_, view) => {
+    view.dispatch({ effects: xmlReferenceLinkEffect.of(null) });
+  };
+
+  return EditorView.domEventHandlers({
+    mousemove: (event, view) => {
+      lastPointer = { x: event.clientX, y: event.clientY };
+      setReferenceLink(view, lastPointer, event.ctrlKey || event.metaKey);
+      return false;
+    },
+    mouseleave: clearReferenceLink,
+    keydown: (event, view) => {
+      if (event.key === "Control" || event.key === "Meta") {
+        setReferenceLink(view, lastPointer, true);
+      }
+      return false;
+    },
+    keyup: (event, view) => {
+      if (event.key === "Control" || event.key === "Meta") clearReferenceLink(event, view);
+      return false;
+    },
+    blur: clearReferenceLink,
+  });
+}
+
 export default function CodeEditor({
   code,
   onChange,
@@ -103,6 +413,7 @@ export default function CodeEditor({
   xmlDoc,
   onOpenFlowState,
   onOpenScreenForState,
+  suggestionSettings,
 }) {
   const viewRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -118,12 +429,12 @@ export default function CodeEditor({
     query: "",
     replaceText: "",
     matchCase: false,
-    useRegex: false,
     wholeWord: false,
   });
   const [searchMetrics, setSearchMetrics] = useState({ total: 0, current: 0 });
   const [contextMenu, setContextMenu] = useState(null);
   const foldGroups = useMemo(() => getPresentXmlFoldGroups(xmlDoc), [xmlDoc]);
+  const activateSuggestionsOnTyping = suggestionSettings?.activation !== "manual";
 
   const getXmlFoldRanges = (group = null) => {
     const source = viewRef.current?.state.doc.toString() || code || "";
@@ -275,7 +586,7 @@ export default function CodeEditor({
       search: state.query,
       replace: state.replaceText,
       caseSensitive: state.matchCase,
-      regexp: state.useRegex,
+      regexp: false,
       wholeWord: state.wholeWord,
     });
 
@@ -354,12 +665,14 @@ export default function CodeEditor({
 
   const replaceCurrent = () => {
     if (!viewRef.current) return;
+    syncSearchToView(searchState, { moveToFirst: false });
     replaceNext(viewRef.current);
     updateSearchMetrics(viewRef.current);
   };
 
   const replaceEveryMatch = () => {
     if (!viewRef.current) return;
+    syncSearchToView(searchState, { moveToFirst: false });
     replaceAll(viewRef.current);
     updateSearchMetrics(viewRef.current);
   };
@@ -377,6 +690,35 @@ export default function CodeEditor({
       selection: EditorSelection.range(selection.from, selection.to),
       effects: EditorView.scrollIntoView(selection.from, { y: "center" }),
     });
+  };
+
+  const jumpToXmlReference = (view, reference) => {
+    if (!view || !reference?.id) return false;
+
+    const source = view.state.doc.toString();
+    const targetPos = findXmlDefinitionPosition(source, reference.kind, reference.id);
+    if (targetPos == null) return false;
+
+    suppressPersistRef.current = true;
+    restoreDoneRef.current = true;
+    view.focus();
+    view.dispatch({
+      selection: EditorSelection.single(targetPos),
+      effects: EditorView.scrollIntoView(targetPos, { y: "center" }),
+    });
+
+    requestAnimationFrame(() => {
+      suppressPersistRef.current = false;
+      if (typeof setEditorViewState !== "function") return;
+      setEditorViewState((prev) => ({
+        ...(prev || {}),
+        cursor: targetPos,
+        scrollTop: view.scrollDOM.scrollTop,
+        syncKey,
+      }));
+    });
+
+    return true;
   };
 
   useEffect(() => {
@@ -460,7 +802,7 @@ export default function CodeEditor({
   useEffect(() => {
     restoreDoneRef.current = false;
     suppressPersistRef.current = true;
-  }, [syncKey, code]);
+  }, [syncKey]);
 
   useEffect(() => {
     const handleWheel = (e) => {
@@ -507,8 +849,8 @@ export default function CodeEditor({
   }, [
     showSearch,
     searchState.query,
+    searchState.replaceText,
     searchState.matchCase,
-    searchState.useRegex,
     searchState.wholeWord,
   ]);
 
@@ -521,6 +863,16 @@ export default function CodeEditor({
         { dark: true }
       ),
     [fontSize]
+  );
+  const evaXmlAutocomplete = useMemo(
+    () =>
+      autocompletion({
+        override: [createEvaXmlCompletionSource({ automaticMinLength: 3 })],
+        activateOnTyping: activateSuggestionsOnTyping,
+        maxRenderedOptions: 14,
+        tooltipClass: () => "eva-xml-completion",
+      }),
+    [activateSuggestionsOnTyping]
   );
 
   useEffect(() => {
@@ -564,7 +916,7 @@ export default function CodeEditor({
         suppressPersistRef.current = false;
       });
     });
-  }, [editorViewState, syncKey, viewMode, code, navigationRequest]);
+  }, [editorViewState, syncKey, viewMode, navigationRequest]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -590,7 +942,6 @@ export default function CodeEditor({
           query={searchState.query}
           replaceText={searchState.replaceText}
           matchCase={searchState.matchCase}
-          useRegex={searchState.useRegex}
           wholeWord={searchState.wholeWord}
           showReplace={showReplace}
           total={searchMetrics.total}
@@ -605,9 +956,6 @@ export default function CodeEditor({
           onToggleReplace={() => setShowReplace((prev) => !prev)}
           onToggleMatchCase={() =>
             setSearchState({ ...searchState, matchCase: !searchState.matchCase })
-          }
-          onToggleRegex={() =>
-            setSearchState({ ...searchState, useRegex: !searchState.useRegex })
           }
           onToggleWholeWord={() =>
             setSearchState({ ...searchState, wholeWord: !searchState.wholeWord })
@@ -632,9 +980,26 @@ export default function CodeEditor({
         extensions={[
           xml(),
           fontSizeTheme,
+          xmlReferenceLinkField,
+          createXmlReferenceLinkHover(),
+          evaXmlAutocomplete,
           search({ top: true }),
           EditorView.domEventHandlers({
-            keydown: (_, event) => {
+            mousedown: (event, view) => {
+              if (!(event.ctrlKey || event.metaKey) || event.button !== 0) return false;
+
+              const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+              if (pos == null) return false;
+
+              const reference = getXmlReferenceAtPosition(view.state.doc.toString(), pos);
+              if (!reference) return false;
+
+              event.preventDefault();
+              event.stopPropagation();
+              jumpToXmlReference(view, reference);
+              return true;
+            },
+            keydown: (event) => {
               if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
                 event.preventDefault();
                 openSearchWindow(false);
@@ -690,6 +1055,7 @@ export default function CodeEditor({
         ]}
         basicSetup={{
           highlightSelectionMatches: true,
+          autocompletion: false,
           searchKeymap: false,
         }}
         editable={editable}
@@ -788,6 +1154,16 @@ export default function CodeEditor({
                   <small>{">"}</small>
                 </button>
                 <div className="editor-context-submenu">
+                  <button
+                    type="button"
+                    className="editor-context-item editor-fold-group"
+                    onClick={() => toggleXmlFoldGroup()}
+                    title="Plegar o desplegar todos los bloques XML"
+                  >
+                    <span>Todos</span>
+                    <small>{foldGroups.reduce((total, group) => total + group.count, 0)}</small>
+                  </button>
+                  <div className="editor-context-separator compact" />
                   {foldGroups.map((group) => (
                     <button
                       type="button"

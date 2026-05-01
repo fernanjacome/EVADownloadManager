@@ -248,10 +248,141 @@
   cursor: pointer;
 }
 
+.editor-container .cm-tooltip-autocomplete {
+  border: 1px solid #cfd4dc;
+  border-radius: 10px;
+  background: #f7f8fa;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+  font-family: "Segoe UI", Consolas, monospace;
+  font-size: 12px;
+  min-width: 330px;
+  max-width: 430px;
+}
+
+.editor-container .cm-tooltip-autocomplete ul {
+  padding: 6px;
+  max-height: 310px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af transparent;
+}
+
+.editor-container .cm-tooltip-autocomplete ul li {
+  min-height: 34px;
+  border-radius: 7px;
+  padding: 6px 9px;
+  color: #1f2933;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  line-height: 1.15;
+  box-sizing: border-box;
+}
+
+.editor-container .cm-tooltip-autocomplete ul li:hover {
+  background: #eef0f3;
+}
+
+.editor-container .cm-tooltip-autocomplete ul li[aria-selected] {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.editor-container .cm-completionIcon {
+  display: none;
+}
+
+.editor-container .cm-completionLabel {
+  color: #111827;
+  font-weight: 650;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-container .cm-completionDetail {
+  color: #4b5563;
+  font-size: 11px;
+  font-family: "Segoe UI", sans-serif;
+  font-weight: 600;
+  justify-self: end;
+  max-width: 145px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-container .cm-completionInfo {
+  border: 1px solid #cfd4dc;
+  border-radius: 8px;
+  background: #f7f8fa;
+  color: #1f2933;
+  padding: 8px 10px;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+body:not(.light-theme) .editor-container .cm-tooltip-autocomplete {
+  border-color: #3a3f46;
+  background: #1b1d20;
+}
+
+body:not(.light-theme) .editor-container .cm-tooltip-autocomplete ul {
+  scrollbar-color: #6b7280 transparent;
+}
+
+body:not(.light-theme) .editor-container .cm-tooltip-autocomplete ul li {
+  color: #d1d5db;
+}
+
+body:not(.light-theme) .editor-container .cm-tooltip-autocomplete ul li:hover {
+  background: #262b31;
+}
+
+body:not(.light-theme) .editor-container .cm-tooltip-autocomplete ul li[aria-selected] {
+  background: #2f343a;
+  color: #f3f4f6;
+}
+
+body:not(.light-theme) .editor-container .cm-completionLabel {
+  color: #f3f4f6;
+}
+
+body:not(.light-theme) .editor-container .cm-completionDetail {
+  color: #9ca3af;
+}
+
+body:not(.light-theme) .editor-container .cm-completionInfo {
+  border-color: #3a3f46;
+  background: #1b1d20;
+  color: #d1d5db;
+}
+
 .editor-context-separator {
   height: 1px;
   background: var(--border-general);
   margin: 4px 6px;
+}
+
+.editor-context-separator.compact {
+  margin: 2px 6px;
+}
+
+.editor-container .cm-xml-reference-link {
+  color: #4b5563 !important;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+body:not(.light-theme) .editor-container .cm-xml-reference-link {
+  color: #9ca3af !important;
 }
 
 body.light-theme .editor-context-menu {

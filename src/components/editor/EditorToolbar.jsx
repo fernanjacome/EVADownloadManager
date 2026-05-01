@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaSave, FaUndo, FaAlignLeft, FaCog } from "react-icons/fa";
+import { FaSave, FaUndo, FaAlignLeft, FaCog, FaSlidersH } from "react-icons/fa";
 import "./EditorToolbar.css";
 import GeneralConfigPanel from "./GeneralConfigPanel";
 import ConfirmModal from "../utils/ConfirmModal";
@@ -20,9 +20,22 @@ export default function EditorToolbar({
   setNotification,
   setSplitView,
   splitView,
+  suggestionSettings,
+  setSuggestionSettings,
 }) {
   const [openPanel, setOpenPanel] = useState(false);
+  const [openSuggestionPanel, setOpenSuggestionPanel] = useState(false);
   const [showConfirmRestore, setShowConfirmRestore] = useState(false);
+  const suggestionActivation = suggestionSettings?.activation ?? "typing";
+
+  const setSuggestionActivation = (activation) => {
+    setSuggestionSettings?.((prev) => ({
+      ...(prev || {}),
+      activation,
+    }));
+  };
+  const suggestionsWhileTyping = suggestionActivation !== "manual";
+
   return (
     <>
       <div className="editor-toolbar">
@@ -48,6 +61,36 @@ export default function EditorToolbar({
           label="General"
           onClick={() => setOpenPanel(true)}
         />
+
+        {viewMode === "code" && (
+          <div className="toolbar-dropdown-wrapper">
+            <ToolbarButton
+              icon={<FaSlidersH />}
+              label="Sugerencias"
+              onClick={() => setOpenSuggestionPanel((prev) => !prev)}
+              title="Configurar sugerencias XML"
+            />
+            {openSuggestionPanel && (
+              <div className="toolbar-dropdown toolbar-suggestions-panel">
+                <label className="suggestion-check">
+                  <input
+                    type="checkbox"
+                    checked={suggestionsWhileTyping}
+                    onChange={(event) =>
+                      setSuggestionActivation(
+                        event.target.checked ? "typing" : "manual",
+                      )
+                    }
+                  />
+                  <span>
+                    Activar sugerencia automática
+                    <small>Desactivalo para solo usar Ctrl + espacio.</small>
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
 
         <ToolbarButton
           icon={<BsLayoutSplit />}

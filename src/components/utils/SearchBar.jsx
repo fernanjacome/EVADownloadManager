@@ -8,7 +8,6 @@ export default function SearchBar({
   query,
   replaceText,
   matchCase,
-  useRegex,
   wholeWord,
   showReplace,
   total = 0,
@@ -19,7 +18,6 @@ export default function SearchBar({
   onReplaceTextChange,
   onToggleReplace,
   onToggleMatchCase,
-  onToggleRegex,
   onToggleWholeWord,
   onNext,
   onPrev,
@@ -155,14 +153,6 @@ export default function SearchBar({
         >
           <FaRegDotCircle />
           <span>Palabra</span>
-        </button>
-        <button
-          className={`option-chip ${useRegex ? "active" : ""}`}
-          onClick={onToggleRegex}
-          title="Usar expresion regular"
-        >
-          <span>.*</span>
-          <span>Regex</span>
         </button>
         <button className="option-chip" onClick={onSelectAll} title="Seleccionar coincidencias">
           <FaList />

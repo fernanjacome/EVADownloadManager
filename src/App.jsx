@@ -32,6 +32,7 @@ const DEFAULT_STATE = {
   sidebarCollapsed: false,
   selectedSidebarItem: null,
   editorViewState: { cursor: 0, scrollTop: 0 },
+  xmlSuggestionSettings: { activation: "typing" },
   compilerState: {
     batName: "",
     imageName: "",
@@ -79,6 +80,9 @@ export default function App() {
   const [selectedSidebarItem, setSelectedSidebarItem] = useState(DEFAULT_STATE.selectedSidebarItem);
   const [editorViewState, setEditorViewState] = useState(
     DEFAULT_STATE.editorViewState
+  );
+  const [xmlSuggestionSettings, setXmlSuggestionSettings] = useState(
+    DEFAULT_STATE.xmlSuggestionSettings
   );
   const [viewMode, setViewMode] = useState(DEFAULT_STATE.viewMode);
   const [screensFolder, setScreensFolder] = useState(
@@ -130,6 +134,7 @@ export default function App() {
       activeEditor,
       snowEnabled,
       editorViewState,
+      xmlSuggestionSettings,
       sidebarWidth,
       sidebarCollapsed,
       selectedSidebarItem,
@@ -150,6 +155,7 @@ export default function App() {
       activeEditor,
       snowEnabled,
       editorViewState,
+      xmlSuggestionSettings,
       sidebarWidth,
       sidebarCollapsed,
       selectedSidebarItem,
@@ -179,6 +185,9 @@ export default function App() {
         setActiveEditor(s.activeEditor ?? DEFAULT_STATE.activeEditor);
         setSnowEnabled(!!s.snowEnabled);
         setEditorViewState(s.editorViewState ?? DEFAULT_STATE.editorViewState);
+        setXmlSuggestionSettings(
+          s.xmlSuggestionSettings ?? DEFAULT_STATE.xmlSuggestionSettings
+        );
         setSidebarWidth(s.sidebarWidth ?? DEFAULT_STATE.sidebarWidth);
         setSidebarCollapsed(!!(s.sidebarCollapsed ?? DEFAULT_STATE.sidebarCollapsed));
         setSelectedSidebarItem(s.selectedSidebarItem ?? DEFAULT_STATE.selectedSidebarItem);
@@ -386,6 +395,7 @@ export default function App() {
     setSidebarCollapsed(DEFAULT_STATE.sidebarCollapsed);
     setSelectedSidebarItem(DEFAULT_STATE.selectedSidebarItem);
     setEditorViewState(DEFAULT_STATE.editorViewState);
+    setXmlSuggestionSettings(DEFAULT_STATE.xmlSuggestionSettings);
     setCompilerState(DEFAULT_STATE.compilerState);
     setSelectedScreen(DEFAULT_STATE.selectedScreen);
     setScreensViewState(DEFAULT_STATE.screensViewState);
@@ -563,6 +573,7 @@ export default function App() {
           activeEditor,
           snowEnabled,
           editorViewState,
+          xmlSuggestionSettings,
           sidebarWidth,
           sidebarCollapsed,
           selectedSidebarItem,
@@ -659,6 +670,8 @@ export default function App() {
                   splitView={splitView}
                   theme={theme}
                   setTheme={setTheme}
+                  suggestionSettings={xmlSuggestionSettings}
+                  setSuggestionSettings={setXmlSuggestionSettings}
                 />
 
                 <div className={`editor-div ${splitView ? "split" : ""}`}>
@@ -676,6 +689,7 @@ export default function App() {
                     editorViewState={editorViewState}
                     setEditorViewState={setEditorViewState}
                     xmlDoc={xml.xmlDoc}
+                    suggestionSettings={xmlSuggestionSettings}
                     onOpenFlowState={(stateId) => {
                       setFlowFocusRequest({
                         id: String(stateId),
@@ -699,6 +713,7 @@ export default function App() {
                       editorViewState={editorViewState}
                       setEditorViewState={setEditorViewState}
                       xmlDoc={xml.xmlDoc}
+                      suggestionSettings={xmlSuggestionSettings}
                       onOpenFlowState={(stateId) => {
                         setFlowFocusRequest({
                           id: String(stateId),

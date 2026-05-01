@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   FaBullseye,
   FaCreditCard,
@@ -108,10 +114,19 @@ function filterStartIdsByCategories(graph, categories) {
 }
 
 function getNodeActionLetters(node) {
-  return Object.keys(node.params || {})
+  const params = node.params || {};
+  const letters = Object.keys(params)
     .filter((key) => /^Key[A-I]State$/i.test(key))
     .map((key) => key.replace(/^Key/i, "").replace(/State$/i, ""))
-    .sort();
+    .filter(Boolean);
+  const continueKey = String(params.ContinueKey || "")
+    .trim()
+    .toUpperCase();
+  if (/^[A-I]$/.test(continueKey)) {
+    letters.push(continueKey);
+  }
+
+  return [...new Set(letters)].sort();
 }
 
 function isSideExitEdge(edgeOrLabel) {
@@ -269,7 +284,7 @@ function getOperationContentFlags(node) {
 
 function getNodeShapeMetrics(node, cardWidth, cardHeight, cardScale) {
   const kind = getStateVisualKind(node);
-  if (kind === "screen") {
+  if (kind === "screen" || kind === "entry") {
     return {
       kind,
       left: 0,
@@ -1028,6 +1043,138 @@ function SelectStateCard({
   );
 }
 
+function EntryPinStateCard({
+  node,
+  graph,
+  instance,
+  isSelected,
+  onToggle,
+  onInspect,
+  cardScale,
+  searchTerm,
+  highlightAllMatches,
+  isMatchFocused,
+  hiddenExitCount,
+}) {
+  const activeLetters = getNodeActionLetters(node);
+  const actionSummary = getStateActionSummary(node);
+  const type = String(node?.type || "").toUpperCase();
+  const bufferLabel = node.params?.Buffer || node.params?.BuffName || "";
+  const keys =
+    type === "PIN"
+      ? ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+      : ["A", "B", "C", "1", "2", "3", "4", "5", "6"];
+
+  return (
+    <button
+      type="button"
+      className={`flow-entry-screen-node ${isSelected ? "selected" : ""} ${
+        instance.expanded ? "expanded" : ""
+      } ${isMatchFocused ? "match-focused" : ""}`}
+      onClick={onToggle}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onInspect(event);
+      }}
+      title="Click para abrir o cerrar esta rama"
+      style={{ "--flow-card-scale": cardScale }}
+    >
+      <div className="flow-screen-shell flow-entry-screen-shell">
+        <div className="flow-screen-idbar">
+          <span className="flow-screen-id">
+            {renderHighlightedText(
+              `State ${node.id}`,
+              searchTerm,
+              highlightAllMatches,
+            )}
+          </span>
+          <span className="flow-screen-type">
+            {renderHighlightedText(
+              type || "ENTRY",
+              searchTerm,
+              highlightAllMatches,
+            )}
+          </span>
+        </div>
+
+        <div className="flow-screen-frame flow-entry-screen-frame">
+          <div className="flow-screen-side left">
+            {["F", "G", "H", "I"].map((letter) => (
+              <span
+                key={letter}
+                className={activeLetters.includes(letter) ? "active" : ""}
+              >
+                {letter}
+              </span>
+            ))}
+          </div>
+
+          <div className="flow-screen-monitor flow-entry-monitor">
+            <div className="flow-entry-copy">
+              <strong>
+                {renderHighlightedText(
+                  node.comment || "Sin comentario",
+                  searchTerm,
+                  highlightAllMatches,
+                )}
+              </strong>
+              <small>
+                {renderHighlightedText(
+                  node.screenComment || `Screen ${node.screenId || "-"}`,
+                  searchTerm,
+                  highlightAllMatches,
+                )}
+              </small>
+              {bufferLabel && (
+                <span className="flow-entry-buffer">
+                  {renderHighlightedText(
+                    bufferLabel,
+                    searchTerm,
+                    highlightAllMatches,
+                  )}
+                </span>
+              )}
+            </div>
+            <span className="flow-entry-screen-pad" aria-hidden="true">
+              {keys.map((key) => (
+                <i key={key}>{key}</i>
+              ))}
+            </span>
+          </div>
+
+          <div className="flow-screen-side right">
+            {["A", "B", "C", "D"].map((letter) => (
+              <span
+                key={letter}
+                className={activeLetters.includes(letter) ? "active" : ""}
+              >
+                {letter}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="flow-screen-footer">
+          <span className="flow-screen-transition">
+            {renderHighlightedText(
+              actionSummary ||
+                instance.incomingLabel ||
+                (graph.startNodeIds.includes(node.id) ? "Start" : "State"),
+              searchTerm,
+              highlightAllMatches,
+            )}
+          </span>
+          {hiddenExitCount > 0 && (
+            <span className="flow-side-exit-chip" title="Excepciones ocultas">
+              +{hiddenExitCount}
+            </span>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function OperationStateNode({
   node,
   graph,
@@ -1125,6 +1272,9 @@ function FlowNodeCard(props) {
   if (visualKind === "screen") {
     return <SelectStateCard {...props} />;
   }
+  if (visualKind === "entry") {
+    return <EntryPinStateCard {...props} />;
+  }
   return <OperationStateNode {...props} />;
 }
 
@@ -1202,6 +1352,11 @@ export default function FlowsPanel({
   const zoomFrameRef = useRef(null);
   const lastPointerRef = useRef(null);
   const floatingDragRef = useRef(null);
+  const previousLayoutPositionRef = useRef(new Map());
+  const layoutMotionFrameRef = useRef(null);
+  const layoutMotionSettleFrameRef = useRef(null);
+  const layoutAnimationTimerRef = useRef(null);
+  const scrollAnimationFrameRef = useRef(null);
   const latestScrollRef = useRef({
     left: initialViewStateRef.current.scrollLeft ?? 0,
     top: initialViewStateRef.current.scrollTop ?? 0,
@@ -1241,6 +1396,8 @@ export default function FlowsPanel({
   const [startCategoryFilter, setStartCategoryFilter] = useState(
     initialViewStateRef.current.startCategoryFilter,
   );
+  const [layoutAnimating, setLayoutAnimating] = useState(false);
+  const [layoutMotionById, setLayoutMotionById] = useState({});
   const highlightAllMatches = true;
   const [inspector, setInspector] = useState(null);
   const [paramMenu, setParamMenu] = useState(null);
@@ -1288,6 +1445,87 @@ export default function FlowsPanel({
       ),
     [scaledLayout.positioned],
   );
+
+  useLayoutEffect(() => {
+    const previous = previousLayoutPositionRef.current;
+    const current = new Map(
+      scaledLayout.positioned.map((instance) => [
+        instance.instanceId,
+        instance,
+      ]),
+    );
+
+    if (!previous.size) {
+      previousLayoutPositionRef.current = current;
+      return;
+    }
+
+    const motions = {};
+    scaledLayout.positioned.forEach((instance) => {
+      const previousInstance = previous.get(instance.instanceId);
+      const parentOrigin =
+        instance.parentInstanceId &&
+        (previous.get(instance.parentInstanceId) ||
+          current.get(instance.parentInstanceId));
+      const origin = previousInstance || parentOrigin;
+      if (!origin) return;
+
+      const dx = Math.round(origin.x - instance.x);
+      const dy = Math.round(origin.y - instance.y);
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && previousInstance) return;
+
+      motions[instance.instanceId] = {
+        dx,
+        dy,
+        opacity: previousInstance ? 1 : 0.18,
+      };
+    });
+
+    previousLayoutPositionRef.current = current;
+
+    if (!Object.keys(motions).length) return;
+
+    setLayoutMotionById(motions);
+    setLayoutAnimating(true);
+
+    if (layoutMotionFrameRef.current) {
+      cancelAnimationFrame(layoutMotionFrameRef.current);
+    }
+    if (layoutMotionSettleFrameRef.current) {
+      cancelAnimationFrame(layoutMotionSettleFrameRef.current);
+    }
+    layoutMotionFrameRef.current = requestAnimationFrame(() => {
+      layoutMotionSettleFrameRef.current = requestAnimationFrame(() => {
+        setLayoutMotionById({});
+        layoutMotionFrameRef.current = null;
+        layoutMotionSettleFrameRef.current = null;
+      });
+    });
+
+    if (layoutAnimationTimerRef.current) {
+      window.clearTimeout(layoutAnimationTimerRef.current);
+    }
+    layoutAnimationTimerRef.current = window.setTimeout(() => {
+      setLayoutAnimating(false);
+      layoutAnimationTimerRef.current = null;
+    }, 280);
+
+    return () => {
+      if (layoutMotionFrameRef.current) {
+        cancelAnimationFrame(layoutMotionFrameRef.current);
+        layoutMotionFrameRef.current = null;
+      }
+      if (layoutMotionSettleFrameRef.current) {
+        cancelAnimationFrame(layoutMotionSettleFrameRef.current);
+        layoutMotionSettleFrameRef.current = null;
+      }
+      if (layoutAnimationTimerRef.current) {
+        window.clearTimeout(layoutAnimationTimerRef.current);
+        layoutAnimationTimerRef.current = null;
+      }
+    };
+  }, [scaledLayout.positioned]);
+
   const nodeMap = useMemo(
     () => new Map(graph.nodes.map((node) => [node.id, node])),
     [graph.nodes],
@@ -1696,6 +1934,56 @@ export default function FlowsPanel({
     });
   };
 
+  const animateCanvasScroll = (container, left, top, behavior = "smooth") => {
+    if (!container) return;
+
+    if (scrollAnimationFrameRef.current) {
+      cancelAnimationFrame(scrollAnimationFrameRef.current);
+      scrollAnimationFrameRef.current = null;
+    }
+
+    if (behavior !== "smooth") {
+      container.scrollTo({ left, top, behavior: "auto" });
+      latestScrollRef.current = { left, top };
+      return;
+    }
+
+    const startLeft = container.scrollLeft;
+    const startTop = container.scrollTop;
+    const deltaLeft = left - startLeft;
+    const deltaTop = top - startTop;
+    const duration = 320;
+    const startedAt = performance.now();
+
+    const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3);
+
+    const tick = (now) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = easeOutCubic(progress);
+      const nextLeft = startLeft + deltaLeft * eased;
+      const nextTop = startTop + deltaTop * eased;
+
+      container.scrollLeft = nextLeft;
+      container.scrollTop = nextTop;
+      latestScrollRef.current = {
+        left: nextLeft,
+        top: nextTop,
+      };
+
+      if (progress < 1) {
+        scrollAnimationFrameRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      container.scrollLeft = left;
+      container.scrollTop = top;
+      latestScrollRef.current = { left, top };
+      scrollAnimationFrameRef.current = null;
+    };
+
+    scrollAnimationFrameRef.current = requestAnimationFrame(tick);
+  };
+
   const focusOnSelectedInstance = (mode = "center", behavior = "smooth") => {
     const container = scrollRef.current;
     if (!container || !selectedPositionedInstance) return;
@@ -1722,17 +2010,8 @@ export default function FlowsPanel({
     const nextLeft = Math.max(0, targetLeft);
     const nextTop = Math.max(0, targetTop);
 
-    temporarilySkipScrollPersist(behavior === "smooth" ? 420 : 120);
-    container.scrollTo({
-      left: nextLeft,
-      top: nextTop,
-      behavior,
-    });
-
-    latestScrollRef.current = {
-      left: nextLeft,
-      top: nextTop,
-    };
+    temporarilySkipScrollPersist(behavior === "smooth" ? 520 : 120);
+    animateCanvasScroll(container, nextLeft, nextTop, behavior);
   };
 
   const centerCurrentView = () => {
@@ -2293,7 +2572,7 @@ export default function FlowsPanel({
       if (!event.ctrlKey || event.button !== 0) return;
       if (
         event.target.closest(
-          ".flow-select-node, .flow-op-node, .flow-inspector, .flows-utilitybar, .flows-subbar",
+          ".flow-select-node, .flow-entry-screen-node, .flow-op-node, .flow-inspector, .flows-utilitybar, .flows-subbar",
         )
       ) {
         return;
@@ -2620,7 +2899,9 @@ export default function FlowsPanel({
             }}
           >
             <div
-              className="flow-canvas-stage"
+              className={`flow-canvas-stage ${
+                layoutAnimating ? "layout-animating" : ""
+              }`}
               style={{
                 width: Math.max(scaledLayout.width + extraScrollableWidth, 720),
                 height: Math.max(scaledLayout.height, 360),
@@ -2757,6 +3038,7 @@ export default function FlowsPanel({
               {scaledLayout.positioned.map((instance) => {
                 const node = nodeMap.get(instance.stateId);
                 if (!node) return null;
+                const motion = layoutMotionById[instance.instanceId];
                 const hiddenExitCount = showSideExits
                   ? 0
                   : graph.edges.filter(
@@ -2773,6 +3055,10 @@ export default function FlowsPanel({
                       width: cardWidth,
                       height: cardHeight,
                       "--flow-card-scale": cardScale,
+                      transform: motion
+                        ? `translate(${motion.dx}px, ${motion.dy}px)`
+                        : "translate(0, 0)",
+                      opacity: motion ? motion.opacity : 1,
                     }}
                   >
                     <FlowNodeCard
@@ -3057,7 +3343,11 @@ export default function FlowsPanel({
                         <strong>
                           {edgeMenu.edge?.tranMapComment || "Sin comentario"}
                         </strong>
-                        <span>TranMap {edgeMenu.edge?.tranMapId || "-"}</span>
+                        <span>
+                          TranMap{" "}
+                          {edgeMenu.edge?.tranMapId ||
+                            "-" + edgeMenu.edge?.tranMapOperationCodeKey}
+                        </span>
                       </div>
                       {(edgeMenu.edge?.tranMapParams || []).length ? (
                         edgeMenu.edge.tranMapParams.map((param, index) => (
@@ -3092,7 +3382,8 @@ export default function FlowsPanel({
                           Tran{" "}
                           {edgeMenu.edge?.transactionCode ||
                             edgeMenu.edge?.transactionOperCodeKey ||
-                            "-"}
+                            "-"}{" "}
+                          {edgeMenu.edge?.transactionOperCodeKey || "-"}
                         </span>
                       </div>
                       {(edgeMenu.edge?.transactionParams || []).length ? (
