@@ -14,9 +14,14 @@ import { FaMoon, FaRegWindowRestore, FaSun } from "react-icons/fa";
 import ScreensInfoModal from "./modals/ScreensInfoModal";
 import CompilerInfoModal from "./modals/CompileInfoModal";
 import FlowsInfoModal from "./modals/FlowsInfoModal";
+import SnippetsModal from "./modals/SnippetsModal";
 import { TbReload } from "react-icons/tb";
 import { GiLargePaintBrush } from "react-icons/gi";
-import { MdCheckBox, MdCheckBoxOutlineBlank } from "react-icons/md";
+import {
+  MdCheckBox,
+  MdCheckBoxOutlineBlank,
+  MdOutlineTextSnippet,
+} from "react-icons/md";
 
 export default function TitleBar({
   fileName,
@@ -72,7 +77,10 @@ export default function TitleBar({
             <div className="menu-item" onClick={() => toggleMenu("file")}>
               Archivo
               {activeMenu === "file" && (
-                <div className="dropdown" onClick={(event) => event.stopPropagation()}>
+                <div
+                  className="dropdown"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <div
                     className="dropdown-item"
                     onClick={() => {
@@ -86,11 +94,23 @@ export default function TitleBar({
                   <div
                     className="dropdown-item"
                     onClick={() => {
+                      setShowModal("snippets");
+                      closeMenus();
+                    }}
+                  >
+                    <span>Gestionar snippets</span>
+                    <MdOutlineTextSnippet />
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
                       setTheme(theme === "dark" ? "light" : "dark");
                       closeMenus();
                     }}
                   >
-                    <span>{theme === "dark" ? "Modo Claro" : "Modo Oscuro"}</span>
+                    <span>
+                      {theme === "dark" ? "Modo Claro" : "Modo Oscuro"}
+                    </span>
                     {theme === "dark" ? <FaSun /> : <FaMoon />}
                   </div>
                   <div
@@ -120,10 +140,15 @@ export default function TitleBar({
             <div className="menu-item" onClick={() => toggleMenu("modules")}>
               Modulos
               {activeMenu === "modules" && (
-                <div className="dropdown" onClick={(event) => event.stopPropagation()}>
+                <div
+                  className="dropdown"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   {moduleOptions.map((module) => {
                     const enabled = visibleModules?.[module.key] !== false;
-                    const enabledCount = Object.values(visibleModules || {}).filter(Boolean).length;
+                    const enabledCount = Object.values(
+                      visibleModules || {},
+                    ).filter(Boolean).length;
                     return (
                       <div
                         key={module.key}
@@ -151,7 +176,10 @@ export default function TitleBar({
             <div className="menu-item" onClick={() => toggleMenu("help")}>
               Ayuda
               {activeMenu === "help" && (
-                <div className="dropdown" onClick={(event) => event.stopPropagation()}>
+                <div
+                  className="dropdown"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <div
                     className="dropdown-item"
                     onClick={() => {
@@ -253,13 +281,24 @@ export default function TitleBar({
         </div>
 
         <div className="title-right">
-          <button className="win-btn min" onClick={() => handleAction("minimize")}>
-            <FaWindowMinimize style={{ color: theme === "dark" ? "#fff" : "#000" }} />
+          <button
+            className="win-btn min"
+            onClick={() => handleAction("minimize")}
+          >
+            <FaWindowMinimize
+              style={{ color: theme === "dark" ? "#fff" : "#000" }}
+            />
           </button>
-          <button className="win-btn max" onClick={() => handleAction("maximize")}>
+          <button
+            className="win-btn max"
+            onClick={() => handleAction("maximize")}
+          >
             <FiMaximize style={{ color: theme === "dark" ? "#fff" : "#000" }} />
           </button>
-          <button className="win-btn close" onClick={() => window.dispatchEvent(new Event("tryAppClose"))}>
+          <button
+            className="win-btn close"
+            onClick={() => window.dispatchEvent(new Event("tryAppClose"))}
+          >
             <IoClose style={{ color: theme === "dark" ? "#fff" : "#000" }} />
           </button>
         </div>
@@ -271,21 +310,46 @@ export default function TitleBar({
         snowEnabled={snowEnabled}
         toggleSnow={toggleSnow}
       />
-      <FormatModal isOpen={showModal === "format"} onClose={() => setShowModal(null)} />
-      <TipsModal isOpen={showModal === "tips"} onClose={() => setShowModal(null)} />
+      <FormatModal
+        isOpen={showModal === "format"}
+        onClose={() => setShowModal(null)}
+      />
+      <TipsModal
+        isOpen={showModal === "tips"}
+        onClose={() => setShowModal(null)}
+      />
       <ValidationsModal
         isOpen={showModal === "validations"}
         onClose={() => setShowModal(null)}
       />
-      <ShortcutsModal isOpen={showModal === "shortcuts"} onClose={() => setShowModal(null)} />
-      <FilesModal isOpen={showModal === "files"} onClose={() => setShowModal(null)} />
-      <ErrorsModal isOpen={showModal === "errors"} onClose={() => setShowModal(null)} />
-      <ScreensInfoModal isOpen={showModal === "screens"} onClose={() => setShowModal(null)} />
+      <ShortcutsModal
+        isOpen={showModal === "shortcuts"}
+        onClose={() => setShowModal(null)}
+      />
+      <FilesModal
+        isOpen={showModal === "files"}
+        onClose={() => setShowModal(null)}
+      />
+      <ErrorsModal
+        isOpen={showModal === "errors"}
+        onClose={() => setShowModal(null)}
+      />
+      <ScreensInfoModal
+        isOpen={showModal === "screens"}
+        onClose={() => setShowModal(null)}
+      />
       <CompilerInfoModal
         isOpen={showModal === "compiler"}
         onClose={() => setShowModal(null)}
       />
-      <FlowsInfoModal isOpen={showModal === "flows"} onClose={() => setShowModal(null)} />
+      <FlowsInfoModal
+        isOpen={showModal === "flows"}
+        onClose={() => setShowModal(null)}
+      />
+      <SnippetsModal
+        isOpen={showModal === "snippets"}
+        onClose={() => setShowModal(null)}
+      />
     </>
   );
 }

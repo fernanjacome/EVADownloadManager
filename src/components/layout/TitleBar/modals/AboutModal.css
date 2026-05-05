@@ -107,9 +107,92 @@ body:not(.light-theme) .about-modal h2 {
   border: 1px solid color-mix(in srgb, var(--border-general) 62%, transparent 38%);
 }
 
+.about-release-card {
+  margin-top: 4px;
+  gap: 12px;
+  padding: 13px;
+}
+
+.about-release-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.about-release-heading h3,
+.about-release-heading p {
+  margin: 0;
+}
+
+.about-release-heading h3 {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.about-release-heading p {
+  color: var(--txt-secondary);
+  font-size: 12.5px;
+}
+
+.about-release-badge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: color-mix(in srgb, var(--c-principal) 14%, transparent 86%);
+  border: 1px solid color-mix(in srgb, var(--c-principal) 22%, transparent 78%);
+  color: var(--c-principal);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.about-release-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.about-release-grid h4 {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  color: var(--txt-normal);
+}
+
+.about-release-grid ul {
+  padding-left: 17px;
+}
+
+.about-release-grid li {
+  margin-bottom: 5px;
+}
+
+.about-release-note {
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--c-principal) 8%, transparent 92%);
+  border: 1px solid color-mix(in srgb, var(--c-principal) 12%, transparent 88%);
+  color: var(--txt-normal);
+}
+
 body:not(.light-theme) .about-section {
   background: rgba(255, 255, 255, 0.045);
   border-color: rgba(134, 170, 153, 0.28);
+}
+
+body:not(.light-theme) .about-release-heading p {
+  color: #c8d5ce;
+}
+
+body:not(.light-theme) .about-release-badge {
+  background: rgba(121, 211, 180, 0.12);
+  border-color: rgba(121, 211, 180, 0.24);
+  color: #9be0c7;
+}
+
+body:not(.light-theme) .about-release-note {
+  background: rgba(121, 211, 180, 0.08);
+  border-color: rgba(121, 211, 180, 0.18);
+  color: #eef7f2;
 }
 
 .about-section h3 {
@@ -255,5 +338,9 @@ body:not(.light-theme) .about-close:hover {
 
   .about-section.about-section-wide {
     grid-column: auto;
+  }
+
+  .about-release-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
-import { EditorSelection, StateEffect, StateField } from "@codemirror/state";
-import { Decoration } from "@codemirror/view";
+import { EditorSelection, Prec, StateEffect, StateField } from "@codemirror/state";
+import { Decoration, keymap } from "@codemirror/view";
 import { xml } from "@codemirror/lang-xml";
 import { foldEffect, foldedRanges, unfoldEffect } from "@codemirror/language";
-import { autocompletion, snippet } from "@codemirror/autocomplete";
+import { autocompletion, nextSnippetField, prevSnippetField, snippet } from "@codemirror/autocomplete";
+import { indentLess, indentMore } from "@codemirror/commands";
 import {
   SearchQuery,
   findNext,
@@ -27,7 +28,118 @@ import { MdContentPaste, MdOutlineSelectAll, MdOutlineSmartDisplay } from "react
 import SearchBar from "../utils/SearchBar";
 import { evaXmlDark, notepadPlus } from "../../utils/notepadPlusTheme";
 import { groupOrder, sidebarConfig } from "../../utils/sidebarConfig";
+import { EVA_SNIPPET_DEFINITIONS } from "../../utils/evaSnippetData";
 import "./CodeEditor.css";
+
+const NAVIGABLE_XML_CONTAINER_TAGS = ["State", "Screen", "Fit", "Tran", "TranMap", "Error"];
+const NAVIGABLE_XML_FALLBACK_TAGS = ["Param"];
+
+function findCurrentXmlElementRange(docText, cursorPos) {
+  const safePos = Math.max(0, Math.min(cursorPos ?? 0, docText.length));
+
+  const findRangeForTags = (tags) => {
+    const beforeCursor = docText.slice(0, safePos + 1);
+    const candidates = tags
+      .map((tag) => {
+        const open = beforeCursor.lastIndexOf(`<${tag}`);
+        return open === -1 ? null : { tag, open };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.open - a.open);
+
+    for (const candidate of candidates) {
+      const charAfter = docText[candidate.open + candidate.tag.length + 1] ?? "";
+      if (!/[\s>/]/.test(charAfter)) continue;
+
+      const openEnd = docText.indexOf(">", candidate.open);
+      if (openEnd === -1 || /\/\s*>$/.test(docText.slice(candidate.open, openEnd + 1))) {
+        continue;
+      }
+
+      const closeTag = `</${candidate.tag}>`;
+      const close = docText.indexOf(closeTag, openEnd + 1);
+      if (close === -1) continue;
+
+      const elementEnd = close + closeTag.length;
+      if (safePos <= elementEnd) {
+        return { from: candidate.open, to: elementEnd, tag: candidate.tag };
+      }
+    }
+
+    return null;
+  };
+
+  return findRangeForTags(NAVIGABLE_XML_CONTAINER_TAGS) || findRangeForTags(NAVIGABLE_XML_FALLBACK_TAGS);
+}
+
+function findAllNavigableRanges(docText, stateFrom, stateTo) {
+  const stateText = docText.slice(stateFrom, stateTo);
+  const ranges = [];
+
+  // 1. Attribute values from the opening tag <State Id="..." Comment="...">
+  const openTagMatch = stateText.match(/^<[A-Za-z]\w*\b([^>]*)>/);
+  if (openTagMatch) {
+    const tagName = openTagMatch[0].match(/^<([A-Za-z]\w*)/)?.[1] || "";
+    const attrsStr = openTagMatch[1];
+    const attrOffset = openTagMatch[0].length - 1 - attrsStr.length;
+    const attrPattern = /\b(\w+)\s*=\s*"([^"]*)"/g;
+    let m;
+    while ((m = attrPattern.exec(attrsStr)) !== null) {
+      if (tagName === "Param" && m[1] === "Key") continue;
+      const value = m[2];
+      if (!value) continue;
+      const quoteOffset = m[0].indexOf('"') + 1;
+      const from = stateFrom + attrOffset + m.index + quoteOffset;
+      ranges.push({ from, to: from + value.length });
+    }
+  }
+
+  // 2. Param element values <Param Key="...">VALUE</Param>
+  const paramPattern = /<Param\b[^>]*>([^<]*)<\/Param>/g;
+  let paramMatch;
+  while ((paramMatch = paramPattern.exec(stateText)) !== null) {
+    const rawValue = paramMatch[1];
+    const pOpenTagEnd = paramMatch[0].indexOf('>');
+    const absValueStart = stateFrom + paramMatch.index + pOpenTagEnd + 1;
+    const trimmed = rawValue.trim();
+    const leadingLen = trimmed ? rawValue.search(/\S/) : 0;
+    const from = absValueStart + Math.max(0, leadingLen);
+    ranges.push({ from, to: from + trimmed.length });
+  }
+
+  return ranges;
+}
+
+function navigateXmlParamValues(view, direction) {
+  const docText = view.state.doc.toString();
+  const sel = view.state.selection.main;
+  const cursorPos = sel.head;
+  const elementRange = findCurrentXmlElementRange(docText, cursorPos);
+  if (!elementRange) return false;
+  const valueRanges = findAllNavigableRanges(docText, elementRange.from, elementRange.to);
+  if (!valueRanges.length) return false;
+  const currentIndex = valueRanges.findIndex(
+    (r) => (sel.from === r.from && sel.to === r.to) || (cursorPos >= r.from && cursorPos <= r.to)
+  );
+  if (currentIndex === -1) return false;
+  const nextIndex =
+    direction === 'next'
+      ? (currentIndex + 1) % valueRanges.length
+      : (currentIndex - 1 + valueRanges.length) % valueRanges.length;
+  const target = valueRanges[nextIndex];
+  view.dispatch({
+    selection: EditorSelection.range(target.from, target.to),
+    effects: EditorView.scrollIntoView(target.from, { y: 'nearest' }),
+  });
+  return true;
+}
+
+const snippetNavigationKeymap = Prec.highest(
+  keymap.of([
+    { key: "Tab", run: (view) => nextSnippetField(view) || navigateXmlParamValues(view, 'next') || indentMore(view) },
+    { key: "Shift-Tab", run: (view) => prevSnippetField(view) || navigateXmlParamValues(view, 'prev') || indentLess(view) },
+  ])
+);
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -90,6 +202,13 @@ function findXmlChildFoldRanges(source, group) {
 }
 
 function makeSnippetCompletion({ label, detail, info, type = "snippet", template, tagTemplate }) {
+  const normalizeSnippetFields = (source) => {
+    let fieldIndex = 1;
+    return String(source || "").replace(/\$\{([A-Za-z_][\w.-]*)\}/g, (_, name) => {
+      return `\${${fieldIndex++}:${name}}`;
+    });
+  };
+
   return {
     label,
     type,
@@ -99,7 +218,7 @@ function makeSnippetCompletion({ label, detail, info, type = "snippet", template
     apply: (view, completion, from, to) => {
       const before = view.state.doc.sliceString(Math.max(0, from - 1), from);
       const useTemplate = before === "<" && tagTemplate ? tagTemplate : template;
-      snippet(useTemplate)(view, completion, from, to);
+      snippet(normalizeSnippetFields(useTemplate))(view, completion, from, to);
     },
   };
 }
@@ -133,13 +252,45 @@ function getFuzzyScore(query, option) {
   return score;
 }
 
-function getFilteredXmlSnippets(query) {
-  if (!query) return EVA_XML_SNIPPETS;
+const USER_SNIPPETS_KEY = "eva_user_snippets";
+const SYSTEM_OVERRIDES_KEY = "eva_system_snippet_overrides";
 
-  const matches = EVA_XML_SNIPPETS.map((option) => ({
-    option,
-    score: getFuzzyScore(query, option),
-  }))
+function loadSystemOverrides() {
+  try {
+    const raw = localStorage.getItem(SYSTEM_OVERRIDES_KEY);
+    const parsed = JSON.parse(raw || "{}");
+    return typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch { return {}; }
+}
+
+function loadUserSnippets() {
+  try {
+    const raw = localStorage.getItem(USER_SNIPPETS_KEY);
+    const parsed = JSON.parse(raw || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((s) => s?.label && s?.template)
+      .map((s) =>
+        makeSnippetCompletion({
+          label: s.label,
+          detail: s.detail || "Snippet",
+          template: s.template,
+        })
+      );
+  } catch {
+    return [];
+  }
+}
+
+function getFilteredXmlSnippets(query, systemSnippets, userSnippets = []) {
+  const all = [...systemSnippets, ...userSnippets];
+  if (!query) return all;
+
+  const matches = all
+    .map((option) => ({
+      option,
+      score: getFuzzyScore(query, option),
+    }))
     .filter((item) => item.score > Number.NEGATIVE_INFINITY)
     .sort((a, b) => b.score - a.score)
     .map(({ option, score }) => ({
@@ -147,137 +298,14 @@ function getFilteredXmlSnippets(query) {
       boost: score,
     }));
 
-  return matches.length ? matches : EVA_XML_SNIPPETS;
+  return matches.length ? matches : all;
 }
 
-const EVA_XML_SNIPPETS = [
-  makeSnippetCompletion({
-    label: "State",
-    detail: "Elemento State",
-    info: "State base con Id, Type y Comment.",
-    template: `<State Id="\${id}" Type="\${type}" Comment="\${comment}">\n\t\${}\n</State>`,
-    tagTemplate: `State Id="\${id}" Type="\${type}" Comment="\${comment}">\n\t\${}\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:select",
-    detail: "SELECT con pantalla y botones",
-    template: `<State Id="\${id}" Type="SELECT" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="KeyAState">\${stateA}</Param>\n\t<Param Key="KeyBState">\${stateB}</Param>\n\t<Param Key="CancelState">900</Param>\n\t<Param Key="TimeoutState">900</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:set",
-    detail: "SET Buffer/Valor",
-    template: `<State Id="\${id}" Type="SET" Comment="\${comment}">\n\t<Param Key="BuffName">\${buffer}</Param>\n\t<Param Key="BuffValue">\${value}</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:setwhen",
-    detail: "SETWHEN por valores",
-    template: `<State Id="\${id}" Type="SETWHEN" Comment="\${comment}">\n\t<Param Key="WhenBuffer">\${whenBuffer}</Param>\n\t<Param Key="SetBuffer">\${setBuffer}</Param>\n\t<Param Key="When1">\${whenValue}</Param>\n\t<Param Key="Set1">\${setValue}</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:switch",
-    detail: "SWITCH por Buffer",
-    template: `<State Id="\${id}" Type="SWITCH" Comment="\${comment}">\n\t<Param Key="Buffer">\${buffer}</Param>\n\t<Param Key="Mode">0</Param>\n\t<Param Key="Value1">\${value1}</Param>\n\t<Param Key="State1">\${state1}</Param>\n\t<Param Key="DefaultState">\${defaultState}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:send",
-    detail: "SEND transaccional",
-    template: `<State Id="\${id}" Type="SEND" Comment="\${comment}">\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:entry",
-    detail: "ENTRY captura buffer",
-    template: `<State Id="\${id}" Type="ENTRY" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Buffer">\${buffer}</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="CancelState">900</Param>\n\t<Param Key="TimeoutState">900</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:pin",
-    detail: "PIN desde pinpad",
-    template: `<State Id="\${id}" Type="PIN" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Buffer">PIN</Param>\n\t<Param Key="MinLen">4</Param>\n\t<Param Key="MaxLen">4</Param>\n\t<Param Key="GoodState">\${next}</Param>\n\t<Param Key="ErrorState">900</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:crd",
-    detail: "CRD lector tarjeta",
-    template: `<State Id="\${id}" Type="CRD" Comment="\${comment}">\n\t<Param Key="ReadFlags">11</Param>\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Timeout">0</Param>\n\t<Param Key="GoodState">\${goodState}</Param>\n\t<Param Key="CardLessState">\${cardLessState}</Param>\n\t<Param Key="NoMatchState">\${noMatchState}</Param>\n\t<Param Key="TimeoutState">998</Param>\n\t<Param Key="ErrorState">900</Param>\n\t<Param Key="InvalidCardScreen">\${invalidCardScreen}</Param>\n\t<Param Key="RemoveCardScreen">\${removeCardScreen}</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:crdsrc",
-    detail: "CRDSRC origen tarjeta",
-    template: `<State Id="\${id}" Type="CRDSRC" Comment="\${comment}">\n\t<Param Key="Chip">\${chipState}</Param>\n\t<Param Key="Track">\${trackState}</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "state:end",
-    detail: "END fin de flujo",
-    template: `<State Id="\${id}" Type="END" Comment="\${comment}">\n\t<Param Key="Screen">\${screen}</Param>\n\t<Param Key="Timeout">5</Param>\n</State>`,
-  }),
-  makeSnippetCompletion({
-    label: "Screen",
-    detail: "Elemento Screen",
-    template: `<Screen Id="\${id}" Comment="\${comment}">\n\t<Param Key="Resource">\${resource}.html</Param>\n</Screen>`,
-    tagTemplate: `Screen Id="\${id}" Comment="\${comment}">\n\t<Param Key="Resource">\${resource}.html</Param>\n</Screen>`,
-  }),
-  makeSnippetCompletion({
-    label: "Tran",
-    detail: "Transaction",
-    template: `<Tran Code="\${code}" Comment="\${comment}">\n\t<Param Key="OperCodeKey">\${operCode}</Param>\n\t<Param Key="NextStateContinue">\${next}</Param>\n</Tran>`,
-    tagTemplate: `Tran Code="\${code}" Comment="\${comment}">\n\t<Param Key="OperCodeKey">\${operCode}</Param>\n\t<Param Key="NextStateContinue">\${next}</Param>\n</Tran>`,
-  }),
-  makeSnippetCompletion({
-    label: "TranMap",
-    detail: "Mapeo de transaccion",
-    template: `<TranMap Id="\${id}" Comment="\${comment}">\n\t<Param Key="OperationCodeKey">\${operCode}</Param>\n\t<Param Key="FieldName1">\${field}</Param>\n\t<Param Key="FieldValue1">\${value}</Param>\n</TranMap>`,
-    tagTemplate: `TranMap Id="\${id}" Comment="\${comment}">\n\t<Param Key="OperationCodeKey">\${operCode}</Param>\n\t<Param Key="FieldName1">\${field}</Param>\n\t<Param Key="FieldValue1">\${value}</Param>\n</TranMap>`,
-  }),
-  makeSnippetCompletion({
-    label: "Error",
-    detail: "Error por RetCode",
-    template: `<Error RetCode="\${retCode}" Comment="\${comment}">\n\t<Param Key="NextState">\${state}</Param>\n</Error>`,
-    tagTemplate: `Error RetCode="\${retCode}" Comment="\${comment}">\n\t<Param Key="NextState">\${state}</Param>\n</Error>`,
-  }),
-  makeSnippetCompletion({
-    label: "Param",
-    detail: "Parametro XML",
-    template: `<Param Key="\${key}">\${value}</Param>`,
-    tagTemplate: `Param Key="\${key}">\${value}</Param>`,
-  }),
-  ...[
-    "Screen",
-    "SelScreen",
-    "GoodState",
-    "ErrorState",
-    "TimeoutState",
-    "CancelState",
-    "NoMatchState",
-    "DefaultState",
-    "Buffer",
-    "BuffName",
-    "BuffValue",
-    "Mode",
-    "WhenBuffer",
-    "SetBuffer",
-    "OperationCodeKey",
-    "OperCodeKey",
-    "NextStateContinue",
-    "FieldName1",
-    "FieldValue1",
-    "Value1",
-    "State1",
-    "KeyAState",
-    "KeyBState",
-    "KeyCState",
-    "KeyDState",
-    "KeyFState",
-    "KeyGState",
-    "KeyHState",
-    "KeyIState",
-  ].map((key) =>
-    makeSnippetCompletion({
-      label: `param:${key}`,
-      detail: "Param comun",
-      template: `<Param Key="${key}">\${value}</Param>`,
-    })
-  ),
-];
+const EVA_XML_SNIPPETS = EVA_SNIPPET_DEFINITIONS.map(makeSnippetCompletion);
 
-function createEvaXmlCompletionSource({ automaticMinLength = 3 } = {}) {
+const PREVIEW_PRIORITY_KEYS = ["Screen", "GoodState", "ErrorState", "TimeoutState", "CancelState", "Buffer", "BuffName", "BuffValue", "OperCodeKey", "NextStateContinue"];
+
+function createEvaXmlCompletionSource({ automaticMinLength = 3, systemSnippets = EVA_XML_SNIPPETS, userSnippets = [] } = {}) {
   return (context) => {
     const word = context.matchBefore(/[A-Za-z0-9_:-]*/);
     if (!word || (word.from === word.to && !context.explicit)) return null;
@@ -286,7 +314,7 @@ function createEvaXmlCompletionSource({ automaticMinLength = 3 } = {}) {
 
     return {
       from: word.from,
-      options: getFilteredXmlSnippets(query),
+      options: getFilteredXmlSnippets(query, systemSnippets, userSnippets),
       filter: false,
     };
   };
@@ -356,12 +384,13 @@ const xmlReferenceLinkField = StateField.define({
   provide: (field) => EditorView.decorations.from(field),
 });
 
-function createXmlReferenceLinkHover() {
+function createXmlReferenceLinkHover(onPreviewRef) {
   let lastPointer = null;
 
   const setReferenceLink = (view, pointer, active) => {
     if (!active || !pointer) {
       view.dispatch({ effects: xmlReferenceLinkEffect.of(null) });
+      onPreviewRef?.current?.(null);
       return;
     }
 
@@ -370,10 +399,12 @@ function createXmlReferenceLinkHover() {
     view.dispatch({
       effects: xmlReferenceLinkEffect.of(reference ? { from: reference.from, to: reference.to } : null),
     });
+    onPreviewRef?.current?.(reference ? { reference, x: pointer.x, y: pointer.y } : null);
   };
 
   const clearReferenceLink = (_, view) => {
     view.dispatch({ effects: xmlReferenceLinkEffect.of(null) });
+    onPreviewRef?.current?.(null);
   };
 
   return EditorView.domEventHandlers({
@@ -410,6 +441,7 @@ export default function CodeEditor({
   theme,
   editorViewState,
   setEditorViewState,
+  splitView = false,
   xmlDoc,
   onOpenFlowState,
   onOpenScreenForState,
@@ -422,8 +454,23 @@ export default function CodeEditor({
   const suppressPersistRef = useRef(true);
   const contextMenuRef = useRef(null);
   const handledNavigationSeqRef = useRef(null);
+  const scrollPersistFrameRef = useRef(null);
   const [fontSize, setFontSize] = useState(15);
   const [showSearch, setShowSearch] = useState(false);
+  const [userSnippets, setUserSnippets] = useState(() => loadUserSnippets());
+  const [systemOverrides, setSystemOverrides] = useState(() => loadSystemOverrides());
+  const [ctrlPreview, setCtrlPreview] = useState(null);
+  const ctrlPreviewRef = useRef(null);
+  ctrlPreviewRef.current = setCtrlPreview;
+
+  useEffect(() => {
+    const reload = () => {
+      setUserSnippets(loadUserSnippets());
+      setSystemOverrides(loadSystemOverrides());
+    };
+    window.addEventListener("eva-snippets-updated", reload);
+    return () => window.removeEventListener("eva-snippets-updated", reload);
+  }, []);
   const [showReplace, setShowReplace] = useState(false);
   const [searchState, setSearchState] = useState({
     query: "",
@@ -431,10 +478,125 @@ export default function CodeEditor({
     matchCase: false,
     wholeWord: false,
   });
-  const [searchMetrics, setSearchMetrics] = useState({ total: 0, current: 0 });
+  const [searchMetrics, setSearchMetrics] = useState({ total: 0, current: 0, allSelected: false });
   const [contextMenu, setContextMenu] = useState(null);
+  const [foldSubmenuOpen, setFoldSubmenuOpen] = useState(false);
   const foldGroups = useMemo(() => getPresentXmlFoldGroups(xmlDoc), [xmlDoc]);
   const activateSuggestionsOnTyping = suggestionSettings?.activation !== "manual";
+
+  const getSavedViewState = (state = editorViewState) => {
+    const keyedState = state?.editors?.[syncKey];
+    if (keyedState) {
+      return {
+        cursor: Number(keyedState.cursor ?? 0),
+        scrollTop: Number(keyedState.scrollTop ?? 0),
+        scrollLeft: Number(keyedState.scrollLeft ?? 0),
+      };
+    }
+
+    if (splitView && state?.syncKey && state.syncKey !== syncKey) return null;
+
+    return {
+      cursor: Number(state?.cursor ?? 0),
+      scrollTop: Number(state?.scrollTop ?? 0),
+      scrollLeft: Number(state?.scrollLeft ?? 0),
+    };
+  };
+
+  const persistCurrentViewState = (view, extra = {}) => {
+    if (!view || typeof setEditorViewState !== "function") return;
+
+    const nextCursor = view.state.selection.main.from;
+    const nextScrollTop = view.scrollDOM.scrollTop;
+    const nextScrollLeft = view.scrollDOM.scrollLeft;
+
+    setEditorViewState((prev) => {
+      const prevEditors = prev?.editors || {};
+      const prevKeyState = prevEditors[syncKey] || {};
+      const nextKeyState = {
+        ...prevKeyState,
+        cursor: nextCursor,
+        scrollTop: nextScrollTop,
+        scrollLeft: nextScrollLeft,
+      };
+      const nextLastNavSeq = extra.lastNavSeq ?? prev?.lastNavSeq;
+
+      if (
+        prev?.cursor === nextCursor &&
+        prev?.scrollTop === nextScrollTop &&
+        prev?.scrollLeft === nextScrollLeft &&
+        prev?.syncKey === syncKey &&
+        prev?.lastNavSeq === nextLastNavSeq &&
+        prevKeyState.cursor === nextCursor &&
+        prevKeyState.scrollTop === nextScrollTop &&
+        prevKeyState.scrollLeft === nextScrollLeft
+      ) {
+        return prev;
+      }
+
+      return {
+        ...(prev || {}),
+        cursor: nextCursor,
+        scrollTop: nextScrollTop,
+        scrollLeft: nextScrollLeft,
+        syncKey,
+        lastNavSeq: nextLastNavSeq,
+        editors: {
+          ...prevEditors,
+          [syncKey]: nextKeyState,
+        },
+      };
+    });
+  };
+
+  const finishRestoreCycle = () => {
+    restoreDoneRef.current = true;
+    requestAnimationFrame(() => {
+      suppressPersistRef.current = false;
+    });
+  };
+
+  const restoreSavedViewState = (view) => {
+    if (!view || viewMode !== "code" || restoreDoneRef.current) return false;
+
+    const savedState = getSavedViewState();
+    if (!savedState) {
+      finishRestoreCycle();
+      return false;
+    }
+
+    const nextCursor = Number(savedState.cursor ?? 0);
+    const nextScrollTop = Number(savedState.scrollTop ?? 0);
+    const nextScrollLeft = Number(savedState.scrollLeft ?? 0);
+    const safeCursor = Math.max(0, Math.min(nextCursor, view.state.doc.length));
+
+    requestAnimationFrame(() => {
+      const activeView = viewRef.current;
+      if (!activeView || restoreDoneRef.current) return;
+
+      activeView.dispatch({
+        selection: EditorSelection.single(safeCursor),
+        effects: EditorView.scrollIntoView(safeCursor, { y: "center" }),
+      });
+      requestAnimationFrame(() => {
+        const settledView = viewRef.current;
+        if (!settledView || restoreDoneRef.current) return;
+        settledView.scrollDOM.scrollTop = Math.max(0, nextScrollTop);
+        settledView.scrollDOM.scrollLeft = Math.max(0, nextScrollLeft);
+        finishRestoreCycle();
+      });
+    });
+
+    return true;
+  };
+
+  const isNavigationPendingForEditor = (request) => {
+    if (!request?.seq) return false;
+    if (request.target && request.target !== syncKey) return false;
+    if (handledNavigationSeqRef.current === request.seq) return false;
+    if (editorViewState?.lastNavSeq === request.seq) return false;
+    return true;
+  };
 
   const getXmlFoldRanges = (group = null) => {
     const source = viewRef.current?.state.doc.toString() || code || "";
@@ -509,6 +671,7 @@ export default function CodeEditor({
       stateContext,
       submenuSide: event.clientX > window.innerWidth - 560 ? "left" : "right",
     });
+    setFoldSubmenuOpen(false);
   };
 
   const getXmlContextAtPosition = (source, position) => {
@@ -592,7 +755,7 @@ export default function CodeEditor({
 
   const updateSearchMetrics = (view, query = buildQuery(searchState)) => {
     if (!view || !query.search || !query.valid) {
-      setSearchMetrics({ total: 0, current: 0 });
+      setSearchMetrics({ total: 0, current: 0, allSelected: false });
       return;
     }
 
@@ -603,11 +766,18 @@ export default function CodeEditor({
     }
 
     if (matches.length === 0) {
-      setSearchMetrics({ total: 0, current: 0 });
+      setSearchMetrics({ total: 0, current: 0, allSelected: false });
       return;
     }
 
     const selection = view.state.selection.main;
+    const selectionRanges = view.state.selection.ranges;
+    const allSelected =
+      selectionRanges.length === matches.length &&
+      matches.every((match, index) => {
+        const range = selectionRanges[index];
+        return range?.from === match.from && range?.to === match.to;
+      });
     let current = matches.findIndex(
       (match) => match.from === selection.from && match.to === selection.to
     );
@@ -617,7 +787,7 @@ export default function CodeEditor({
       if (current === -1) current = 0;
     }
 
-    setSearchMetrics({ total: matches.length, current });
+    setSearchMetrics({ total: matches.length, current, allSelected });
   };
 
   const syncSearchToView = (nextState, options = {}) => {
@@ -679,6 +849,14 @@ export default function CodeEditor({
 
   const selectAllOccurrences = () => {
     if (!viewRef.current) return;
+    if (searchMetrics.allSelected) {
+      const selection = viewRef.current.state.selection.main;
+      viewRef.current.dispatch({
+        selection: EditorSelection.single(selection.from),
+      });
+      updateSearchMetrics(viewRef.current);
+      return;
+    }
     selectMatches(viewRef.current);
     updateSearchMetrics(viewRef.current);
   };
@@ -709,13 +887,7 @@ export default function CodeEditor({
 
     requestAnimationFrame(() => {
       suppressPersistRef.current = false;
-      if (typeof setEditorViewState !== "function") return;
-      setEditorViewState((prev) => ({
-        ...(prev || {}),
-        cursor: targetPos,
-        scrollTop: view.scrollDOM.scrollTop,
-        syncKey,
-      }));
+      persistCurrentViewState(view);
     });
 
     return true;
@@ -775,21 +947,19 @@ export default function CodeEditor({
 
         handledNavigationSeqRef.current = request.seq;
         suppressPersistRef.current = false;
-        if (typeof setEditorViewState !== "function") return;
-
-        setEditorViewState((prev) => ({
-          ...(prev || {}),
-          cursor: pos,
-          scrollTop: settledView.scrollDOM.scrollTop,
-          syncKey,
-        }));
+        persistCurrentViewState(settledView, { lastNavSeq: request.seq });
       });
     });
   };
 
   const tryConsumeNavigationRequest = (request) => {
     if (!request?.seq) return false;
-    if (handledNavigationSeqRef.current === request.seq) return true;
+    if (handledNavigationSeqRef.current === request.seq) return false;
+    if (editorViewState?.lastNavSeq === request.seq) {
+      handledNavigationSeqRef.current = request.seq;
+      return false;
+    }
+    if (request.target && request.target !== syncKey) return false;
     if (!viewRef.current) return false;
     navigateToRequest(request);
     return true;
@@ -797,7 +967,7 @@ export default function CodeEditor({
 
   useEffect(() => {
     tryConsumeNavigationRequest(navigationRequest);
-  }, [navigationRequest?.seq, navigationRequest?.pos, syncKey, viewMode]);
+  }, [navigationRequest?.seq, navigationRequest?.pos, editorViewState?.lastNavSeq, syncKey, viewMode]);
 
   useEffect(() => {
     restoreDoneRef.current = false;
@@ -827,11 +997,13 @@ export default function CodeEditor({
       if (!contextMenuRef.current) return;
       if (contextMenuRef.current.contains(event.target)) return;
       setContextMenu(null);
+      setFoldSubmenuOpen(false);
     };
 
     const onEscape = (event) => {
       if (event.key === "Escape") {
         setContextMenu(null);
+        setFoldSubmenuOpen(false);
       }
     };
 
@@ -864,16 +1036,61 @@ export default function CodeEditor({
       ),
     [fontSize]
   );
+  const effectiveSystemSnippets = useMemo(() => {
+    if (Object.keys(systemOverrides).length === 0) return EVA_XML_SNIPPETS;
+    return EVA_SNIPPET_DEFINITIONS.map((def) => {
+      const ov = systemOverrides[def.label];
+      return makeSnippetCompletion(ov ? { ...def, ...ov } : def);
+    });
+  }, [systemOverrides]);
+
   const evaXmlAutocomplete = useMemo(
     () =>
       autocompletion({
-        override: [createEvaXmlCompletionSource({ automaticMinLength: 3 })],
+        override: [createEvaXmlCompletionSource({ automaticMinLength: 3, systemSnippets: effectiveSystemSnippets, userSnippets })],
         activateOnTyping: activateSuggestionsOnTyping,
         maxRenderedOptions: 14,
         tooltipClass: () => "eva-xml-completion",
       }),
-    [activateSuggestionsOnTyping]
+    [activateSuggestionsOnTyping, userSnippets, effectiveSystemSnippets]
   );
+
+  const xmlRefHoverExt = useMemo(() => createXmlReferenceLinkHover(ctrlPreviewRef), []);
+
+  const ctrlPreviewInfo = useMemo(() => {
+    if (!ctrlPreview || !xmlDoc) return null;
+    const { reference, x, y } = ctrlPreview;
+
+    if (reference.kind === "state") {
+      const node = Array.from(xmlDoc.querySelectorAll("States > State")).find(
+        (el) => el.getAttribute("Id") === reference.id
+      );
+      if (!node) return null;
+      const allParams = Array.from(node.querySelectorAll("Param")).map((p) => [
+        p.getAttribute("Key") || "",
+        p.textContent?.trim() || "",
+      ]);
+      const prioritized = PREVIEW_PRIORITY_KEYS.flatMap((k) => {
+        const match = allParams.find(([key]) => key === k);
+        return match ? [match] : [];
+      });
+      const rest = allParams.filter(([k]) => !PREVIEW_PRIORITY_KEYS.includes(k));
+      const params = [...prioritized, ...rest].slice(0, 6);
+      return { kind: "state", id: reference.id, type: node.getAttribute("Type") || "-", comment: node.getAttribute("Comment") || "", params, x, y };
+    }
+
+    if (reference.kind === "screen") {
+      const node = Array.from(xmlDoc.querySelectorAll("Screens > Screen")).find(
+        (el) => el.getAttribute("Id") === reference.id
+      );
+      if (!node) return null;
+      const resource = node.querySelector("Param[Key='Resource']")?.textContent?.trim() || "";
+      const comment = node.getAttribute("Comment") || "";
+      return { kind: "screen", id: reference.id, comment, resource, x, y };
+    }
+
+    return null;
+  }, [ctrlPreview, xmlDoc]);
 
   useEffect(() => {
     if (!viewRef.current) return;
@@ -888,34 +1105,47 @@ export default function CodeEditor({
   }, [onFocus, syncKey]);
 
   useEffect(() => {
+    return () => {
+      if (scrollPersistFrameRef.current != null) {
+        cancelAnimationFrame(scrollPersistFrameRef.current);
+        scrollPersistFrameRef.current = null;
+      }
+      const view = viewRef.current;
+      if (!view || suppressPersistRef.current) return;
+      persistCurrentViewState(view);
+    };
+  }, [setEditorViewState, syncKey]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    const handleScroll = () => {
+      if (suppressPersistRef.current) return;
+      if (scrollPersistFrameRef.current != null) return;
+
+      scrollPersistFrameRef.current = requestAnimationFrame(() => {
+        scrollPersistFrameRef.current = null;
+        persistCurrentViewState(view);
+      });
+    };
+
+    view.scrollDOM.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      view.scrollDOM.removeEventListener("scroll", handleScroll);
+      if (scrollPersistFrameRef.current != null) {
+        cancelAnimationFrame(scrollPersistFrameRef.current);
+        scrollPersistFrameRef.current = null;
+      }
+    };
+  }, [setEditorViewState, syncKey]);
+
+  useEffect(() => {
     const view = viewRef.current;
     if (!view || restoreDoneRef.current) return;
     if (viewMode !== "code") return;
-    if (
-      navigationRequest?.seq &&
-      handledNavigationSeqRef.current !== navigationRequest.seq
-    ) return;
-
-    const nextCursor = Number(editorViewState?.cursor ?? 0);
-    const nextScrollTop = Number(editorViewState?.scrollTop ?? 0);
-    const targetKey = editorViewState?.syncKey;
-    if (targetKey && targetKey !== syncKey) return;
-
-    const safeCursor = Math.max(0, Math.min(nextCursor, view.state.doc.length));
-
-    requestAnimationFrame(() => {
-      if (!viewRef.current || restoreDoneRef.current) return;
-
-      view.dispatch({
-        selection: EditorSelection.single(safeCursor),
-        effects: EditorView.scrollIntoView(safeCursor, { y: "center" }),
-      });
-      view.scrollDOM.scrollTop = Math.max(0, nextScrollTop);
-      restoreDoneRef.current = true;
-      requestAnimationFrame(() => {
-        suppressPersistRef.current = false;
-      });
-    });
+    if (isNavigationPendingForEditor(navigationRequest)) return;
+    restoreSavedViewState(view);
   }, [editorViewState, syncKey, viewMode, navigationRequest]);
 
   useEffect(() => {
@@ -946,6 +1176,7 @@ export default function CodeEditor({
           showReplace={showReplace}
           total={searchMetrics.total}
           current={searchMetrics.current}
+          selectAllActive={searchMetrics.allSelected}
           inputRef={searchInputRef}
           replaceInputRef={replaceInputRef}
           onQueryChange={(value) => setSearchState({ ...searchState, query: value })}
@@ -978,10 +1209,11 @@ export default function CodeEditor({
         height="100%"
         theme={theme === "dark" ? evaXmlDark : notepadPlus}
         extensions={[
+          snippetNavigationKeymap,
           xml(),
           fontSizeTheme,
           xmlReferenceLinkField,
-          createXmlReferenceLinkHover(),
+          xmlRefHoverExt,
           evaXmlAutocomplete,
           search({ top: true }),
           EditorView.domEventHandlers({
@@ -1031,25 +1263,7 @@ export default function CodeEditor({
               !suppressPersistRef.current &&
               (update.selectionSet || update.docChanged || update.viewportChanged)
             ) {
-              const nextCursor = update.state.selection.main.from;
-              const nextScrollTop = update.view.scrollDOM.scrollTop;
-
-              setEditorViewState((prev) => {
-                if (
-                  prev?.cursor === nextCursor &&
-                  prev?.scrollTop === nextScrollTop &&
-                  prev?.syncKey === syncKey
-                ) {
-                  return prev;
-                }
-
-                return {
-                  ...(prev || {}),
-                  cursor: nextCursor,
-                  scrollTop: nextScrollTop,
-                  syncKey,
-                };
-              });
+              persistCurrentViewState(update.view);
             }
           }),
         ]}
@@ -1057,6 +1271,7 @@ export default function CodeEditor({
           highlightSelectionMatches: true,
           autocompletion: false,
           searchKeymap: false,
+          indentWithTab: false,
         }}
         editable={editable}
         className={`editor-code ${!editable ? "read-only" : ""}`}
@@ -1067,7 +1282,8 @@ export default function CodeEditor({
             effects: setSearchQuery.of(buildQuery(searchState)),
           });
           updateSearchMetrics(view, buildQuery(searchState));
-          tryConsumeNavigationRequest(navigationRequest);
+          const navigationStarted = tryConsumeNavigationRequest(navigationRequest);
+          if (!navigationStarted) restoreSavedViewState(view);
         }}
       />
 
@@ -1148,7 +1364,10 @@ export default function CodeEditor({
           {foldGroups.length ? (
             <>
               <div className="editor-context-separator" />
-              <div className="editor-context-submenu-wrap">
+              <div
+                className={`editor-context-submenu-wrap ${foldSubmenuOpen ? "open" : ""}`}
+                onMouseEnter={() => setFoldSubmenuOpen(true)}
+              >
                 <button type="button" className="editor-context-item editor-context-submenu-trigger">
                   <span>Plegar / Desplegar</span>
                   <small>{">"}</small>
@@ -1229,6 +1448,53 @@ export default function CodeEditor({
           ) : null}
         </div>
       )}
+
+      {ctrlPreviewInfo && (() => {
+        const PANEL_W = 280;
+        const PANEL_OFFSET_X = 18;
+        const PANEL_OFFSET_Y = 22;
+        const left = Math.min(
+          Math.max(8, ctrlPreviewInfo.x + PANEL_OFFSET_X),
+          window.innerWidth - PANEL_W - 8
+        );
+        const top = Math.min(
+          Math.max(8, ctrlPreviewInfo.y + PANEL_OFFSET_Y),
+          window.innerHeight - 60
+        );
+        return (
+          <div
+            className="cm-ctrl-preview"
+            style={{ left, top, width: PANEL_W }}
+          >
+            <div className="cm-ctrl-preview-head">
+              <strong>
+                {ctrlPreviewInfo.kind === "state"
+                  ? (ctrlPreviewInfo.comment || `State ${ctrlPreviewInfo.id}`)
+                  : (ctrlPreviewInfo.comment || `Screen ${ctrlPreviewInfo.id}`)}
+              </strong>
+              <span>
+                {ctrlPreviewInfo.kind === "state"
+                  ? `State ${ctrlPreviewInfo.id} · ${ctrlPreviewInfo.type}`
+                  : `Screen ${ctrlPreviewInfo.id}`}
+              </span>
+            </div>
+            <div className="cm-ctrl-preview-params">
+              {ctrlPreviewInfo.kind === "state" && ctrlPreviewInfo.params.map(([key, val]) => (
+                <div key={key} className="cm-ctrl-preview-row">
+                  <span>{key}</span>
+                  <strong>{val || "—"}</strong>
+                </div>
+              ))}
+              {ctrlPreviewInfo.kind === "screen" && ctrlPreviewInfo.resource && (
+                <div className="cm-ctrl-preview-row">
+                  <span>Resource</span>
+                  <strong>{ctrlPreviewInfo.resource}</strong>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="editor-fontsize">
         <button

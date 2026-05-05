@@ -486,16 +486,17 @@ export default function App() {
         return;
       }
 
+      const resourceFile = resource.split('?')[0].trim();
       const match = screensList.find(
-        (screen) => String(screen.resource || "").toLowerCase() === String(resource).toLowerCase()
+        (screen) => String(screen.resource || "").toLowerCase() === resourceFile.toLowerCase()
       );
       if (!match) {
-        addNotification("info", `La pantalla ${resource} no esta cargada en el modulo Pantallas.`);
+        addNotification("info", `La pantalla ${resourceFile} no esta cargada en el modulo Pantallas.`);
         return;
       }
 
       setViewMode("screens");
-      setSelectedScreen(match);
+      setSelectedScreen(resourceFile !== resource ? { ...match, resource } : match);
       return;
     }
 
@@ -530,16 +531,17 @@ export default function App() {
       return;
     }
 
+    const resourceFile = resource.split('?')[0].trim();
     const match = screensList.find(
-      (screen) => String(screen.resource || "").toLowerCase() === String(resource).toLowerCase()
+      (screen) => String(screen.resource || "").toLowerCase() === resourceFile.toLowerCase()
     );
     if (!match) {
-      addNotification("info", `La pantalla ${resource} no esta cargada en el modulo Pantallas.`);
+      addNotification("info", `La pantalla ${resourceFile} no esta cargada en el modulo Pantallas.`);
       return;
     }
 
     setViewMode("screens");
-    setSelectedScreen(match);
+    setSelectedScreen(resourceFile !== resource ? { ...match, resource } : match);
   };
 
   if (isRestoringWorkspace) {
@@ -641,8 +643,8 @@ export default function App() {
 
         <div className="editor-wrapper full">
           {/* ======================= CODE ======================= */}
-          {visibleModules.code && viewMode === "code" && (
-            <div style={{ height: "100%" }}>
+          {visibleModules.code && (
+            <div style={{ height: "100%", display: viewMode === "code" ? "block" : "none" }}>
             {!xml.xmlDoc ? (
               <EmptyState onLoadClick={xml.openFile} onNewClick={xml.newXml} />
             ) : (
@@ -688,6 +690,7 @@ export default function App() {
                     theme={theme}
                     editorViewState={editorViewState}
                     setEditorViewState={setEditorViewState}
+                    splitView={splitView}
                     xmlDoc={xml.xmlDoc}
                     suggestionSettings={xmlSuggestionSettings}
                     onOpenFlowState={(stateId) => {
@@ -712,6 +715,7 @@ export default function App() {
                       theme={theme}
                       editorViewState={editorViewState}
                       setEditorViewState={setEditorViewState}
+                      splitView={splitView}
                       xmlDoc={xml.xmlDoc}
                       suggestionSettings={xmlSuggestionSettings}
                       onOpenFlowState={(stateId) => {
@@ -773,8 +777,8 @@ export default function App() {
           )}
 
           {/* ======================= FLOWS ======================= */}
-          {visibleModules.flows && viewMode === "flows" && (
-            <div style={{ height: "100%" }}>
+          {visibleModules.flows && (
+            <div style={{ height: "100%", display: viewMode === "flows" ? "block" : "none" }}>
             {xml.xmlDoc ? (
               <FlowsPanel
                 xmlDoc={xml.xmlDoc}

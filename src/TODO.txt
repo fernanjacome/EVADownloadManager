@@ -1,6 +1,21 @@
 TO DO LIST
--snipetts para xml
--toolbox para xml
--Fold/unfold por states en xml
--control + click en *States y *Screen
+ general
+ [OK] cambia todo el nombre antiguo EVADownloadManager que tiene el proyecto, por el nuevo nombre EVAStudio2026
+ [OK] cambiar a v1.2.0 realmente (version consistente en v1.2.4 - no se hizo downgrade)
+ [OK] agregar menu para personalizacion de snippets
+
+modulo xml
+[OK] mantener abierto el submenu de plegar/despelgar son con el hover unicamente
+pendiente: mostrar una previsualizacion del state al hacer contro + click y pasando el hover
+[INFO] al crear un snippet, que el tab me ayude a posicionarme rapidamente en los values para editarlos (ya funciona por defecto en CodeMirror - usar TAB luego de insertar el snippet)
+
+modulo flujos
+
+-cambiar icono de centrar states por uno como el de centrar de maps
+[OK] -solucionar el ligero blur al controlar el zoom del modulo de flujos: se elimino will-change que forzaba composicion GPU
+[OK] -quitar animaciones a los nodos en el xml: eliminadas transiciones CSS y offsets de motion
+
+modulo pantallas
+[OK] -al navegar al modulo pantallas se debe centrar el menu de lista de pantallas en la pantalla seleccionada
+[OK] -mostrar nombre de pantalla arriba del visualizador, de manera minimal y centrada
 

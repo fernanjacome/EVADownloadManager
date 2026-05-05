@@ -1,6 +1,6 @@
 {
-  "name": "eva-download-manager",
-  "version": "1.2.0",
+  "name": "eva-studio-2026",
+  "version": "1.2.4",
   "description": "Gestor de Downloads XML para EVA",
   "author": "Fernando Jácome",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "electron:build": "vite build --emptyOutDir false && electron-builder --publish never"
   },
   "build": {
-    "appId": "com.eva.downloadmanager",
+    "appId": "com.eva.studio2026",
     "productName": "EVA Studio 2026",
     "asar": true,
     "compression": "maximum",

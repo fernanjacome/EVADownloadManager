@@ -345,12 +345,17 @@ export default function ScreensPanel({
         )}
 
         {screensFolder && selectedScreen && (
-          <ScreenViewer
-            folder={screensFolder}
-            resource={selectedScreen.resource}
-            viewState={screensViewState}
-            onViewStateChange={onScreensViewStateChange}
-          />
+          <>
+            <div className="screens-viewer-title">
+              {selectedScreen.resource.replace(/\.html?$/i, "")}
+            </div>
+            <ScreenViewer
+              folder={screensFolder}
+              resource={selectedScreen.resource}
+              viewState={screensViewState}
+              onViewStateChange={onScreensViewStateChange}
+            />
+          </>
         )}
       </div>
     </div>

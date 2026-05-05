@@ -44,8 +44,12 @@ export default function ScreenViewer({ folder, resource, viewState, onViewStateC
   useEffect(() => {
     const load = async () => {
       const baseUrl = await window.electronAPI.startStaticServer(folder);
-      const finalUrl = `${baseUrl}/${resource}?v=${Date.now()}`;
-      setUrl(finalUrl);
+      const qIdx = resource.indexOf('?');
+      const resourcePath = qIdx === -1 ? resource : resource.slice(0, qIdx);
+      const resourceQuery = qIdx === -1 ? '' : resource.slice(qIdx + 1);
+      const cacheBuster = `v=${Date.now()}`;
+      const queryString = resourceQuery ? `${resourceQuery}&${cacheBuster}` : cacheBuster;
+      setUrl(`${baseUrl}/${resourcePath}?${queryString}`);
     };
 
     load();

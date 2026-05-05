@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { FaRegFileCode } from "react-icons/fa";
 
 export default function ScreenSelector({ screens, selected, onSelect }) {
+  const selectedRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedRef.current) {
+      selectedRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [selected]);
+
   return (
     <div className="screen-selector">
       {screens.map((scr) => {
@@ -10,6 +18,7 @@ export default function ScreenSelector({ screens, selected, onSelect }) {
         return (
           <div
             key={scr.resource}
+            ref={isActive ? selectedRef : null}
             className={`screen-item ${isActive ? "active" : ""}`}
             onClick={() => onSelect(scr)}
           >

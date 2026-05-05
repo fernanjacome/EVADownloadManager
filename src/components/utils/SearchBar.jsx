@@ -12,6 +12,7 @@ export default function SearchBar({
   showReplace,
   total = 0,
   current = 0,
+  selectAllActive = false,
   inputRef,
   replaceInputRef,
   onQueryChange,
@@ -154,7 +155,11 @@ export default function SearchBar({
           <FaRegDotCircle />
           <span>Palabra</span>
         </button>
-        <button className="option-chip" onClick={onSelectAll} title="Seleccionar coincidencias">
+        <button
+          className={`option-chip ${selectAllActive ? "active" : ""}`}
+          onClick={onSelectAll}
+          title={selectAllActive ? "Quitar seleccion multiple" : "Seleccionar coincidencias"}
+        >
           <FaList />
           <span>Todas</span>
         </button>

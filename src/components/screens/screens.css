@@ -159,6 +159,7 @@
 .screens-viewer-area {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: stretch;
     justify-content: stretch;
     overflow: hidden;
@@ -166,6 +167,16 @@
     background:
         radial-gradient(circle at top right, rgba(0, 200, 150, 0.04), transparent 24%),
         var(--c-fondo);
+}
+
+.screens-viewer-title {
+    text-align: center;
+    padding: 4px 12px 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--txt-normalb);
+    flex: 0 0 auto;
 }
 
 .screen-fit-wrapper {

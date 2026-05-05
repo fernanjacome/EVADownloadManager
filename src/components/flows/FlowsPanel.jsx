@@ -305,7 +305,7 @@ function getOperationContentFlags(node) {
 
 function getNodeShapeMetrics(node, cardWidth, cardHeight, cardScale) {
   const kind = getStateVisualKind(node);
-  if (kind === "screen" || kind === "entry") {
+  if (kind === "screen" || kind === "entry" || kind === "card") {
     return {
       kind,
       left: 0,
@@ -1196,6 +1196,122 @@ function EntryPinStateCard({
   );
 }
 
+function CardReaderStateCard({
+  node,
+  graph,
+  instance,
+  isSelected,
+  onToggle,
+  onInspect,
+  cardScale,
+  searchTerm,
+  highlightAllMatches,
+  isMatchFocused,
+  hiddenExitCount,
+}) {
+  const type = String(node?.type || "").toUpperCase();
+  const isCardSource = type === "CRDSRC";
+  const cardDetail = isCardSource
+    ? [
+        node.params?.Chip ? `Chip -> ${node.params.Chip}` : "",
+        node.params?.Track ? `Track -> ${node.params.Track}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : node.params?.ReadFlags
+      ? `ReadFlags ${node.params.ReadFlags}`
+      : "";
+
+  return (
+    <button
+      type="button"
+      className={`flow-card-screen-node ${isSelected ? "selected" : ""} ${
+        instance.expanded ? "expanded" : ""
+      } ${isMatchFocused ? "match-focused" : ""}`}
+      onClick={onToggle}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onInspect(event);
+      }}
+      title="Click para abrir o cerrar esta rama"
+      style={{ "--flow-card-scale": cardScale }}
+    >
+      <div className="flow-screen-shell flow-card-screen-shell">
+        <div className="flow-screen-idbar">
+          <span className="flow-screen-id">
+            {renderHighlightedText(
+              `State ${node.id}`,
+              searchTerm,
+              highlightAllMatches,
+            )}
+          </span>
+          <span className="flow-screen-type">
+            {renderHighlightedText(
+              type || "CRD",
+              searchTerm,
+              highlightAllMatches,
+            )}
+          </span>
+        </div>
+
+        <div className="flow-card-reader-frame">
+          <div className="flow-card-reader-monitor">
+            <div className="flow-card-reader-monitor-text">
+              {renderHighlightedText(
+                node.screenComment || node.comment || "Ingrese su tarjeta",
+                searchTerm,
+                highlightAllMatches,
+              )}
+            </div>
+            {node.comment && node.screenComment && (
+              <small>
+                {renderHighlightedText(
+                  node.comment,
+                  searchTerm,
+                  highlightAllMatches,
+                )}
+              </small>
+            )}
+            {cardDetail && (
+              <span className="flow-card-reader-detail">
+                {renderHighlightedText(
+                  cardDetail,
+                  searchTerm,
+                  highlightAllMatches,
+                )}
+              </span>
+            )}
+            <NodeBadges node={node} graph={graph} hiddenExitCount={0} />
+          </div>
+
+          <span
+            className={`flow-card-reader-art ${isCardSource ? "source" : ""}`}
+            aria-hidden="true"
+          >
+            <FaCreditCard />
+          </span>
+        </div>
+
+        <div className="flow-screen-footer">
+          <span className="flow-screen-transition">
+            {renderHighlightedText(
+              instance.incomingLabel ||
+                (graph.startNodeIds.includes(node.id) ? "Start" : "State"),
+              searchTerm,
+              highlightAllMatches,
+            )}
+          </span>
+          {hiddenExitCount > 0 && (
+            <span className="flow-side-exit-chip" title="Excepciones ocultas">
+              +{hiddenExitCount}
+            </span>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function OperationStateNode({
   node,
   graph,
@@ -1296,6 +1412,9 @@ function FlowNodeCard(props) {
   if (visualKind === "entry") {
     return <EntryPinStateCard {...props} />;
   }
+  if (visualKind === "card") {
+    return <CardReaderStateCard {...props} />;
+  }
   return <OperationStateNode {...props} />;
 }
 
@@ -1351,6 +1470,7 @@ export default function FlowsPanel({
       flowViewState.startCategoryFilter.length
         ? flowViewState.startCategoryFilter
         : ["CRD*"],
+    hiddenStartBranches: flowViewState?.hiddenStartBranches || {},
     scrollLeft: flowViewState?.scrollLeft ?? 0,
     scrollTop: flowViewState?.scrollTop ?? 0,
   });
@@ -1379,11 +1499,17 @@ export default function FlowsPanel({
   const layoutMotionSettleFrameRef = useRef(null);
   const layoutAnimationTimerRef = useRef(null);
   const suppressLayoutMotionRef = useRef(false);
+  const hiddenStartBranchesRef = useRef(
+    new Map(Object.entries(initialViewStateRef.current.hiddenStartBranches)),
+  );
   const scrollAnimationFrameRef = useRef(null);
   const latestScrollRef = useRef({
     left: initialViewStateRef.current.scrollLeft ?? 0,
     top: initialViewStateRef.current.scrollTop ?? 0,
   });
+  const skipInitialFlowPersistRef = useRef(true);
+  const didPersistFlowViewRef = useRef(false);
+  const latestFlowViewStateRef = useRef(null);
   const [instances, setInstances] = useState([]);
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
   const [horizontalScale, setHorizontalScale] = useState(
@@ -1420,7 +1546,6 @@ export default function FlowsPanel({
     initialViewStateRef.current.startCategoryFilter,
   );
   const [layoutAnimating, setLayoutAnimating] = useState(false);
-  const [layoutMotionById, setLayoutMotionById] = useState({});
   const highlightAllMatches = true;
   const [inspector, setInspector] = useState(null);
   const [paramMenu, setParamMenu] = useState(null);
@@ -1435,6 +1560,56 @@ export default function FlowsPanel({
     () => (inspector ? Object.entries(inspector.node.params || {}) : []),
     [inspector],
   );
+
+  const buildCurrentFlowViewState = (overrides = {}) => {
+    const container = scrollRef.current;
+    const scrollLeft =
+      overrides.scrollLeft ??
+      container?.scrollLeft ??
+      latestScrollRef.current.left;
+    const scrollTop =
+      overrides.scrollTop ??
+      container?.scrollTop ??
+      latestScrollRef.current.top;
+
+    latestScrollRef.current = {
+      left: scrollLeft,
+      top: scrollTop,
+    };
+
+    return {
+      instances,
+      selectedInstanceId,
+      horizontalScale,
+      verticalScale,
+      cardScale,
+      canvasZoom,
+      showControls: showLayoutPanel,
+      showAppearance: false,
+      showSearch: false,
+      showCanvasZoom,
+      showSideExits,
+      autoFocusOnExpand,
+      searchTerm,
+      startCategoryFilter,
+      hiddenStartBranches: Object.fromEntries(hiddenStartBranchesRef.current),
+      scrollLeft,
+      scrollTop,
+      ...overrides,
+    };
+  };
+
+  const persistFlowViewState = (overrides = {}) => {
+    if (!onFlowViewStateChange) return;
+    const nextState = buildCurrentFlowViewState(overrides);
+    latestFlowViewStateRef.current = nextState;
+    didPersistFlowViewRef.current = true;
+
+    onFlowViewStateChange((prev) => ({
+      ...(prev || {}),
+      ...nextState,
+    }));
+  };
 
   useEffect(() => {
     canvasZoomRef.current = canvasZoom;
@@ -1509,14 +1684,12 @@ export default function FlowsPanel({
 
     if (suppressLayoutMotionRef.current) {
       suppressLayoutMotionRef.current = false;
-      setLayoutMotionById({});
       setLayoutAnimating(false);
       return;
     }
 
     if (!Object.keys(motions).length) return;
 
-    setLayoutMotionById(motions);
     setLayoutAnimating(true);
 
     if (layoutMotionFrameRef.current) {
@@ -1527,7 +1700,6 @@ export default function FlowsPanel({
     }
     layoutMotionFrameRef.current = requestAnimationFrame(() => {
       layoutMotionSettleFrameRef.current = requestAnimationFrame(() => {
-        setLayoutMotionById({});
         layoutMotionFrameRef.current = null;
         layoutMotionSettleFrameRef.current = null;
       });
@@ -1585,9 +1757,18 @@ export default function FlowsPanel({
 
     setInstances((prev) => {
       const isInitialLoad = prev.length === 0;
+      const archivedForActiveFilters = startCategoryFilter.flatMap(
+        (category) => hiddenStartBranchesRef.current.get(category) || [],
+      );
+      const existingIds = new Set(prev.map((item) => item.instanceId));
+      const sourceInstances = prev.concat(
+        archivedForActiveFilters.filter(
+          (item) => !existingIds.has(item.instanceId),
+        ),
+      );
       const reconciled = reconcileInstancesForStarts({
         graph,
-        currentInstances: prev,
+        currentInstances: sourceInstances,
         persistedInstances: initialViewStateRef.current.instances,
         startIds: filteredStartIds,
         showSideExits,
@@ -1598,22 +1779,9 @@ export default function FlowsPanel({
         pendingScrollRestoreRef.current = true;
       }
 
-      const categoryToFocus = pendingCategoryFocusRef.current;
-      const categoryMatch = categoryToFocus
-        ? reconciled.find(
-            (item) =>
-              !item.parentInstanceId &&
-              getStartCategory(nodeMap.get(item.stateId)) === categoryToFocus,
-          )
-        : null;
-      if (categoryMatch) {
-        pendingCategoryFocusRef.current = null;
-        pendingFocusModeRef.current = "as-start";
-        pendingCenterRef.current = true;
-      }
+      pendingCategoryFocusRef.current = null;
 
       setSelectedInstanceId((currentSelected) => {
-        if (categoryMatch) return categoryMatch.instanceId;
         if (reconciled.some((item) => item.instanceId === currentSelected)) {
           return currentSelected;
         }
@@ -1674,26 +1842,14 @@ export default function FlowsPanel({
   }, [focusStateId, focusStateKey, graph.nodes]);
 
   useEffect(() => {
-    if (!onFlowViewStateChange) return;
-    onFlowViewStateChange((prev) => ({
-      ...(prev || {}),
-      instances,
-      selectedInstanceId,
-      horizontalScale,
-      verticalScale,
-      cardScale,
-      canvasZoom,
-      showControls: showLayoutPanel,
-      showAppearance: false,
-      showSearch: false,
-      showCanvasZoom,
-      showSideExits,
-      autoFocusOnExpand,
-      searchTerm,
-      startCategoryFilter,
-      scrollLeft: latestScrollRef.current.left,
-      scrollTop: latestScrollRef.current.top,
-    }));
+    latestFlowViewStateRef.current = buildCurrentFlowViewState();
+
+    if (skipInitialFlowPersistRef.current) {
+      skipInitialFlowPersistRef.current = false;
+      return;
+    }
+
+    persistFlowViewState();
   }, [
     instances,
     selectedInstanceId,
@@ -1709,6 +1865,19 @@ export default function FlowsPanel({
     startCategoryFilter,
     onFlowViewStateChange,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (!onFlowViewStateChange || !didPersistFlowViewRef.current) return;
+      const latestState =
+        latestFlowViewStateRef.current || buildCurrentFlowViewState();
+
+      onFlowViewStateChange((prev) => ({
+        ...(prev || {}),
+        ...latestState,
+      }));
+    };
+  }, [onFlowViewStateChange]);
 
   const setLayoutPreset = (preset) => {
     const prepareViewLayoutChange = (behavior = "smooth") => {
@@ -1821,7 +1990,9 @@ export default function FlowsPanel({
 
         const labelScale = Math.max(0.9, Math.min(cardScale, 1.7));
         const baseLabelWidth =
-          instance.incomingLabelWidth || edgeMeta?.labelWidth || EDGE_LABEL_WIDTH;
+          instance.incomingLabelWidth ||
+          edgeMeta?.labelWidth ||
+          EDGE_LABEL_WIDTH;
 
         return {
           id: `${instance.parentInstanceId}-${instance.instanceId}`,
@@ -2179,7 +2350,12 @@ export default function FlowsPanel({
         );
         const labelHeight = (edge.secondaryLabel ? 40 : 30) * edge.labelScale;
         return {
-          left: Math.min(path.startX, path.midX, path.labelStartX, path.beforeEndX),
+          left: Math.min(
+            path.startX,
+            path.midX,
+            path.labelStartX,
+            path.beforeEndX,
+          ),
           top: Math.min(path.startY, path.endY - labelHeight / 2),
           right: Math.max(path.midX, path.labelEndX, path.beforeEndX),
           bottom: Math.max(path.startY, path.endY + labelHeight / 2),
@@ -2200,6 +2376,7 @@ export default function FlowsPanel({
       style: {
         transform: `translate(${padding - minX}px, ${padding - minY}px)`,
         transformOrigin: "top left",
+        zoom: 1,
         overflow: "visible",
       },
     };
@@ -2215,7 +2392,9 @@ export default function FlowsPanel({
     try {
       const backgroundColor =
         getComputedStyle(viewport).getPropertyValue("--flow-bg").trim() ||
-        (document.body.classList.contains("light-theme") ? "#f5f7fb" : "#111111");
+        (document.body.classList.contains("light-theme")
+          ? "#f5f7fb"
+          : "#111111");
       const exportConfig = getCurrentBranchExport();
       if (!exportConfig) return;
       const { branchIds, filenameBase, width, height, style } = exportConfig;
@@ -2240,7 +2419,8 @@ export default function FlowsPanel({
             return false;
           }
 
-          if (node.classList?.contains?.("flow-start-group-block")) return false;
+          if (node.classList?.contains?.("flow-start-group-block"))
+            return false;
           if (node.classList?.contains?.("flow-stage-node")) {
             return branchIds.has(node.dataset.instanceId);
           }
@@ -2597,10 +2777,19 @@ export default function FlowsPanel({
   };
 
   const toggleStartCategoryFilter = (category) => {
+    persistFlowViewState();
     setStartCategoryFilter((prev) => {
       const isActive = prev.includes(category);
-      if (!isActive) {
-        pendingCategoryFocusRef.current = category;
+      if (isActive) {
+        const itemById = new Map(
+          instances.map((item) => [item.instanceId, item]),
+        );
+        const branchItems = instances.filter((item) => {
+          const rootId = getRootInstanceId(item, itemById);
+          const root = rootId ? itemById.get(rootId) : null;
+          return getStartCategory(nodeMap.get(root?.stateId)) === category;
+        });
+        hiddenStartBranchesRef.current.set(category, branchItems);
       }
       return isActive
         ? prev.filter((item) => item !== category)
@@ -2771,6 +2960,10 @@ export default function FlowsPanel({
     if (!container || !onFlowViewStateChange) return;
 
     const persistScroll = () => {
+      if (!didPersistFlowViewRef.current && !restoredViewportRef.current) {
+        return;
+      }
+
       latestScrollRef.current = {
         left: container.scrollLeft,
         top: container.scrollTop,
@@ -3157,8 +3350,9 @@ export default function FlowsPanel({
               style={{
                 width: canvasVisualWidth,
                 height: canvasVisualHeight,
-                transform: `scale(${canvasZoom})`,
+                transform: "none",
                 transformOrigin: "top left",
+                zoom: canvasZoom,
               }}
             >
               <svg
@@ -3300,7 +3494,6 @@ export default function FlowsPanel({
               {scaledLayout.positioned.map((instance) => {
                 const node = nodeMap.get(instance.stateId);
                 if (!node) return null;
-                const motion = layoutMotionById[instance.instanceId];
                 const hiddenExitCount = showSideExits
                   ? 0
                   : graph.edges.filter(
@@ -3318,10 +3511,6 @@ export default function FlowsPanel({
                       width: cardWidth,
                       height: cardHeight,
                       "--flow-card-scale": cardScale,
-                      transform: motion
-                        ? `translate(${motion.dx}px, ${motion.dy}px)`
-                        : "translate(0, 0)",
-                      opacity: motion ? motion.opacity : 1,
                     }}
                   >
                     <FlowNodeCard
@@ -3396,7 +3585,7 @@ export default function FlowsPanel({
               onClick={centerCurrentView}
               title="Centrar seleccion"
             >
-              <FaExpandArrowsAlt />
+              <FaMapMarkerAlt />
             </button>
             <button
               type="button"
@@ -3453,87 +3642,87 @@ export default function FlowsPanel({
                 <FaTimes />
               </button>
             </div>
-
-            <div className="flow-inspector-body">
-              <div className="flow-inspector-actions">
+            <div
+              className={`flow-inspector-actions`}
+              style={{ padding: "0.5rem" }}
+            >
+              <button
+                type="button"
+                className="flow-screen-preview-btn ready"
+                onClick={() => jumpToState(inspector.node)}
+              >
+                <span className="flow-screen-preview-main">
+                  <IoCodeSlash />
+                  Ir al XML
+                </span>
+              </button>
+              {screenStatus && (
                 <button
                   type="button"
                   className="flow-screen-preview-btn ready"
-                  onClick={() => jumpToState(inspector.node)}
+                  onClick={() => {
+                    onOpenScreen?.(screenStatus.screen);
+                    setInspector(null);
+                  }}
                 >
                   <span className="flow-screen-preview-main">
-                    <IoCodeSlash />
-                    Ir al XML
+                    <FaExternalLinkAlt />
+                    Ir a {screenStatus.label}
                   </span>
                 </button>
-              </div>
-
-              {screenStatus && (
-                <div className="flow-inspector-actions">
-                  <button
-                    type="button"
-                    className="flow-screen-preview-btn ready"
-                    onClick={() => {
-                      onOpenScreen?.(screenStatus.screen);
-                      setInspector(null);
-                    }}
-                  >
-                    <span className="flow-screen-preview-main">
-                      <FaExternalLinkAlt />
-                      Ir a {screenStatus.label}
-                    </span>
-                  </button>
-                </div>
               )}
-
-              <section className="flow-inspector-section">
-                <h4>
-                  <FaLayerGroup /> Parametros
-                </h4>
-                <div className="flow-inspector-list compact">
-                  {inspectorParams.length > 0 ? (
-                    inspectorParams.map(([key, value]) => {
-                      const paramScreenStatus = getScreenStatusFromParam(
-                        key,
-                        value,
-                      );
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          className="flow-param-row compact"
-                          onClick={() => jumpToParam(inspector.node, key)}
-                          onContextMenu={(event) => {
-                            event.preventDefault();
-                            setSendMenu(null);
-                            setParamMenu({
-                              x: Math.min(
-                                event.clientX + 8,
-                                window.innerWidth - 220,
-                              ),
-                              y: Math.min(
-                                event.clientY + 8,
-                                window.innerHeight - 140,
-                              ),
-                              node: inspector.node,
-                              key,
-                              value,
-                              screenStatus: paramScreenStatus,
-                            });
-                          }}
-                        >
-                          <span>{key}</span>
-                          <strong>{value || "-"}</strong>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="flow-param-empty">
-                      Este state no tiene parametros.
-                    </div>
-                  )}
+            </div>
+            <div className="flow-inspector-body">
+              <div className="flow-tranmap-card compact">
+                <div className="flow-tranmap-title">
+                  <strong>{inspector.node.comment || "Sin comentario"}</strong>
+                  <span>
+                    State {inspector.node.id} · {inspector.node.type}
+                  </span>
                 </div>
-              </section>
+                {inspectorParams.length > 0 ? (
+                  inspectorParams.map(([key, value]) => {
+                    const paramScreenStatus = getScreenStatusFromParam(
+                      key,
+                      value,
+                    );
+                    return (
+                      <div
+                        key={key}
+                        className="flow-tranmap-rule clickable"
+                        onClick={() => jumpToParam(inspector.node, key)}
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          setSendMenu(null);
+                          setParamMenu({
+                            x: Math.min(
+                              event.clientX + 8,
+                              window.innerWidth - 220,
+                            ),
+                            y: Math.min(
+                              event.clientY + 8,
+                              window.innerHeight - 140,
+                            ),
+                            node: inspector.node,
+                            key,
+                            value,
+                            screenStatus: paramScreenStatus,
+                          });
+                        }}
+                        title={`Ir a ${key} en el XML`}
+                      >
+                        <span>{key}</span>
+                        <strong>{value || "-"}</strong>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flow-tranmap-rule muted">
+                    <span>Sin parametros</span>
+                    <strong>—</strong>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -3546,8 +3735,29 @@ export default function FlowsPanel({
             onClick={(event) => event.stopPropagation()}
             onContextMenu={(event) => event.preventDefault()}
           >
+            <div
+              className="flow-inspector-head"
+              onPointerDown={(event) =>
+                startFloatingDrag(event, paramMenuRef, setParamMenu)
+              }
+            >
+              <div>
+                <strong>{paramMenu.key}</strong>
+                <span>{paramMenu.value || "—"}</span>
+              </div>
+              <button
+                type="button"
+                className="flow-inspector-close"
+                onClick={() => setParamMenu(null)}
+              >
+                <FaTimes />
+              </button>
+            </div>
             <div className="flow-inspector-body">
-              <div className="flow-inspector-actions">
+              <div
+                className={`flow-inspector-actions`}
+                style={{ padding: "0.5rem" }}
+              >
                 <button
                   type="button"
                   className="flow-screen-preview-btn ready"
@@ -3558,9 +3768,7 @@ export default function FlowsPanel({
                     Ir al XML
                   </span>
                 </button>
-              </div>
-              {paramMenu.screenStatus && (
-                <div className="flow-inspector-actions">
+                {paramMenu.screenStatus && (
                   <button
                     type="button"
                     className="flow-screen-preview-btn ready"
@@ -3575,8 +3783,8 @@ export default function FlowsPanel({
                       Ir a {paramMenu.screenStatus.label}
                     </span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}

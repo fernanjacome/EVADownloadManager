@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem *)",
+      "Bash(npx eslint *)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('name:', p.name, '| appId:', p.build.appId, '| version:', p.version\\)\")"
+    ]
+  }
+}
