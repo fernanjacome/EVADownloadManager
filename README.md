@@ -1,7 +1,23 @@
 # EVA Studio 2026
 
-Versión: 1.1.0
-Última actualización: 29 de diciembre de 2025
+Version: 1.3.0
+Ultima actualizacion: 6 de mayo de 2026
+
+---
+
+## Actualizaciones v1.3.0 [Comparador XML]
+
+- Nuevo modulo Comparar para revisar dos archivos XML o texto lado a lado.
+- Comparacion visual estilo Beyond Compare con panel izquierdo/derecho, scroll sincronizado, minimap, filas fantasma y diferencias inline.
+- Motor propio de diff con LCS, alineacion contextual, heuristicas XML por tags/atributos y deteccion de bloques movidos.
+- Soporte para XML grandes con renderizado virtualizado.
+- Carga de archivos por lado conservando ruta completa.
+- Persistencia del estado del comparador: archivos cargados, rutas, opciones, scroll, historial y altura del registro de cambios.
+- Copia de bloques entre lados, incluyendo eliminacion desde el lado fantasma cuando el bloque solo existe en el lado contrario.
+- Registro inferior de cambios con restauracion individual, restaurar todo y Ctrl+Z.
+- Botones por panel para guardar o vaciar el lado correspondiente.
+- El guardado sincroniza el modulo XML cuando el archivo guardado es el XML abierto actualmente.
+- Opciones para ignorar espacios, ignorar comentarios y comparar con sensibilidad a mayusculas.
 
 ---
 

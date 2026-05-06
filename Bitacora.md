@@ -1,5 +1,41 @@
 ## EVA XML MANAGER
 
+[06/05/2026]
+
+- Version 1.3.0.
+- Se agrego el modulo Comparar con comparacion lado a lado, minimap, scroll sincronizado, diferencias inline y bloques fantasma.
+- Se agrego motor propio de diferencias con LCS, alineacion contextual y heuristicas XML.
+- Se agrego persistencia del estado del comparador y registro de cambios con restauracion.
+- Se agrego guardado por panel y sincronizacion con el modulo XML cuando corresponde.
+
+[30/04/2026 - 10:41PM]
+
+- Se agrego boton para expotrar a PNG el flujo desplegado en el modulo de flujos.
+
+[30/04/2026]
+
+- Version 1.2.3
+- Se agrego snippets para modulo xml
+- Se agrego menu para personalizar snippets
+- Se agrego cuadro de sugerencias
+- Se agrego navegacion entre states dentro del xml, con contrl + click
+
+[29/04/2026 - 7:58PM]
+
+- Version 1.2.2
+- Se agrego menu contextual con click derecho en modulo xml
+- Se agrego opcion para plegar/desplegar en modulo xml
+
+[29/04/2026 - 7:33PM]
+
+- Version 1.2.1
+- Se mejoro cards y nodos en el modulo de flujos
+
+[29/04/2026]
+
+- Version 1.2.0
+- Se agrego modulo de flujos
+
 [17/12/2025]
 Corregir arrastre de archivos.
 Implementar guardado de sesión y boton para cerrar nodos.
