@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaUpload, FaTrash, FaLink, FaProjectDiagram } from "react-icons/fa";
+import { FaUpload, FaTrash, FaLink, FaProjectDiagram, FaNotEqual } from "react-icons/fa";
 import "./Header.css";
 import ConfirmModal from "../../utils/ConfirmModal";
 import { MdScreenshotMonitor } from "react-icons/md";
@@ -61,6 +61,15 @@ export default function Header({
               onClick={() => setViewMode("code")}
             >
               <IoCodeSlash /> XML
+            </button>
+          )}
+
+          {visibleModules?.compare !== false && (
+            <button
+              className={`mode-btn ${viewMode === "compare" ? "active" : ""}`}
+              onClick={() => setViewMode("compare")}
+            >
+              <FaNotEqual /> Comparar
             </button>
           )}
 

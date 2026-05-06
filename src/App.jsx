@@ -13,6 +13,7 @@ import ScreensPanel from "./components/screens/ScreensPanel";
 import CompilerForm from "./components/compiler/CompilerForm";
 import RemoteViewer from "./components/remote/RemoteViewer";
 import FlowsPanel from "./components/flows/FlowsPanel";
+import XmlCompareView from "./components/xmlCompare/XmlCompareView";
 import { useSnowEffect } from "./hooks/useSnowEffect";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSidebarResize } from "./hooks/useSidebarResize";
@@ -58,9 +59,11 @@ const DEFAULT_STATE = {
     scrollLeft: 0,
     scrollTop: 0,
   },
+  compareState: null,
   theme: "light",
   visibleModules: {
     code: true,
+    compare: true,
     screens: true,
     compiler: true,
     flows: true,
@@ -97,6 +100,7 @@ export default function App() {
   const [selectedScreen, setSelectedScreen] = useState(DEFAULT_STATE.selectedScreen);
   const [screensViewState, setScreensViewState] = useState(DEFAULT_STATE.screensViewState);
   const [flowViewState, setFlowViewState] = useState(DEFAULT_STATE.flowViewState);
+  const [compareState, setCompareState] = useState(DEFAULT_STATE.compareState);
   const [theme, setTheme] = useState(DEFAULT_STATE.theme);
   const [visibleModules, setVisibleModules] = useState(
     DEFAULT_STATE.visibleModules
@@ -145,6 +149,7 @@ export default function App() {
       selectedScreen,
       screensViewState,
       flowViewState,
+      compareState,
       visibleModules,
     }),
     [
@@ -166,6 +171,7 @@ export default function App() {
       selectedScreen,
       screensViewState,
       flowViewState,
+      compareState,
       visibleModules,
     ]
   );
@@ -200,6 +206,7 @@ export default function App() {
         setSelectedScreen(s.selectedScreen ?? DEFAULT_STATE.selectedScreen);
         setScreensViewState(s.screensViewState ?? DEFAULT_STATE.screensViewState);
         setFlowViewState(s.flowViewState ?? DEFAULT_STATE.flowViewState);
+        setCompareState(s.compareState ?? DEFAULT_STATE.compareState);
         setVisibleModules(s.visibleModules ?? DEFAULT_STATE.visibleModules);
         setCollapsedGroups(
           s.collapsedGroups ??
@@ -253,7 +260,7 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
-    if (visibleModules[viewMode]) return;
+    if (visibleModules?.[viewMode] !== false) return;
 
     const fallbackMode =
       Object.entries(visibleModules).find(([, enabled]) => enabled)?.[0] ??
@@ -400,6 +407,7 @@ export default function App() {
     setSelectedScreen(DEFAULT_STATE.selectedScreen);
     setScreensViewState(DEFAULT_STATE.screensViewState);
     setFlowViewState(DEFAULT_STATE.flowViewState);
+    setCompareState(DEFAULT_STATE.compareState);
     setTheme(DEFAULT_STATE.theme);
     setVisibleModules(DEFAULT_STATE.visibleModules);
     setFlowFocusRequest(null);
@@ -586,6 +594,7 @@ export default function App() {
           selectedScreen,
           screensViewState,
           flowViewState,
+          compareState,
           visibleModules,
         })}
       />
@@ -731,6 +740,21 @@ export default function App() {
                 </div>
               </div>
             )}
+            </div>
+          )}
+
+          {/* ======================= XML COMPARE ======================= */}
+          {visibleModules.compare !== false && viewMode === "compare" && (
+            <div style={{ height: "100%" }}>
+              <XmlCompareView
+                currentXml={xml.code}
+                currentFileName={xml.filePath || xml.fileInfo?.name || xml.title || "XML actual"}
+                currentFilePath={xml.filePath}
+                notify={addNotification}
+                initialState={compareState}
+                onStateChange={setCompareState}
+                onSideSaved={({ path, text }) => xml.syncExternalSave({ path, code: text })}
+              />
             </div>
           )}
 

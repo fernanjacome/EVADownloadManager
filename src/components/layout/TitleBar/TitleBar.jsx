@@ -51,6 +51,7 @@ export default function TitleBar({
 
   const moduleOptions = [
     { key: "code", label: "XML" },
+    { key: "compare", label: "Comparador XML" },
     { key: "flows", label: "Flujos" },
     { key: "screens", label: "Pantallas" },
     { key: "compiler", label: "Compilador" },

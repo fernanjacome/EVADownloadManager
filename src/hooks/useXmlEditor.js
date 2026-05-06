@@ -169,6 +169,36 @@ export function useXmlEditor({ notify }) {
         return true;
     };
 
+    const syncExternalSave = async ({ path, code: nextCode }) => {
+        if (!path || !filePath || path.toLowerCase() !== filePath.toLowerCase()) {
+            return false;
+        }
+
+        const doc = new DOMParser().parseFromString(nextCode, "text/xml");
+        if (doc.getElementsByTagName("parsererror")[0]) {
+            return false;
+        }
+
+        setCode(nextCode);
+        setSavedCode(nextCode);
+        setXmlDoc(doc);
+
+        try {
+            const info = await window.electronAPI?.getFileInfo?.(path);
+            if (info?.success) {
+                setFileInfo({
+                    name: path.split("\\").pop(),
+                    size: (info.info.size / 1024).toFixed(1) + " KB",
+                    lastModified: new Date(info.info.lastModified).toLocaleString(),
+                });
+            }
+        } catch {
+            // Si falla la metadata, el contenido ya quedo sincronizado.
+        }
+
+        return true;
+    };
+
     /* =========================
        Drag & Drop
     ========================== */
@@ -209,6 +239,7 @@ export function useXmlEditor({ notify }) {
         title,
         openFile,
         saveXml,
+        syncExternalSave,
         restoreOriginal: () => {
             setCode(originalCode);
             setXmlDoc(new DOMParser().parseFromString(originalCode, "text/xml"));
