@@ -13,8 +13,31 @@
   transition: width 0.2s ease, padding 0.2s ease;
 }
 
-.sidebar.collapsed-shell {
-  padding: 8px 6px 10px;
+.sidebar-expand-fab {
+  position: absolute;
+  bottom: 10px;
+  left: 6px;
+  z-index: 15;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--border-general) 80%, transparent 20%);
+  background: #333;
+  color: var(--c-fondo-secundario);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease;
+}
+
+.sidebar-expand-fab:hover {
+  border-color: var(--c-principal);
+  color: var(--c-principal);
+  background: color-mix(in srgb, var(--c-principal) 8%, var(--c-fondo-secundario) 92%);
+  box-shadow: 0 4px 12px rgba(0, 200, 150, 0.15);
 }
 
 .sidebar-topbar {

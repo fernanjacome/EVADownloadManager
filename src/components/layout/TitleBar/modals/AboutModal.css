@@ -45,6 +45,12 @@ body:not(.light-theme) .about-modal {
   color: var(--txt-normal);
 }
 
+.about-subtitle {
+  margin: 3px 0 0;
+  color: var(--txt-secondary);
+  font-size: 12.5px;
+}
+
 body:not(.light-theme) .about-header h2,
 body:not(.light-theme) .about-modal h2 {
   color: #fcfffd;
@@ -113,6 +119,146 @@ body:not(.light-theme) .about-modal h2 {
   padding: 13px;
 }
 
+.about-update-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.about-update-actions {
+  align-self: end;
+}
+
+.about-update-card h3,
+.about-update-status,
+.about-update-version {
+  margin: 0;
+}
+
+.about-update-status {
+  margin-top: 3px;
+  color: var(--txt-secondary);
+}
+
+.about-update-version {
+  margin-top: 5px;
+  color: var(--c-principal);
+  font-weight: 700;
+}
+
+.about-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.about-progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--border-general) 50%, transparent 50%);
+  overflow: hidden;
+}
+
+.about-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--c-principal);
+  transition: width 0.2s ease;
+}
+
+.about-progress-fill.indeterminate {
+  width: 40% !important;
+  animation: about-progress-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes about-progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+.about-progress-label {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--txt-secondary);
+  min-width: 100px;
+}
+
+body:not(.light-theme) .about-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body:not(.light-theme) .about-progress-fill {
+  background: #79d3b4;
+}
+
+.about-modal .about-update-config-path {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.about-update-label {
+  display: block;
+  margin-top: 8px;
+  color: var(--txt-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.about-update-input-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.about-update-input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid color-mix(in srgb, var(--border-general) 80%, transparent 20%);
+  border-radius: 7px;
+  background: var(--c-fondo-code);
+  color: var(--txt-normal);
+  font: 12px Consolas, "Fira Code", monospace;
+  padding: 7px 8px;
+}
+
+.about-update-button {
+  border: 1px solid color-mix(in srgb, var(--c-principal) 28%, transparent 72%);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c-principal) 12%, transparent 88%);
+  color: var(--txt-normal);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+.about-update-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--c-principal) 20%, transparent 80%);
+}
+
+.about-update-button:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.about-update-spinner {
+  animation: about-update-spin 0.82s linear infinite;
+}
+
+@keyframes about-update-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .about-release-heading {
   display: flex;
   align-items: center;
@@ -152,9 +298,16 @@ body:not(.light-theme) .about-modal h2 {
 }
 
 .about-release-grid h4 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   margin: 0 0 6px;
   font-size: 12.5px;
   color: var(--txt-normal);
+}
+
+.about-release-grid h4 svg {
+  color: var(--c-principal);
 }
 
 .about-release-grid ul {
@@ -341,6 +494,10 @@ body:not(.light-theme) .about-close:hover {
   }
 
   .about-release-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-update-card {
     grid-template-columns: 1fr;
   }
 }

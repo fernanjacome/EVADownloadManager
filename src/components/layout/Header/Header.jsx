@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { FaUpload, FaTrash, FaLink, FaProjectDiagram, FaNotEqual } from "react-icons/fa";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  FaFileAlt,
+  FaLink,
+  FaNotEqual,
+  FaProjectDiagram,
+  FaTrash,
+  FaUpload,
+} from "react-icons/fa";
 import "./Header.css";
 import ConfirmModal from "../../utils/ConfirmModal";
 import { MdScreenshotMonitor } from "react-icons/md";
@@ -14,9 +21,87 @@ export default function Header({
   viewMode,
   setViewMode,
   visibleModules,
+  onDetachModule,
 }) {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [draggingModule, setDraggingModule] = useState(null);
+  const modeSwitchRef = useRef(null);
   console.log(fileInfo);
+
+  const moduleButtons = [
+    { key: "code", label: "XML", icon: <IoCodeSlash /> },
+    { key: "compare", label: "Comparar", icon: <FaNotEqual /> },
+    { key: "screens", label: "Pantallas", icon: <MdScreenshotMonitor /> },
+    { key: "compiler", label: "Compilador", icon: <IoBuild /> },
+    { key: "flows", label: "Flujos", icon: <FaProjectDiagram /> },
+    { key: "logs", label: "Logs", icon: <FaFileAlt /> },
+    { key: "remote", label: "Remoto", icon: <FaLink />, className: "remote" },
+  ];
+
+  const handleModuleDragStart = (event, moduleKey) => {
+    setDraggingModule(moduleKey);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", `eva-module:${moduleKey}`);
+    event.dataTransfer.setDragImage(
+      event.currentTarget,
+      event.currentTarget.offsetWidth / 2,
+      event.currentTarget.offsetHeight / 2
+    );
+  };
+
+  const handleModuleDragEnd = (event, moduleKey) => {
+    const modeSwitch = event.currentTarget.closest(".mode-switch");
+    const bounds = modeSwitch?.getBoundingClientRect();
+    const { clientX, clientY } = event;
+    const droppedOutsideWindow = clientX === 0 && clientY === 0;
+    const droppedOutsideRow =
+      !bounds ||
+      droppedOutsideWindow ||
+      clientX < bounds.left ||
+      clientX > bounds.right ||
+      clientY < bounds.top ||
+      clientY > bounds.bottom;
+
+    setDraggingModule(null);
+
+    if (droppedOutsideRow) {
+      onDetachModule?.(moduleKey);
+    }
+  };
+
+  useEffect(() => {
+    const updateDockZone = () => {
+      const rect = modeSwitchRef.current?.getBoundingClientRect?.();
+      if (!rect) return;
+
+      window.electronAPI?.updateModuleDockZone?.({
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+      });
+    };
+
+    updateDockZone();
+    window.addEventListener("resize", updateDockZone);
+    window.addEventListener("scroll", updateDockZone, true);
+
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(updateDockZone)
+        : null;
+    if (modeSwitchRef.current && observer) {
+      observer.observe(modeSwitchRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateDockZone);
+      window.removeEventListener("scroll", updateDockZone, true);
+      observer?.disconnect();
+      window.electronAPI?.updateModuleDockZone?.(null);
+    };
+  }, [visibleModules]);
+
   return (
     <header className="header-bar">
       <div className="header-title">
@@ -54,60 +139,31 @@ export default function Header({
         >
           <FaTrash /> Eliminar
         </button>
-        <div className="mode-switch">
-          {visibleModules?.code !== false && (
-            <button
-              className={`mode-btn ${viewMode === "code" ? "active" : ""}`}
-              onClick={() => setViewMode("code")}
-            >
-              <IoCodeSlash /> XML
-            </button>
-          )}
+        <div className="mode-switch" ref={modeSwitchRef}>
+          {moduleButtons.map((moduleButton) => {
+            if (visibleModules?.[moduleButton.key] === false) return null;
 
-          {visibleModules?.compare !== false && (
-            <button
-              className={`mode-btn ${viewMode === "compare" ? "active" : ""}`}
-              onClick={() => setViewMode("compare")}
-            >
-              <FaNotEqual /> Comparar
-            </button>
-          )}
-
-          {visibleModules?.screens !== false && (
-            <button
-              className={`mode-btn ${viewMode === "screens" ? "active" : ""}`}
-              onClick={() => setViewMode("screens")}
-            >
-              <MdScreenshotMonitor /> Pantallas
-            </button>
-          )}
-          {visibleModules?.compiler !== false && (
-            <button
-              className={`mode-btn ${viewMode === "compiler" ? "active" : ""}`}
-              onClick={() => setViewMode("compiler")}
-            >
-              <IoBuild /> Compilador
-            </button>
-          )}
-          {visibleModules?.flows !== false && (
-            <button
-              className={`mode-btn ${viewMode === "flows" ? "active" : ""}`}
-              onClick={() => setViewMode("flows")}
-            >
-              <FaProjectDiagram /> Flujos
-            </button>
-          )}
-          {visibleModules?.remote !== false && (
-            <button
-              className={`mode-btn remote ${
-                viewMode === "remote" ? "active" : ""
-              }`}
-              onClick={() => setViewMode("remote")}
-            >
-              <FaLink />
-              Remoto
-            </button>
-          )}
+            return (
+              <button
+                key={moduleButton.key}
+                className={`mode-btn ${moduleButton.className || ""} ${
+                  viewMode === moduleButton.key ? "active" : ""
+                } ${draggingModule === moduleButton.key ? "dragging" : ""}`}
+                draggable
+                title="Arrastra fuera de la fila para desacoplar este modulo"
+                onClick={() => setViewMode(moduleButton.key)}
+                onDragStart={(event) =>
+                  handleModuleDragStart(event, moduleButton.key)
+                }
+                onDragEnd={(event) =>
+                  handleModuleDragEnd(event, moduleButton.key)
+                }
+              >
+                {moduleButton.icon}
+                {moduleButton.label}
+              </button>
+            );
+          })}
         </div>
 
         <ConfirmModal

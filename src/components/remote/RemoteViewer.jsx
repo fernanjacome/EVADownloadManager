@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import "./RemoteViewer.css";
 import Spinner from "../utils/Spinner";
-import { MdOutlineError } from "react-icons/md";
+import { MdCancel, MdOutlineError } from "react-icons/md";
+import { FaLink } from "react-icons/fa6";
 
 const API_BASE = "https://192.168.10.241:5007";
 
@@ -41,7 +42,7 @@ export default function RemoteViewer() {
   });
   const isValidIp = (ip) =>
     /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(
-      ip
+      ip,
     );
   const resolveIp = () => {
     if (source === "recent") return selectedIp;
@@ -112,7 +113,7 @@ export default function RemoteViewer() {
       setRecentIps((prev) => {
         const next = [targetIp, ...prev.filter((x) => x !== targetIp)].slice(
           0,
-          5
+          5,
         );
         localStorage.setItem("vnc_recent_ips", JSON.stringify(next));
         return next;
@@ -148,7 +149,7 @@ export default function RemoteViewer() {
       if (err?.name === "AbortError") return;
       setConexion(false);
       setError(
-        `No se pudo conectar al equipo ${targetIp}. El servidor VNC no responde.`
+        `No se pudo conectar al equipo ${targetIp}. El servidor VNC no responde.`,
       );
     } finally {
       setLoading(false);
@@ -172,15 +173,27 @@ export default function RemoteViewer() {
   const shouldShowDropdown = showRecent && !isBusy && recentIps.length > 0;
 
   return (
-    <div className="remote-viewer">
+    <div
+      className={`remote-viewer ${isConnected ? "is-connected" : "is-disconnected"}`}
+    >
       <div className="remote-toolbar">
         {!isConnected && (
           <>
-            <div className="remote-input-wrapper">
+            <div className="remote-connect-heading">
+              <span className="remote-connect-icon">
+                <FaLink />
+              </span>
+              <div>
+                <h3>Conectar VNC</h3>
+                <p>Ingresa la IP del equipo que deseas abrir.</p>
+              </div>
+            </div>
+            <div className="remote-input-wrapper remote-service-field">
+              <label htmlFor="remote-target-ip">IP del equipo</label>
               <input
                 ref={inputRef}
+                id="remote-target-ip"
                 className="remote-input"
-                placeholder="Remote host"
                 value={ipInput}
                 onFocus={() => {
                   setShowRecent(true);
@@ -296,11 +309,19 @@ export default function RemoteViewer() {
               )}
             </div>
             <button
-              className="remote-btn primary"
-              onClick={connect}
-              disabled={loading || (!resolveIp() && !isConnected)}
+              className={`remote-btn primary remote-connect-btn ${loading ? "is-waiting" : ""}`}
+              onClick={() => {
+                if (loading) {
+                  abortRef.current?.abort();
+                  setError(null);
+                  return;
+                }
+                connect();
+              }}
+              disabled={!loading && !resolveIp()}
             >
-              Conectar
+              {loading ? <MdCancel /> : <FaLink />}
+              {loading ? "Cancelar" : "Conectar"}
             </button>
           </>
         )}

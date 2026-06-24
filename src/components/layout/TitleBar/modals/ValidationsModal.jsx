@@ -1,35 +1,13 @@
 import React from "react";
-import "./AboutModal.css";
+import { FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import HelpModal from "./HelpModal";
 
-export default function ValidationsModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="about-overlay" onClick={onClose}>
-      <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Validaciones</h2>
-
-        <div className="about-body">
-          <p className="about-intro">
-            Estas validaciones revisan lo básico para evitar errores en el XML.
-          </p>
-
-          <ul>
-            <li>El XML está bien formado.</li>
-            <li>La estructura base existe.</li>
-            <li>No hay IDs duplicados en secciones importantes.</li>
-          </ul>
-
-          <p className="about-note">
-            Sirve como apoyo, pero no reemplaza revisar el flujo completo cuando
-            el cambio es grande.
-          </p>
-        </div>
-
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
-      </div>
-    </div>
-  );
+export default function ValidationsModal(props) {
+  return <HelpModal {...props} title="Validaciones" icon={FaCheckCircle}
+    summary="Comprueba problemas básicos antes de usar el XML en otro módulo."
+    sections={[
+      { title: "Qué se revisa", icon: FaCheckCircle, items: ["El XML está bien formado.", "Existe la estructura base esperada.", "No se detectan IDs duplicados en secciones clave."] },
+      { title: "Qué hacer si falla", icon: FaExclamationTriangle, items: ["Ve a la línea indicada por el mensaje.", "Corrige un error a la vez y vuelve a validar.", "Revisa Flujos si el XML es válido pero no navega como esperas."] },
+    ]}
+    tip="La validación es una red de seguridad; no reemplaza revisar una transición nueva de principio a fin." />;
 }

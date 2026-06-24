@@ -114,3 +114,95 @@ body.resizing-sidebar {
   cursor: col-resize;
   user-select: none;
 }
+
+.detached-module-app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--c-fondo);
+  color: var(--txt-code);
+}
+
+.detached-module-bar {
+  flex: 0 0 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--border-general);
+  background: var(--c-fondo-secundario);
+  color: var(--txt-code);
+  user-select: none;
+  cursor: move;
+  -webkit-app-region: drag;
+}
+
+.detached-module-bar:active {
+  cursor: grabbing;
+}
+
+.detached-module-title {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detached-window-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.detached-win-btn {
+  width: 30px;
+  height: 26px;
+  border: 0;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--txt-code);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.detached-win-btn:hover {
+  background: var(--hover-general);
+}
+
+.detached-win-btn.dock {
+  width: auto;
+  padding: 0 8px;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--border-general) 72%, transparent 28%);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.detached-win-btn.dock:hover {
+  background: color-mix(in srgb, var(--c-principal) 12%, transparent 88%);
+  border-color: color-mix(in srgb, var(--c-principal) 30%, var(--border-general) 70%);
+}
+
+.detached-win-btn.close:hover {
+  background: #c0392b;
+  color: white;
+}
+
+.detached-module-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.detached-module-body > * {
+  height: 100%;
+}

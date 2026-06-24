@@ -1,32 +1,14 @@
 import React from "react";
-import "./AboutModal.css";
+import { FaExclamationTriangle, FaRoute } from "react-icons/fa";
+import HelpModal from "./HelpModal";
 
-export default function ErrorsModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="about-overlay" onClick={onClose}>
-      <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Errores comunes</h2>
-
-        <div className="about-body">
-          <p>
-            Los errores mas tipicos suelen venir de XML mal cerrado, IDs repetidos o referencias que apuntan a algo que ya no existe.
-          </p>
-
-          <ul>
-            <li>Si te habla de linea y columna, casi siempre es estructura XML.</li>
-            <li>Si algo no navega bien, revisa IDs y estados destino.</li>
-            <li>Si una pantalla no abre, revisa que el recurso HTML exista y este cargado.</li>
-          </ul>
-
-          <p className="about-note">
-            Cuando no estes seguro, lo mas util suele ser revisar primero el XML y luego el modulo Flujos.
-          </p>
-        </div>
-
-        <button className="about-close" onClick={onClose}>Cerrar</button>
-      </div>
-    </div>
-  );
+export default function ErrorsModal(props) {
+  return <HelpModal {...props} title="Errores comunes" icon={FaExclamationTriangle}
+    summary="Un orden simple para diagnosticar errores de XML, flujos y pantallas."
+    quickStart={["Lee el mensaje y ubica su línea.", "Corrige la estructura o referencia indicada.", "Valida y revisa el flujo afectado."]}
+    sections={[
+      { title: "XML", icon: FaExclamationTriangle, items: ["Línea y columna suelen indicar estructura mal cerrada.", "IDs repetidos producen referencias ambiguas.", "Valida después de cada corrección importante."] },
+      { title: "Navegación", icon: FaRoute, items: ["Revisa el state destino y la transición.", "Confirma que la pantalla HTML existe en la carpeta cargada.", "Usa Flujos para seguir la ruta real."] },
+    ]}
+    tip="No corrijas varios mensajes a ciegas: el primer error de sintaxis puede provocar muchos errores secundarios." />;
 }

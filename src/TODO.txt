@@ -1,7 +1,7 @@
 TO DO LIST
  general
  [OK] cambia todo el nombre antiguo EVADownloadManager que tiene el proyecto, por el nuevo nombre EVAStudio2026
- [OK] cambiar a v1.2.0 realmente (version consistente en v1.2.4 - no se hizo downgrade)
+ [OK] cambiar a v1.2.0 realmente (version consistente en v1.3.0 - no se hizo downgrade)
  [OK] agregar menu para personalizacion de snippets
 
 modulo xml
@@ -18,4 +18,3 @@ modulo flujos
 modulo pantallas
 [OK] -al navegar al modulo pantallas se debe centrar el menu de lista de pantallas en la pantalla seleccionada
 [OK] -mostrar nombre de pantalla arriba del visualizador, de manera minimal y centrada
-

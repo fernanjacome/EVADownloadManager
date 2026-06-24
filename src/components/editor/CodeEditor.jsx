@@ -384,7 +384,7 @@ const xmlReferenceLinkField = StateField.define({
   provide: (field) => EditorView.decorations.from(field),
 });
 
-function createXmlReferenceLinkHover(onPreviewRef) {
+function createXmlReferenceLinkHover(onPreviewRef, previewEnabledRef) {
   let lastPointer = null;
 
   const setReferenceLink = (view, pointer, active) => {
@@ -399,7 +399,7 @@ function createXmlReferenceLinkHover(onPreviewRef) {
     view.dispatch({
       effects: xmlReferenceLinkEffect.of(reference ? { from: reference.from, to: reference.to } : null),
     });
-    onPreviewRef?.current?.(reference ? { reference, x: pointer.x, y: pointer.y } : null);
+    onPreviewRef?.current?.(reference && previewEnabledRef?.current !== false ? { reference, x: pointer.x, y: pointer.y } : null);
   };
 
   const clearReferenceLink = (_, view) => {
@@ -462,6 +462,9 @@ export default function CodeEditor({
   const [ctrlPreview, setCtrlPreview] = useState(null);
   const ctrlPreviewRef = useRef(null);
   ctrlPreviewRef.current = setCtrlPreview;
+  const statePreviewEnabled = suggestionSettings?.statePreview !== false;
+  const statePreviewEnabledRef = useRef(true);
+  statePreviewEnabledRef.current = statePreviewEnabled;
 
   useEffect(() => {
     const reload = () => {
@@ -483,6 +486,10 @@ export default function CodeEditor({
   const [foldSubmenuOpen, setFoldSubmenuOpen] = useState(false);
   const foldGroups = useMemo(() => getPresentXmlFoldGroups(xmlDoc), [xmlDoc]);
   const activateSuggestionsOnTyping = suggestionSettings?.activation !== "manual";
+
+  useEffect(() => {
+    if (!statePreviewEnabled) setCtrlPreview(null);
+  }, [statePreviewEnabled]);
 
   const getSavedViewState = (state = editorViewState) => {
     const keyedState = state?.editors?.[syncKey];
@@ -1055,10 +1062,10 @@ export default function CodeEditor({
     [activateSuggestionsOnTyping, userSnippets, effectiveSystemSnippets]
   );
 
-  const xmlRefHoverExt = useMemo(() => createXmlReferenceLinkHover(ctrlPreviewRef), []);
+  const xmlRefHoverExt = useMemo(() => createXmlReferenceLinkHover(ctrlPreviewRef, statePreviewEnabledRef), []);
 
   const ctrlPreviewInfo = useMemo(() => {
-    if (!ctrlPreview || !xmlDoc) return null;
+    if (!statePreviewEnabled || !ctrlPreview || !xmlDoc) return null;
     const { reference, x, y } = ctrlPreview;
 
     if (reference.kind === "state") {
@@ -1090,7 +1097,7 @@ export default function CodeEditor({
     }
 
     return null;
-  }, [ctrlPreview, xmlDoc]);
+  }, [statePreviewEnabled, ctrlPreview, xmlDoc]);
 
   useEffect(() => {
     if (!viewRef.current) return;

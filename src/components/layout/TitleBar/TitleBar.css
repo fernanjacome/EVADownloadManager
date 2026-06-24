@@ -4,9 +4,9 @@
   justify-content: space-between;
   background: var(--c-fondo);
   color: #ccc;
-  height: 30px;
+  height: 36px;
   -webkit-app-region: drag;
-  padding: 0.2rem 0 0.2rem 0.5rem;
+  padding: 0 6px 0 9px;
   border-bottom: 1px solid var(--border-general);
 }
 
@@ -26,11 +26,16 @@
 
 .title-center {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 13px;
+  font-weight: 600;
   color: var(--txt-normalb);
-  pointer-events: none;
   -webkit-app-region: drag;
+  cursor: default;
 }
 
 .title-logo {
@@ -40,33 +45,50 @@
 
 .menu-bar {
   display: flex;
-  gap: 4px;
+  gap: 0;
 }
 
 .menu-item {
   position: relative;
-  padding: 0 5px;
+  padding: 0 8px;
   cursor: pointer;
   font-size: 12px;
   line-height: 30px;
-  color: var(--txt-normalb);
+  color: var(--txt-normalf);
+  border-radius: 4px;
+  transition: background 0.1s ease, color 0.1s ease;
 }
 
-.menu-item:hover {
-  background: var(--hover-general);
+.menu-item:hover,
+.menu-item.active {
+  background: color-mix(in srgb, var(--c-principal) 10%, transparent 90%);
+  color: var(--txt-normalf);
 }
 
 .dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 2px);
   left: 0;
   background: var(--c-fondo);
   border: 1px solid var(--border-general);
   border-radius: 8px;
-  min-width: 208px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 100;
   padding: 3px;
+  animation: menu-fade-in 0.1s ease;
+}
+
+@keyframes menu-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .submenu {
@@ -78,18 +100,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.45rem;
-  padding: 5px 8px;
+  gap: 12px;
+  padding: 4px 10px;
   cursor: pointer;
   font-size: 12px;
   border-radius: 5px;
-  color: var(--txt-normalb);
-  min-height: 28px;
+  color: var(--txt-normald);
+  min-height: 26px;
+  transition: background 0.1s ease;
 }
 
 .dropdown-item svg {
-  margin-top: 1px;
-  padding: 0;
+  font-size: 12px;
+  opacity: 0.6;
+  flex: 0 0 auto;
 }
 
 .dropdown-item-label {
@@ -101,7 +125,12 @@
 }
 
 .dropdown-item:hover {
-  background: var(--hover-general);
+  background: color-mix(in srgb, var(--c-principal) 10%, transparent 90%);
+  color: var(--c-principal);
+}
+
+.dropdown-item:hover svg {
+  opacity: 1;
 }
 
 .dropdown-item.has-submenu {
@@ -109,12 +138,13 @@
 }
 
 .dropdown-item.disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .dropdown-item.disabled:hover {
   background: transparent;
+  color: var(--txt-normald);
 }
 
 .dropdown-item.module-toggle.disabled:hover {
@@ -123,8 +153,8 @@
 
 .dropdown-separator {
   height: 1px;
-  background: var(--border-general);
-  margin: 4px 6px;
+  background: color-mix(in srgb, var(--border-general) 60%, transparent 40%);
+  margin: 3px 6px;
 }
 
 .dropdown-section-label {
@@ -151,43 +181,69 @@
 
 .title-right {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+  margin-left: 10px;
+  padding-left: 8px;
+  border-left: 1px solid color-mix(in srgb, var(--border-general) 58%, transparent 42%);
   -webkit-app-region: no-drag;
 }
 
 .win-btn {
-  border: none;
-  background: var(--c-fondo);
-  padding: 0.2rem 0.5rem;
-  font-size: 1rem;
+  display: grid;
+  width: 31px;
+  height: 29px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--txt-normalf);
+  font-size: 15px;
   cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
-.win-btn:focus {
-  outline: none;
-  border: none;
+.win-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
 }
 
-.win-btn.max svg {
-  font-size: 0.8rem !important;
+.win-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-principal) 72%, white 28%);
+  outline-offset: 1px;
 }
 
 .win-btn.min svg {
-  font-size: 0.8rem !important;
-  margin-bottom: 0.4rem;
+  transform: translateY(1px);
 }
 
 .win-btn.close svg {
-  font-size: 1.2rem !important;
+  width: 18px;
+  height: 18px;
 }
 
 .win-btn:hover {
-  background: var(--hover-general);
+  border-color: color-mix(in srgb, var(--border-general) 72%, transparent 28%);
+  background: color-mix(in srgb, var(--c-principal) 12%, transparent 88%);
+  color: var(--c-principal);
+  transform: translateY(-1px);
 }
 
 .win-btn.close:hover {
+  border-color: #e81123;
   background: #e81123;
   color: white;
+}
+
+.win-btn:active {
+  transform: translateY(0);
+}
+
+body:not(.light-theme) .title-right {
+  border-left-color: rgba(134, 170, 153, 0.24);
 }
 
 .session-overlay {

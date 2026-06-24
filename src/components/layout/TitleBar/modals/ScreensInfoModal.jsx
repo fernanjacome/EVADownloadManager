@@ -1,67 +1,16 @@
 import React from "react";
 import { FaFolderOpen, FaImages, FaSyncAlt } from "react-icons/fa";
-import "./AboutModal.css";
+import HelpModal from "./HelpModal";
 
-export default function ScreensInfoModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="about-overlay" onClick={onClose}>
-      <div
-        className="about-modal module-help-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2>Pantallas</h2>
-
-        <div className="about-body module-help-body">
-          <p className="about-intro">
-            Aquí puedes ver los HTML reales desde una carpeta y validar si
-            coinciden con el XML.
-          </p>
-
-          <div className="about-module-grid">
-            <div className="about-section">
-              <h3 className="about-section-title">
-                <FaFolderOpen className="about-section-icon" />
-                <span>Uso</span>
-              </h3>
-              <ol className="about-steps">
-                <li>Selecciona la carpeta.</li>
-                <li>Elige una pantalla.</li>
-                <li>Revisa su contenido en el visor.</li>
-              </ol>
-            </div>
-
-            <div className="about-section">
-              <h3 className="about-section-title">
-                <FaSyncAlt className="about-section-icon" />
-                <span>Refrescar</span>
-              </h3>
-              <ul>
-                <li>Si cambiaste la ruta.</li>
-                <li>Si editaste archivos fuera de la app.</li>
-                <li>Si ves una versión desactualizada.</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="about-section about-section-wide">
-            <h3 className="about-section-title">
-              <FaImages className="about-section-icon" />
-              <span>Notas</span>
-            </h3>
-            <ul>
-              <li>La lista depende de la carpeta, no del XML.</li>
-              <li>Puedes abrir pantallas sin referencia en el flujo.</li>
-              <li>Desde XML o Flujos se intenta abrir la pantalla asociada.</li>
-            </ul>
-          </div>
-        </div>
-
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
-      </div>
-    </div>
-  );
+export default function ScreensInfoModal(props) {
+  return <HelpModal {...props} title="Pantallas" icon={FaImages}
+    summary="Explora, edita y previsualiza los recursos HTML, CSS, JavaScript e imágenes de una carpeta."
+    quickStart={["Selecciona la carpeta raíz del proyecto.", "Abre un recurso desde el árbol.", "Guarda o previsualiza el resultado."]}
+    sections={[
+      { title: "Editor", icon: FaImages, items: ["Autocompletado HTML y JavaScript en el editor.", "Indicadores por pestaña para cambios y errores.", "F2 cambia el nombre del recurso seleccionado."] },
+      { title: "Recursos", icon: FaFolderOpen, items: ["Puedes copiar y pegar archivos entre carpetas cargadas.", "Las rutas relativas sugieren recursos de la carpeta.", "Las imágenes y GIF se abren en previsualización."] },
+      { title: "Refrescar", icon: FaSyncAlt, items: ["Úsalo tras editar archivos fuera de EVA Studio.", "Recarga la lista y limpia la caché de la vista.", "Los errores se muestran solo en el archivo que los contiene."] },
+    ]}
+    shortcuts={[{ keys: "Ctrl + S", label: "Guardar recurso" }, { keys: "F2", label: "Renombrar" }, { keys: "Tab", label: "Aceptar sugerencia" }]}
+    tip="Los cambios no guardados permanecen marcados en naranja; revísalos antes de recargar la carpeta." />;
 }

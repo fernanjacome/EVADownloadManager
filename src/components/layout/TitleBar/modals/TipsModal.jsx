@@ -1,31 +1,14 @@
 import React from "react";
-import "./AboutModal.css";
+import { FaLightbulb, FaSave } from "react-icons/fa";
+import HelpModal from "./HelpModal";
 
-export default function TipsModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="about-overlay" onClick={onClose}>
-      <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Recomendaciones</h2>
-
-        <div className="about-body">
-          <p className="about-intro">
-            Para trabajar mejor con un download, combina XML, Flujos y
-            Pantallas.
-          </p>
-
-          <ul>
-            <li>Guarda una copia antes de cambios grandes.</li>
-            <li>Usa comentarios claros en los states.</li>
-            <li>Si algo no cuadra, revisa referencias y pantallas.</li>
-          </ul>
-        </div>
-
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
-      </div>
-    </div>
-  );
+export default function TipsModal(props) {
+  return <HelpModal {...props} title="Recomendaciones" icon={FaLightbulb}
+    summary="Una rutina breve para trabajar con cambios de forma segura."
+    quickStart={["Guarda una copia antes de cambios grandes.", "Edita y valida una sección por vez.", "Revisa Flujos y Pantallas antes de compilar."]}
+    sections={[
+      { title: "Buenas prácticas", icon: FaSave, items: ["Usa comentarios claros en los states complejos.", "Evita cambiar IDs sin revisar sus referencias.", "Guarda con frecuencia durante una edición larga."] },
+      { title: "Diagnóstico", icon: FaLightbulb, items: ["Primero revisa la validación de XML.", "Después sigue el recorrido en Flujos.", "Confirma que las pantallas referenciadas existen."] },
+    ]}
+    tip="Cambios pequeños, guardados y verificables son mucho más fáciles de revertir y explicar." />;
 }

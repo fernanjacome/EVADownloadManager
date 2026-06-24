@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { FaExchangeAlt, FaGripLines, FaList, FaRegDotCircle } from "react-icons/fa";
+import {
+  FaExchangeAlt,
+  FaGripLines,
+  FaList,
+  FaRegDotCircle,
+} from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import "./SearchBar.css";
@@ -33,7 +38,7 @@ export default function SearchBar({
     const preferredWidth = Math.min(560, Math.max(440, window.innerWidth - 36));
     return {
       x: Math.max(12, window.innerWidth - preferredWidth - 18),
-      y: 88,
+      y: 110,
     };
   });
 
@@ -48,11 +53,11 @@ export default function SearchBar({
       const { offsetX, offsetY, width, height } = dragStateRef.current;
       const nextX = Math.min(
         Math.max(12, event.clientX - offsetX),
-        Math.max(12, window.innerWidth - width - 12)
+        Math.max(12, window.innerWidth - width - 12),
       );
       const nextY = Math.min(
         Math.max(48, event.clientY - offsetY),
-        Math.max(48, window.innerHeight - height - 12)
+        Math.max(48, window.innerHeight - height - 12),
       );
 
       setPosition({ x: nextX, y: nextY });
@@ -81,7 +86,8 @@ export default function SearchBar({
         className="search-window-bar"
         onPointerDown={(event) => {
           if (event.button !== 0) return;
-          const rect = event.currentTarget.parentElement.getBoundingClientRect();
+          const rect =
+            event.currentTarget.parentElement.getBoundingClientRect();
           dragStateRef.current = {
             offsetX: event.clientX - rect.left,
             offsetY: event.clientY - rect.top,
@@ -158,7 +164,11 @@ export default function SearchBar({
         <button
           className={`option-chip ${selectAllActive ? "active" : ""}`}
           onClick={onSelectAll}
-          title={selectAllActive ? "Quitar seleccion multiple" : "Seleccionar coincidencias"}
+          title={
+            selectAllActive
+              ? "Quitar seleccion multiple"
+              : "Seleccionar coincidencias"
+          }
         >
           <FaList />
           <span>Todas</span>
@@ -185,7 +195,10 @@ export default function SearchBar({
           </div>
 
           <div className="search-actions">
-            <button onClick={onReplaceOne} title="Reemplazar coincidencia actual">
+            <button
+              onClick={onReplaceOne}
+              title="Reemplazar coincidencia actual"
+            >
               Reemplazar
             </button>
             <button onClick={onReplaceAll} title="Reemplazar todas">

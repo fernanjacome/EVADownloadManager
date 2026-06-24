@@ -129,14 +129,22 @@
   background: transparent;
   border: none;
   color: var(--txt-normal);
-  cursor: pointer;
+  cursor: grab;
   display: flex;
   gap: 0.2rem;
   align-items: center;
 }
 
+.mode-btn:active {
+  cursor: grabbing;
+}
+
 .mode-btn:hover {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.mode-btn.dragging {
+  opacity: 0.55;
 }
 
 .mode-btn.active {

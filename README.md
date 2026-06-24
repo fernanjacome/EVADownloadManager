@@ -1,7 +1,68 @@
 # EVA Studio 2026
 
-Version: 1.3.0
+Version: 1.3.2
 Ultima actualizacion: 6 de mayo de 2026
+
+---
+
+## Actualizador portable (`win-unpacked`)
+
+Desde **Version** se puede buscar, descargar y aplicar una actualización sin instalador. El proceso verifica el SHA-512 del ZIP, cierra EVA Studio, reemplaza la carpeta `win-unpacked` y abre de nuevo el ejecutable.
+
+El canal se configura desde **Version** pegando una URL HTTPS o una ruta compartida. Si se pega una carpeta compartida, EVA Studio busca automáticamente `latest.json` dentro de ella. También se puede crear `update-config.json` en la carpeta de datos de EVA Studio (o definir `EVA_UPDATE_MANIFEST_URL` al arrancar):
+
+```json
+{
+  "manifestUrl": "https://actualizaciones.ejemplo.com/eva-studio/latest.json"
+}
+```
+
+Ejemplo para la carpeta compartida indicada:
+
+```json
+{
+  "manifestUrl": "\\\\192.168.10.101\\Personales\\FJacome\\EVAStudio"
+}
+```
+
+El manifiesto puede estar en HTTPS o en la misma carpeta compartida y debe tener este formato. El ZIP debe contener la carpeta portable con `EVA Studio 2026.exe`. Para una ruta compartida, `url` puede ser solo el nombre del ZIP.
+
+```json
+{
+  "version": "1.3.2",
+  "url": "EVA-Studio-2026-1.3.2-win-unpacked.zip",
+  "sha512": "HASH_SHA512_EN_BASE64_O_HEX",
+  "notes": "Correcciones del módulo Pantallas"
+}
+```
+
+---
+
+## Actualizaciones v1.3.2
+
+- Menú contextual del editor de Pantallas con formateo manual y la opción de formatear al guardar.
+- Nombre del recurso centrado sobre la previsualización.
+
+---
+
+## Actualizaciones v1.3.1
+
+- Ctrl + Z, Ctrl + Y y Ctrl + Shift + Z ahora centran el editor de Pantallas en la línea donde se restauró o rehízo el cambio.
+
+---
+
+## Navegación en recursos
+
+- Al elegir un resultado en el buscador de contenido de Pantallas, EVA Studio abre el archivo correcto y centra el editor en la línea de la coincidencia.
+
+---
+
+## Pantallas y ayuda
+
+- Ayuda rediseñada para XML, Comparador, Pantallas, Compilador, Flujos, Logs, Remoto y atajos, con pasos accionables y cierre por Escape.
+- Ventana Version actualizada con los cambios desde la 1.3.1.
+- Pantallas: mejoras de autocompletado, validación de errores, rutas relativas, F2 para renombrar, copia entre carpetas y persistencia de pestañas.
+- Actualizador portable mediante ZIP validado con SHA-512, con soporte para canales HTTPS y rutas compartidas.
 
 ---
 

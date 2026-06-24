@@ -27,13 +27,23 @@ export default function EditorToolbar({
   const [openSuggestionPanel, setOpenSuggestionPanel] = useState(false);
   const [showConfirmRestore, setShowConfirmRestore] = useState(false);
   const suggestionActivation = suggestionSettings?.activation ?? "typing";
+  const statePreviewEnabled = suggestionSettings?.statePreview !== false;
 
-  const setSuggestionActivation = (activation) => {
+  const updateSuggestionSettings = (nextSettings) => {
     setSuggestionSettings?.((prev) => ({
       ...(prev || {}),
-      activation,
+      ...nextSettings,
     }));
   };
+
+  const setSuggestionActivation = (activation) => {
+    updateSuggestionSettings({ activation });
+  };
+
+  const setStatePreviewEnabled = (statePreview) => {
+    updateSuggestionSettings({ statePreview });
+  };
+
   const suggestionsWhileTyping = suggestionActivation !== "manual";
 
   return (
@@ -66,12 +76,13 @@ export default function EditorToolbar({
           <div className="toolbar-dropdown-wrapper">
             <ToolbarButton
               icon={<FaSlidersH />}
-              label="Sugerencias"
+              label="Parametros"
               onClick={() => setOpenSuggestionPanel((prev) => !prev)}
-              title="Configurar sugerencias XML"
+              title="Configurar parametros XML"
             />
             {openSuggestionPanel && (
               <div className="toolbar-dropdown toolbar-suggestions-panel">
+                <h3>Parametros XML</h3>
                 <label className="suggestion-check">
                   <input
                     type="checkbox"
@@ -85,6 +96,19 @@ export default function EditorToolbar({
                   <span>
                     Activar sugerencia automática
                     <small>Desactivalo para solo usar Ctrl + espacio.</small>
+                  </span>
+                </label>
+                <label className="suggestion-check">
+                  <input
+                    type="checkbox"
+                    checked={statePreviewEnabled}
+                    onChange={(event) =>
+                      setStatePreviewEnabled(event.target.checked)
+                    }
+                  />
+                  <span>
+                    Previsualizar states con Ctrl + hover
+                    <small>Activa el popup al pasar el mouse sobre una referencia.</small>
                   </span>
                 </label>
               </div>

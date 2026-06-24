@@ -1,6 +1,7 @@
 /* Layout general */
 .remote-viewer {
-    height: 85dvh;
+    height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background-color: var(--c-fondo-code);
@@ -23,9 +24,118 @@
     z-index: 20;
 }
 
+.remote-viewer.is-disconnected {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: var(--c-fondo);
+}
+
+.remote-viewer.is-disconnected .remote-toolbar {
+    width: min(520px, 100%);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+    padding: 0;
+    overflow: visible;
+    border: 1px solid var(--border-general);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--c-fondo-code) 10%, var(--c-fondo) 90%);
+}
+
+.remote-connect-heading {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 14px 11px;
+    border-bottom: 1px solid var(--border-general);
+}
+
+.remote-connect-icon {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    color: var(--c-principal);
+    background: color-mix(in srgb, var(--c-principal) 12%, transparent 88%);
+}
+
+.remote-connect-heading h3,
+.remote-connect-heading p {
+    margin: 0;
+}
+
+.remote-connect-heading h3 {
+    color: var(--txt-normal);
+    font-size: 14px;
+}
+
+.remote-connect-heading p {
+    margin-top: 2px;
+    color: var(--txt-normalf);
+    font-size: 11px;
+}
+
+.remote-viewer.is-disconnected .remote-input-wrapper {
+    margin: 0 0 14px 14px;
+}
+
+.remote-service-field label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--txt-secondary, var(--txt-normal));
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.remote-viewer.is-disconnected .remote-connect-btn {
+    align-self: end;
+    min-height: 30px;
+    margin: 0 14px 14px 0;
+}
+
+.remote-connect-btn.is-waiting {
+    opacity: 0.72;
+}
+
+.remote-viewer.is-disconnected .remote-area {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    height: auto;
+    pointer-events: none;
+}
+
+.remote-viewer.is-disconnected .remote-center {
+    background: color-mix(in srgb, var(--c-fondo) 68%, transparent 32%);
+}
+
+.remote-viewer.is-disconnected .remote-status.error {
+    position: absolute;
+    top: calc(50% + 82px);
+    width: min(520px, calc(100% - 36px));
+    height: auto;
+    gap: 5px;
+    padding: 8px 12px;
+    border: 1px solid color-mix(in srgb, #d9534f 32%, transparent 68%);
+    border-radius: 7px;
+    background: color-mix(in srgb, #d9534f 7%, var(--c-fondo) 93%);
+    color: #c45151;
+    font-size: 12px;
+}
+
+.remote-viewer.is-disconnected .remote-status svg {
+    font-size: 20px;
+}
+
 /* Input IP */
 .remote-input {
-    width: 180px;
+    width: 100%;
+    height: 30px;
     padding: 6px 8px;
     border-radius: 6px;
     border: 1px solid var(--border-general);
@@ -41,6 +151,11 @@
 
 /* Botones */
 .remote-btn {
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     padding: 6px 12px;
     border-radius: 6px;
     border: 1px solid transparent;
@@ -143,14 +258,15 @@
 }
 
 .remote-area {
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* flex: 1; */
     overflow: hidden;
     position: relative;
     z-index: 1;
-    height: 85dvh;
+    height: auto;
 }
 
 .remote-frame {

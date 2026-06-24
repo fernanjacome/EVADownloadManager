@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 export function useAppPersistence({
     enabledRef,
+    pauseSaveRef,
     load,
     state,
     debounceMs = 500,
@@ -54,6 +55,10 @@ export function useAppPersistence({
         lastStateRef.current = state;
         lastSerializedRef.current = serializedState;
 
+        if (pauseSaveRef?.current) {
+            return;
+        }
+
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
         }
@@ -66,6 +71,7 @@ export function useAppPersistence({
     useEffect(() => {
         const handleFlush = () => {
             if (!enabledRef.current) return;
+            if (pauseSaveRef?.current) return;
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
                 saveTimeoutRef.current = null;

@@ -1,0 +1,5 @@
+PUBLISH
+npm run build; npx electron-builder --win --x64 --config.directories.output=release-1.3.1 --publish never
+
+RAR AND LATEST
+$zip = Join-Path $PWD 'release-1.3.1\EVA-Studio-2026-1.3.1-win-unpacked.zip'; if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip }; Compress-Archive -LiteralPath (Join-Path $PWD 'release-1.3.1\win-unpacked') -DestinationPath $zip -CompressionLevel Optimal; $hash = [Security.Cryptography.SHA512]::Create().ComputeHash([IO.File]::ReadAllBytes($zip)); [PSCustomObject]@{Path=$zip;Length=(Get-Item -LiteralPath $zip).Length;Sha512Base64=[Convert]::ToBase64String($hash)} | ConvertTo-Json -Compress

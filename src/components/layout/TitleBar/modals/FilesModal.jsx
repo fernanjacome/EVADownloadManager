@@ -1,43 +1,15 @@
 import React from "react";
-import "./AboutModal.css";
+import { FaFileImport, FaSave, FaTrash } from "react-icons/fa";
+import HelpModal from "./HelpModal";
 
-export default function FilesModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="about-overlay" onClick={onClose}>
-      <div className="about-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Archivos</h2>
-
-        <div className="about-body">
-          <p>
-            Desde aqui cargas un XML, empiezas uno nuevo o limpias lo que tienes
-            abierto en la ventana actual.
-          </p>
-
-          <ul>
-            <li>
-              <strong>Importar</strong> te permite cargar un archivo XML.
-            </li>
-            <li>
-              <strong>Guardar</strong> escribe los cambios en el archivo.
-            </li>
-            <li>
-              <strong>Eliminar</strong> limpia el archivo de esta ventana.
-            </li>
-          </ul>
-
-          <p className="about-note">
-            La aplicación guarda el estado del usuario automáticamente, al
-            cerrar la aplicación y volver a abrirla, el workspace se cargara
-            como estaba.
-          </p>
-        </div>
-
-        <button className="about-close" onClick={onClose}>
-          Cerrar
-        </button>
-      </div>
-    </div>
-  );
+export default function FilesModal(props) {
+  return <HelpModal {...props} title="Archivos" icon={FaFileImport}
+    summary="Carga, guarda y organiza el XML abierto en esta ventana."
+    quickStart={["Importa un XML o crea uno nuevo.", "Edita y guarda los cambios.", "Usa Restablecer solo si quieres limpiar la sesión."]}
+    sections={[
+      { title: "Acciones", icon: FaFileImport, items: ["Importar carga un XML desde disco.", "Guardar escribe los cambios en el archivo.", "Eliminar limpia el XML de esta ventana."] },
+      { title: "Sesión", icon: FaSave, items: ["El workspace se restaura al abrir EVA Studio.", "Cada ventana conserva su propio estado.", "Guarda antes de distribuir una copia."] },
+      { title: "Limpieza", icon: FaTrash, items: ["Restablecer no es una forma de guardar.", "Verifica los cambios pendientes antes de limpiar.", "Usa una copia si necesitas experimentar."] },
+    ]}
+    tip="Mantén una copia versionada del XML antes de cambios que afecten muchos states." />;
 }

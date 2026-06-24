@@ -100,45 +100,54 @@ export default function Sidebar({
     });
   }, [searchTerm, xmlDoc, setCollapsed]);
 
+  if (sidebarCollapsed) {
+    return (
+      <button
+        type="button"
+        className="sidebar-expand-fab"
+        onClick={() => setSidebarCollapsed?.(false)}
+        title="Expandir arbol XML"
+      >
+        <FaAngleRight />
+      </button>
+    );
+  }
+
   return (
     <aside
-      className={`sidebar ${sidebarCollapsed ? "collapsed-shell" : ""}`}
+      className="sidebar"
       style={style}
     >
       <div className="sidebar-topbar">
-        {!sidebarCollapsed && (
-          <div className="sidebar-search">
-            <div className="search-box">
-              <FaSearch className="search-icon" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Buscar"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-              />
-            </div>
+        <div className="sidebar-search">
+          <div className="search-box">
+            <FaSearch className="search-icon" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Buscar"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+            />
           </div>
-        )}
+        </div>
 
         <button
           type="button"
           className="sidebar-collapse-btn"
           onClick={() => setSidebarCollapsed?.((prev) => !prev)}
-          title={sidebarCollapsed ? "Expandir arbol XML" : "Colapsar arbol XML"}
+          title="Colapsar arbol XML"
         >
-          {sidebarCollapsed ? <FaAngleRight /> : <FaAngleLeft />}
+          <FaAngleLeft />
         </button>
       </div>
 
       {!xmlDoc ? (
         <div className="empty-state">
-          {!sidebarCollapsed && <h2 style={{ width: "60%" }}>No hay XML cargado</h2>}
+          <h2 style={{ width: "60%" }}>No hay XML cargado</h2>
         </div>
       ) : (
         <>
-          {sidebarCollapsed ? null : (
-            <>
           {groupOrder.map((group) => {
             const config = sidebarConfig[group];
             const section = xmlDoc.querySelector(group);
@@ -234,8 +243,6 @@ export default function Sidebar({
               </div>
             );
           })}
-            </>
-          )}
         </>
       )}
     </aside>

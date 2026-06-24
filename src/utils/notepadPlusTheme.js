@@ -48,9 +48,9 @@ export const notepadPlusTheme = EditorView.theme(
 
 // 🎨 Colores de sintaxis estilo Notepad++
 export const notepadPlusHighlightStyle = HighlightStyle.define([
-    { tag: t.tagName, color: "#0000ff" }, // etiquetas
-    { tag: t.attributeName, color: "#ff0000" }, // atributos
-    { tag: t.attributeValue, color: "#008080" }, // valores
+    { tag: t.tagName, color: "#0000ff" },
+    { tag: t.attributeName, color: "#ff0000" },
+    { tag: t.attributeValue, color: "#008080" },
     { tag: t.string, color: "#008080" },
     { tag: t.comment, color: "#008000", fontStyle: "italic" },
     { tag: t.number, color: "#098658" },
@@ -58,6 +58,15 @@ export const notepadPlusHighlightStyle = HighlightStyle.define([
     { tag: t.operator, color: "#000" },
     { tag: t.angleBracket, color: "#808080" },
     { tag: [t.null, t.variableName, t.invalid, t.meta], color: "#333333" },
+    { tag: t.propertyName, color: "#d32f2f" },
+    { tag: t.className, color: "#795548" },
+    { tag: t.typeName, color: "#0000ff" },
+    { tag: t.color, color: "#098658" },
+    { tag: t.unit, color: "#098658" },
+    { tag: t.function(t.variableName), color: "#6f42c1" },
+    { tag: t.punctuation, color: "#808080" },
+    { tag: t.definition(t.propertyName), color: "#6f42c1" },
+    { tag: [t.atom, t.bool], color: "#0000ff" },
 ]);
 
 export const notepadPlus = [
@@ -119,6 +128,15 @@ export const evaXmlDarkHighlightStyle = HighlightStyle.define([
     { tag: t.operator, color: "#dce6e2" },
     { tag: t.angleBracket, color: "#7b8d88" },
     { tag: [t.null, t.variableName, t.invalid, t.meta], color: "#c9d5d1" },
+    { tag: t.propertyName, color: "#9cdcfe" },
+    { tag: t.className, color: "#d7ba7d" },
+    { tag: t.typeName, color: "#4ec9b0" },
+    { tag: t.color, color: "#ce9178" },
+    { tag: t.unit, color: "#b5cea8" },
+    { tag: t.function(t.variableName), color: "#dcdcaa" },
+    { tag: t.punctuation, color: "#7b8d88" },
+    { tag: t.definition(t.propertyName), color: "#dcdcaa" },
+    { tag: [t.atom, t.bool], color: "#569cd6" },
 ]);
 
 export const evaXmlDark = [

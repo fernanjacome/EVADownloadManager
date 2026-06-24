@@ -7,15 +7,34 @@ import ValidationsModal from "./modals/ValidationsModal";
 import ShortcutsModal from "./modals/ShortcutModal";
 import FilesModal from "./modals/FilesModal";
 import ErrorsModal from "./modals/ErrorsModal";
-import { FiMaximize } from "react-icons/fi";
+import XmlHelpModal from "./modals/XmlHelpModal";
+import CompareHelpModal from "./modals/CompareHelpModal";
+import LogsHelpModal from "./modals/LogsHelpModal";
+import RemoteHelpModal from "./modals/RemoteHelpModal";
+import {
+  FiCode,
+  FiMaximize,
+  FiMinimize2,
+  FiMinus,
+  FiMonitor,
+  FiTerminal,
+  FiWifi,
+} from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
-import { FaWindowMinimize } from "react-icons/fa6";
-import { FaMoon, FaRegWindowRestore, FaSun } from "react-icons/fa";
+import {
+  FaExchangeAlt,
+  FaFileAlt,
+  FaKeyboard,
+  FaMoon,
+  FaProjectDiagram,
+  FaRegWindowRestore,
+  FaSun,
+} from "react-icons/fa";
 import ScreensInfoModal from "./modals/ScreensInfoModal";
 import CompilerInfoModal from "./modals/CompileInfoModal";
 import FlowsInfoModal from "./modals/FlowsInfoModal";
 import SnippetsModal from "./modals/SnippetsModal";
-import { TbReload } from "react-icons/tb";
+import { TbInfoCircle, TbReload } from "react-icons/tb";
 import { GiLargePaintBrush } from "react-icons/gi";
 import {
   MdCheckBox,
@@ -35,6 +54,7 @@ export default function TitleBar({
 }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [showModal, setShowModal] = useState(null);
+  const [isMaximized, setIsMaximized] = useState(false);
   const menuRef = useRef(null);
 
   const handleAction = (action) => {
@@ -49,6 +69,10 @@ export default function TitleBar({
     setActiveMenu(null);
   };
 
+  const hoverMenu = (menu) => {
+    if (activeMenu) setActiveMenu(menu);
+  };
+
   const moduleOptions = [
     { key: "code", label: "XML" },
     { key: "compare", label: "Comparador XML" },
@@ -56,6 +80,7 @@ export default function TitleBar({
     { key: "screens", label: "Pantallas" },
     { key: "compiler", label: "Compilador" },
     { key: "remote", label: "Remoto" },
+    { key: "logs", label: "Logs" },
   ];
 
   useEffect(() => {
@@ -69,13 +94,28 @@ export default function TitleBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const api = window.electronAPI;
+    api
+      ?.getWindowMaximized?.()
+      .then(setIsMaximized)
+      .catch(() => {});
+    return api?.onWindowMaximizedChange?.(setIsMaximized);
+  }, []);
+
+  const toggleMaximize = () => handleAction("maximize");
+
   return (
     <>
       <div className="title-bar">
         <div className="title-left">
           <img src="favicon.ico" alt="logo" className="title-logo" />
           <div className="menu-bar" ref={menuRef}>
-            <div className="menu-item" onClick={() => toggleMenu("file")}>
+            <div
+              className={`menu-item ${activeMenu === "file" ? "active" : ""}`}
+              onClick={() => toggleMenu("file")}
+              onMouseEnter={() => hoverMenu("file")}
+            >
               Archivo
               {activeMenu === "file" && (
                 <div
@@ -102,6 +142,7 @@ export default function TitleBar({
                     <span>Gestionar snippets</span>
                     <MdOutlineTextSnippet />
                   </div>
+                  <div className="dropdown-separator" />
                   <div
                     className="dropdown-item"
                     onClick={() => {
@@ -114,6 +155,7 @@ export default function TitleBar({
                     </span>
                     {theme === "dark" ? <FaSun /> : <FaMoon />}
                   </div>
+                  <div className="dropdown-separator" />
                   <div
                     className="dropdown-item"
                     onClick={async () => {
@@ -138,7 +180,11 @@ export default function TitleBar({
               )}
             </div>
 
-            <div className="menu-item" onClick={() => toggleMenu("modules")}>
+            <div
+              className={`menu-item ${activeMenu === "modules" ? "active" : ""}`}
+              onClick={() => toggleMenu("modules")}
+              onMouseEnter={() => hoverMenu("modules")}
+            >
               Modulos
               {activeMenu === "modules" && (
                 <div
@@ -174,58 +220,46 @@ export default function TitleBar({
               )}
             </div>
 
-            <div className="menu-item" onClick={() => toggleMenu("help")}>
+            <div
+              className={`menu-item ${activeMenu === "help" ? "active" : ""}`}
+              onClick={() => toggleMenu("help")}
+              onMouseEnter={() => hoverMenu("help")}
+            >
               Ayuda
               {activeMenu === "help" && (
                 <div
                   className="dropdown"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("compiler");
-                      closeMenus();
-                    }}
-                  >
-                    Compilador
+                  {/* <div className="dropdown-item" onClick={() => { setShowModal("xmlhelp"); closeMenus(); }}>
+                    <span>XML</span>
+                    <FiCode />
                   </div>
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("screens");
-                      closeMenus();
-                    }}
-                  >
-                    Pantallas
+                  <div className="dropdown-item" onClick={() => { setShowModal("comparehelp"); closeMenus(); }}>
+                    <span>Comparador</span>
+                    <FaExchangeAlt />
                   </div>
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("flows");
-                      closeMenus();
-                    }}
-                  >
-                    Flujos
+                  <div className="dropdown-item" onClick={() => { setShowModal("screens"); closeMenus(); }}>
+                    <span>Pantallas</span>
+                    <FiMonitor />
                   </div>
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("format");
-                      closeMenus();
-                    }}
-                  >
-                    Formato XML
+                  <div className="dropdown-item" onClick={() => { setShowModal("compiler"); closeMenus(); }}>
+                    <span>Compilador</span>
+                    <FiTerminal />
                   </div>
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("validations");
-                      closeMenus();
-                    }}
-                  >
-                    Validaciones
+                  <div className="dropdown-item" onClick={() => { setShowModal("flows"); closeMenus(); }}>
+                    <span>Flujos</span>
+                    <FaProjectDiagram />
                   </div>
+                  <div className="dropdown-item" onClick={() => { setShowModal("logshelp"); closeMenus(); }}>
+                    <span>Logs</span>
+                    <FaFileAlt />
+                  </div>
+                  <div className="dropdown-item" onClick={() => { setShowModal("remotehelp"); closeMenus(); }}>
+                    <span>Remoto</span>
+                    <FiWifi />
+                  </div> */}
+                  <div className="dropdown-separator" />
                   <div
                     className="dropdown-item"
                     onClick={() => {
@@ -233,34 +267,8 @@ export default function TitleBar({
                       closeMenus();
                     }}
                   >
-                    Atajos de teclado
-                  </div>
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("files");
-                      closeMenus();
-                    }}
-                  >
-                    Gestion de archivos
-                  </div>
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("errors");
-                      closeMenus();
-                    }}
-                  >
-                    Errores comunes
-                  </div>
-                  <div
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowModal("tips");
-                      closeMenus();
-                    }}
-                  >
-                    Recomendaciones
+                    <span>Atajos de teclado</span>
+                    <FaKeyboard />
                   </div>
                   <div
                     className="dropdown-item"
@@ -269,7 +277,8 @@ export default function TitleBar({
                       closeMenus();
                     }}
                   >
-                    Version
+                    <span>Version</span>
+                    <TbInfoCircle />
                   </div>
                 </div>
               )}
@@ -277,30 +286,38 @@ export default function TitleBar({
           </div>
         </div>
 
-        <div className="title-center">
+        <div
+          className="title-center"
+          onDoubleClick={toggleMaximize}
+          title="Doble clic para maximizar o restaurar"
+        >
           {fileName ? `${fileName} - EVA Studio 2026` : "EVA Studio 2026"}
         </div>
 
-        <div className="title-right">
+        <div className="title-right" aria-label="Controles de ventana">
           <button
             className="win-btn min"
             onClick={() => handleAction("minimize")}
+            title="Minimizar"
+            aria-label="Minimizar ventana"
           >
-            <FaWindowMinimize
-              style={{ color: theme === "dark" ? "#fff" : "#000" }}
-            />
+            <FiMinus />
           </button>
           <button
             className="win-btn max"
-            onClick={() => handleAction("maximize")}
+            onClick={toggleMaximize}
+            title={isMaximized ? "Restaurar" : "Maximizar"}
+            aria-label={isMaximized ? "Restaurar ventana" : "Maximizar ventana"}
           >
-            <FiMaximize style={{ color: theme === "dark" ? "#fff" : "#000" }} />
+            {isMaximized ? <FiMinimize2 /> : <FiMaximize />}
           </button>
           <button
             className="win-btn close"
             onClick={() => window.dispatchEvent(new Event("tryAppClose"))}
+            title="Cerrar"
+            aria-label="Cerrar ventana"
           >
-            <IoClose style={{ color: theme === "dark" ? "#fff" : "#000" }} />
+            <IoClose />
           </button>
         </div>
       </div>
@@ -349,6 +366,22 @@ export default function TitleBar({
       />
       <SnippetsModal
         isOpen={showModal === "snippets"}
+        onClose={() => setShowModal(null)}
+      />
+      <XmlHelpModal
+        isOpen={showModal === "xmlhelp"}
+        onClose={() => setShowModal(null)}
+      />
+      <CompareHelpModal
+        isOpen={showModal === "comparehelp"}
+        onClose={() => setShowModal(null)}
+      />
+      <LogsHelpModal
+        isOpen={showModal === "logshelp"}
+        onClose={() => setShowModal(null)}
+      />
+      <RemoteHelpModal
+        isOpen={showModal === "remotehelp"}
         onClose={() => setShowModal(null)}
       />
     </>
