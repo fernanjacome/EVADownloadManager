@@ -11,7 +11,7 @@ const PHASE_LABELS = {
 
 export default function AboutModal({ isOpen, onClose }) {
   const [updateState, setUpdateState] = useState({
-    currentVersion: "1.3.2",
+    currentVersion: "1.3.3",
     message: "Consultando actualizaciones...",
     loading: false,
     available: false,
@@ -102,7 +102,7 @@ export default function AboutModal({ isOpen, onClose }) {
           <FaInfoCircle className="about-icon" />
           <div>
             <h2 id="about-title">
-              Version {updateState.currentVersion || "1.3.2"}
+              Version {updateState.currentVersion || "1.3.3"}
             </h2>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function AboutModal({ isOpen, onClose }) {
 
         <div className="about-footer">
           <p className="about-version">
-            Version {updateState.currentVersion || "1.3.2"}
+            Version {updateState.currentVersion || "1.3.3"}
           </p>
           <p className="about-signature">Extreme Visual Appliance</p>
         </div>
