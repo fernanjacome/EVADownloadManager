@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 
 import "./App.css";
 import { formatXml } from "./utils/xmlUtils";
@@ -15,6 +15,8 @@ import RemoteViewer from "./components/remote/RemoteViewer";
 import FlowsPanel from "./components/flows/FlowsPanel";
 import XmlCompareView from "./components/xmlCompare/XmlCompareView";
 import LogsPanel from "./components/logViewer/LogsPanel";
+import EvaAiAssistant from "./components/ai/EvaAiAssistant";
+import EvaAiConfigModal from "./components/layout/TitleBar/modals/EvaAiConfigModal";
 import { useSnowEffect } from "./hooks/useSnowEffect";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSidebarResize } from "./hooks/useSidebarResize";
@@ -77,6 +79,8 @@ const DEFAULT_STATE = {
   },
   detachedModule: null,
   detachedModules: [],
+  evaAiEnabled: true,
+  evaAiChats: {},
 };
 
 const MODULE_LABELS = {
@@ -148,6 +152,12 @@ export default function App() {
   const [detachedModules, setDetachedModules] = useState(
     DEFAULT_STATE.detachedModules,
   );
+  const [evaAiEnabled, setEvaAiEnabled] = useState(DEFAULT_STATE.evaAiEnabled);
+  const [evaAiSettings, setEvaAiSettings] = useState(null);
+  const [evaAiConfigOpen, setEvaAiConfigOpen] = useState(false);
+  const [evaAiScreenContext, setEvaAiScreenContext] = useState(null);
+  const [evaAiChats, setEvaAiChats] = useState(DEFAULT_STATE.evaAiChats);
+  const [screensRefreshToken, setScreensRefreshToken] = useState(0);
   const restoredSidebarSelectionRef = useRef(false);
   const [flowFocusRequest, setFlowFocusRequest] = useState(null);
   const navigationSeqRef = useRef(1);
@@ -171,6 +181,28 @@ export default function App() {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
   const xml = useXmlEditor({ notify: addNotification });
+  const evaAiChatKey = useMemo(() => {
+    if (viewMode === "code" && xml.filePath) return `xml:${xml.filePath}`;
+    if (viewMode === "screens" && screensFolder) return `screens:${screensFolder}`;
+    return null;
+  }, [screensFolder, viewMode, xml.filePath]);
+  const updateEvaAiChat = useCallback((key, chat) => {
+    if (!key) return;
+    setEvaAiChats((current) => {
+      const next = { ...current, [key]: { ...chat, updatedAt: Date.now() } };
+      const keys = Object.keys(next).sort((left, right) => (next[right]?.updatedAt || 0) - (next[left]?.updatedAt || 0));
+      keys.slice(12).forEach((oldKey) => delete next[oldKey]);
+      return next;
+    });
+  }, []);
+  const clearEvaAiChat = useCallback((key) => {
+    if (!key) return;
+    setEvaAiChats((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  }, []);
   const persistenceEnabledRef = useRef(false);
   const persistencePausedRef = useRef(false);
   const persistenceResumeTimerRef = useRef(null);
@@ -199,6 +231,8 @@ export default function App() {
       visibleModules,
       detachedModule,
       detachedModules,
+      evaAiEnabled,
+      evaAiChats,
     }),
     [
       xml,
@@ -224,6 +258,8 @@ export default function App() {
       visibleModules,
       detachedModule,
       detachedModules,
+      evaAiEnabled,
+      evaAiChats,
     ],
   );
 
@@ -294,6 +330,8 @@ export default function App() {
         setVisibleModules(restoredVisibleModules);
         setDetachedModule(s.detachedModule ?? DEFAULT_STATE.detachedModule);
         setDetachedModules(DEFAULT_STATE.detachedModules);
+        setEvaAiEnabled(s.evaAiEnabled ?? DEFAULT_STATE.evaAiEnabled);
+        setEvaAiChats(s.evaAiChats && typeof s.evaAiChats === "object" ? s.evaAiChats : {});
         setCollapsedGroups(
           s.collapsedGroups ??
             Object.fromEntries(groupOrder.map((g) => [g, true])),
@@ -317,6 +355,12 @@ export default function App() {
   useSnowEffect(snowEnabled);
   useKeyboardShortcuts();
   usePreventZoom();
+
+  useEffect(() => {
+    window.electronAPI?.getEvaAiSettings?.().then((result) => {
+      if (result?.success) setEvaAiSettings(result.settings);
+    });
+  }, []);
 
   const { startResize } = useSidebarResize(setSidebarWidth);
 
@@ -665,6 +709,8 @@ export default function App() {
     setLogsState(DEFAULT_STATE.logsState);
     setTheme(DEFAULT_STATE.theme);
     setVisibleModules(DEFAULT_STATE.visibleModules);
+    setEvaAiEnabled(DEFAULT_STATE.evaAiEnabled);
+    setEvaAiChats(DEFAULT_STATE.evaAiChats);
     setDetachedModule(DEFAULT_STATE.detachedModule);
     setDetachedModules(DEFAULT_STATE.detachedModules);
     setFlowFocusRequest(null);
@@ -679,7 +725,6 @@ export default function App() {
     }, 0);
   };
 
-  console.log(xml);
 
   const getEffectiveEditorTarget = () => (splitView ? activeEditor : "left");
 
@@ -1170,6 +1215,9 @@ export default function App() {
         onResetApp={resetAppState}
         visibleModules={visibleModules}
         setVisibleModules={setVisibleModules}
+        evaAiEnabled={evaAiEnabled}
+        setEvaAiEnabled={setEvaAiEnabled}
+        onOpenEvaAiSettings={() => setEvaAiConfigOpen(true)}
         getCurrentAppState={() => ({
           xmlState: xml.getPersistableState(),
           theme,
@@ -1194,6 +1242,8 @@ export default function App() {
           visibleModules,
           detachedModule,
           detachedModules,
+          evaAiEnabled,
+          evaAiChats,
         })}
       />
       {snowEnabled && <div className="xmas-cable-lights" />}
@@ -1381,6 +1431,8 @@ export default function App() {
                 onScreensViewStateChange={setScreensViewState}
                 setScreensList={setScreensList}
                 theme={theme}
+                onAiContextChange={setEvaAiScreenContext}
+                refreshToken={screensRefreshToken}
               />
             </div>
           )}
@@ -1451,6 +1503,32 @@ export default function App() {
         </div>
       </div>
 
+      <EvaAiAssistant
+        enabled={evaAiEnabled && ["code", "screens"].includes(viewMode) && Boolean(evaAiChatKey)}
+        settings={evaAiSettings}
+        xmlContext={{
+          name: xml.fileInfo?.name || xml.title || "XML actual",
+          code: xml.code,
+        }}
+        screenContext={evaAiScreenContext}
+        chatKey={evaAiChatKey}
+        savedChat={evaAiChatKey ? evaAiChats[evaAiChatKey] : null}
+        activeModule={viewMode}
+        onChatChange={updateEvaAiChat}
+        onChatClear={clearEvaAiChat}
+        onOpenSettings={() => setEvaAiConfigOpen(true)}
+        onOpenResource={(resourcePath) => {
+          setScreensRefreshToken((t) => t + 1);
+          setViewMode("screens");
+          setSelectedScreen({ id: resourcePath.replace(/\.html?$/i, ""), comment: "", resource: resourcePath, _nav: Date.now() });
+        }}
+      />
+      <EvaAiConfigModal
+        isOpen={evaAiConfigOpen}
+        onClose={() => setEvaAiConfigOpen(false)}
+        settings={evaAiSettings}
+        onSaved={setEvaAiSettings}
+      />
       <NotificationContainer
         notifications={notifications}
         removeNotification={removeNotification}

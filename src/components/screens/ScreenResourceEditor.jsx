@@ -1809,7 +1809,6 @@ export default function ScreenResourceEditor({
           className="screen-editor-context-menu"
           style={{ left: editorContextMenu.x, top: editorContextMenu.y }}
           onMouseDown={(event) => {
-            event.preventDefault();
             event.stopPropagation();
           }}
         >
@@ -1828,7 +1827,10 @@ export default function ScreenResourceEditor({
               type="checkbox"
               checked={formatOnSave}
               disabled={!canFormatResource(resource.extension)}
-              onChange={(event) => onFormatOnSaveChange?.(event.target.checked)}
+              onChange={(event) => {
+                onFormatOnSaveChange?.(event.target.checked);
+                setEditorContextMenu(null);
+              }}
             />
             Formatear al guardar
           </label>

@@ -19,6 +19,10 @@ const moduleDockZones = new Map();
 const linkedStateFingerprints = new Map();
 let workspacePersistTimer = null;
 const UPDATE_CONFIG_FILE = "update-config.json";
+const EVA_AI_CONFIG_FILE = "eva-ai-config.json";
+const EVA_AI_LOG_FILE = path.join(app.getPath("userData"), "eva-ai-log.txt");
+const GEMINI_OPENAI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+let lastGeminiRequestTime = 0;
 const pendingUpdates = new Map();
 const UPDATE_LOG_FILE = path.join(app.getPath("userData"), "update-log.txt");
 
@@ -28,6 +32,14 @@ function updateLog(message) {
   try {
     fs.appendFileSync(UPDATE_LOG_FILE, line, "utf-8");
   } catch { /* ignore */ }
+}
+
+function evaAiLog(message) {
+  try {
+    fs.appendFileSync(EVA_AI_LOG_FILE, `[${new Date().toISOString()}] ${message}\n`, "utf-8");
+  } catch {
+    // The assistant must remain usable even if its diagnostic log cannot be written.
+  }
 }
 
 const MODULE_LABELS = {
@@ -57,6 +69,369 @@ function readJsonFile(filePath, fallback = null) {
 function writeJsonFile(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+}
+
+function getEvaAiConfig() {
+  const configPath = path.join(app.getPath("userData"), EVA_AI_CONFIG_FILE);
+  const config = readJsonFile(configPath, {});
+  return {
+    endpoint: String(config.endpoint || "").trim() || GEMINI_OPENAI_ENDPOINT,
+    model: String(config.model || "").trim(),
+    apiKey: String(config.apiKey || "").trim(),
+    systemPrompt: String(config.systemPrompt || "").trim(),
+  };
+}
+
+function normalizeEvaAiConfig(input) {
+  const endpoint = String(input?.endpoint || "").trim();
+  const model = String(input?.model || "").trim();
+  const apiKey = String(input?.apiKey || "").trim();
+  const systemPrompt = String(input?.systemPrompt || "").trim();
+
+  return { endpoint, model, apiKey, systemPrompt };
+}
+
+function extractEvaAiText(payload) {
+  const direct = payload?.choices?.[0]?.message?.content;
+  if (typeof direct === "string") return direct.trim();
+  if (Array.isArray(direct)) {
+    return direct
+      .map((part) => (typeof part === "string" ? part : part?.text || ""))
+      .join("\n")
+      .trim();
+  }
+
+  const geminiParts = payload?.candidates?.[0]?.content?.parts;
+  if (Array.isArray(geminiParts)) {
+    return geminiParts.map((part) => part?.text || "").join("\n").trim();
+  }
+
+  return "";
+}
+
+const EVA_AI_TEXT_EXTENSIONS = new Set([
+  ".html", ".htm", ".css", ".scss", ".js", ".jsx", ".ts", ".tsx",
+  ".json", ".xml", ".svg", ".txt",
+]);
+
+const EVA_AI_SCREEN_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "list_screen_resources",
+      description: "Lista los recursos de la carpeta de Pantallas actualmente cargada.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_screen_resources",
+      description: "Busca texto dentro de HTML, CSS, JavaScript, SVG, JSON y XML de la carpeta de Pantallas cargada.",
+      parameters: {
+        type: "object",
+        properties: { query: { type: "string", description: "Texto o identificador que se debe buscar." } },
+        required: ["query"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "read_screen_resource",
+      description: "Lee un recurso de texto concreto dentro de la carpeta de Pantallas cargada.",
+      parameters: {
+        type: "object",
+        properties: { path: { type: "string", description: "Ruta relativa del recurso." } },
+        required: ["path"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "open_screen_resource",
+      description: "Abre un recurso de pantalla en el editor. Si no se conoce la ruta exacta, busca por nombre parcial y abre el mejor resultado o lista las opciones encontradas.",
+      parameters: {
+        type: "object",
+        properties: { path: { type: "string", description: "Ruta relativa exacta o nombre parcial del recurso a abrir (ej: pantalla_menu_servicios.html o menu_servicios)." } },
+        required: ["path"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_screen_resource",
+      description: "Crea un nuevo archivo en la carpeta de Pantallas. Analiza los archivos existentes para seguir el patron de nombres. Si ya existe un archivo similar, informa al usuario antes de crear.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Ruta relativa del archivo a crear (ej: pantalla_nueva.html)." },
+          content: { type: "string", description: "Contenido del archivo." },
+        },
+        required: ["path", "content"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "write_screen_resource",
+      description: "Escribe o reemplaza el contenido de un recurso existente en la carpeta de Pantallas. Antes de escribir, SIEMPRE lee el contenido actual con read_screen_resource para no perder datos.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Ruta relativa del recurso a escribir." },
+          content: { type: "string", description: "Contenido completo del archivo." },
+        },
+        required: ["path", "content"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "restore_screen_resource",
+      description: "Restaura un recurso a su version anterior (antes del ultimo cambio de EVA). Usa esto cuando el usuario pida deshacer o volver al estado anterior.",
+      parameters: {
+        type: "object",
+        properties: { path: { type: "string", description: "Ruta relativa del recurso a restaurar." } },
+        required: ["path"],
+        additionalProperties: false,
+      },
+    },
+  },
+];
+
+const EVA_AI_XML_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "get_xml_overview",
+      description: "Obtiene el resumen estructural y de flujo del XML actualmente cargado.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "read_xml_fragment",
+      description: "Busca y lee un fragmento del XML actual alrededor de una etiqueta, identificador o texto.",
+      parameters: {
+        type: "object",
+        properties: { query: { type: "string", description: "Etiqueta, ID o texto que se debe localizar." } },
+        required: ["query"],
+        additionalProperties: false,
+      },
+    },
+  },
+];
+
+function getEvaAiTools(mode, context) {
+  const hasScreens = context?.screens?.folder;
+  const hasXml = context?.xml?.content;
+  if (mode === "PANTALLAS") return hasScreens ? EVA_AI_SCREEN_TOOLS : [];
+  if (mode === "XML") return hasXml ? EVA_AI_XML_TOOLS : [];
+  const tools = [];
+  if (hasScreens) tools.push(...EVA_AI_SCREEN_TOOLS);
+  if (hasXml) tools.push(...EVA_AI_XML_TOOLS);
+  return tools;
+}
+
+function compactScreenResourceList(folderPath) {
+  const root = path.resolve(folderPath);
+  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+    throw new Error("La carpeta de Pantallas asociada ya no esta disponible.");
+  }
+  return collectScreenResources(root)
+    .filter((resource) => resource.type === "file")
+    .slice(0, 600)
+    .map((resource) => resource.path);
+}
+
+function searchScreenResourcesForEva(folderPath, query) {
+  const root = path.resolve(folderPath);
+  const term = String(query || "").trim().toLowerCase().slice(0, 180);
+  if (!term) return [];
+  const results = [];
+  for (const resource of collectScreenResources(root)) {
+    if (resource.type !== "file" || !EVA_AI_TEXT_EXTENSIONS.has(resource.extension)) continue;
+    if (results.length >= 24) break;
+    try {
+      const content = fs.readFileSync(resolveScreenResource(root, resource.path), "utf-8");
+      const lower = content.toLowerCase();
+      let from = 0;
+      while (results.length < 24) {
+        const index = lower.indexOf(term, from);
+        if (index === -1) break;
+        const line = content.slice(0, index).split("\n").length;
+        const start = Math.max(0, content.lastIndexOf("\n", index) + 1);
+        const end = content.indexOf("\n", index + term.length);
+        results.push({
+          path: resource.path,
+          line,
+          text: content.slice(start, end === -1 ? content.length : end).trim().slice(0, 260),
+        });
+        from = index + Math.max(term.length, 1);
+      }
+    } catch {
+      // Unreadable resources are skipped; the assistant never needs to see system errors for them.
+    }
+  }
+  return results;
+}
+
+function buildEvaSystemPrompt(customPrompt, mode) {
+  const scope = mode === "GENERAL"
+    ? "XML actual y carpeta de Pantallas cargada"
+    : mode === "PANTALLAS"
+      ? "carpeta de Pantallas cargada"
+      : "XML actual";
+  return [
+    "Eres EVA, asistente técnico integrado en EVA Studio.",
+    `Contexto: ${scope}. Responde en español, directo, sin emojis.`,
+    "Usa las herramientas disponibles para explorar, leer, crear, modificar y restaurar recursos. PRIMERO lee el contenido actual antes de modificar un archivo. NUNCA inventes contenido de memoria. Si el contexto ya incluye el codigo del recurso activo, NO lo leas de nuevo.",
+    "Si el usuario pide deshacer, usa restore_screen_resource. Codigo en bloques Markdown (```html, ```css, ```js), siempre completo.",
+    customPrompt ? `Instruccion del usuario: ${customPrompt.slice(0, 600)}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+function buildEvaContextSummary(context) {
+  const mode = String(context?.mode || "XML").toUpperCase();
+  const parts = [];
+  if ((mode === "XML" || mode === "GENERAL") && context?.xml?.overview) {
+    parts.push(`XML:\n${String(context.xml.overview).slice(0, 5000)}`);
+  }
+  if ((mode === "PANTALLAS" || mode === "GENERAL") && context?.screens?.folder) {
+    const active = context.screens.activePath || "";
+    const activeCode = context.screens.activeCode || "";
+    let screenPart = `Pantallas: carpeta cargada.`;
+    if (active) screenPart += ` Recurso activo: ${active}.`;
+    try {
+      const htmlFiles = compactScreenResourceList(context.screens.folder).filter((f) => /\.html?$/i.test(f));
+      if (htmlFiles.length <= 25) screenPart += `\nArchivos: ${htmlFiles.join(", ")}.`;
+      else screenPart += `\n${htmlFiles.length} archivos HTML. Usa list_screen_resources solo si necesitas la lista completa.`;
+    } catch { /* folder unavailable */ }
+    if (activeCode && activeCode.length < 4000) {
+      screenPart += `\n\nContenido de ${active}:\n${activeCode}`;
+    }
+    parts.push(screenPart);
+  }
+  return parts.join("\n\n");
+}
+
+function runEvaAiTool(name, args, context) {
+  const mode = String(context?.mode || "XML").toUpperCase();
+  const screens = context?.screens;
+  const xml = context?.xml;
+  const canUseScreens = (mode === "PANTALLAS" || mode === "GENERAL") && screens?.folder;
+  const canUseXml = (mode === "XML" || mode === "GENERAL") && xml?.content;
+
+  if (name === "list_screen_resources") {
+    if (!canUseScreens) return { error: "El contexto PANTALLAS no esta disponible." };
+    const files = compactScreenResourceList(screens.folder);
+    const htmlFiles = files.filter((f) => /\.html?$/i.test(f));
+    const otherFiles = files.filter((f) => !/\.html?$/i.test(f));
+    const summary = { total: files.length, html: htmlFiles.length, otros: otherFiles.length };
+    summary.pantallas = htmlFiles.slice(0, 80);
+    if (otherFiles.length) summary.recursos = otherFiles.slice(0, 40);
+    return summary;
+  }
+  if (name === "search_screen_resources") {
+    if (!canUseScreens) return { error: "El contexto PANTALLAS no esta disponible." };
+    return { results: searchScreenResourcesForEva(screens.folder, args.query) };
+  }
+  if (name === "read_screen_resource") {
+    if (!canUseScreens) return { error: "El contexto PANTALLAS no esta disponible." };
+    const relativePath = String(args.path || "").replace(/\\/g, "/");
+    if (relativePath === screens.activePath && typeof screens.activeCode === "string") {
+      return { path: relativePath, source: "editor", content: screens.activeCode.slice(0, 18000) };
+    }
+    const fullPath = resolveScreenResource(screens.folder, relativePath);
+    const extension = path.extname(fullPath).toLowerCase();
+    if (!EVA_AI_TEXT_EXTENSIONS.has(extension)) return { error: "EVA solo puede leer recursos de texto." };
+    return { path: relativePath, source: "disk", content: fs.readFileSync(fullPath, "utf-8").slice(0, 18000) };
+  }
+  if (name === "open_screen_resource") {
+    if (!canUseScreens) return { error: "El contexto PANTALLAS no esta disponible." };
+    const query = String(args.path || "").trim().replace(/\\/g, "/");
+    if (!query) return { error: "Indica un nombre o ruta de recurso." };
+    const allFiles = compactScreenResourceList(screens.folder);
+    const exact = allFiles.find((f) => f === query || f.endsWith(`/${query}`) || f === `${query}.html`);
+    if (exact) return { _action: "open_resource", path: exact, message: `Abriendo ${exact}.` };
+    const term = query.toLowerCase();
+    const matches = allFiles.filter((f) => f.toLowerCase().includes(term));
+    if (matches.length === 1) return { _action: "open_resource", path: matches[0], message: `Abriendo ${matches[0]}.` };
+    if (matches.length > 1) return { matches: matches.slice(0, 20), message: `${matches.length} coincidencias. Pide al usuario que elija.` };
+    return { found: false, query, message: "No se encontro ningun recurso con ese nombre." };
+  }
+  if (name === "create_screen_resource" || name === "write_screen_resource") {
+    if (!canUseScreens) return { error: "El contexto PANTALLAS no esta disponible." };
+    const relativePath = String(args.path || "").replace(/\\/g, "/");
+    if (!relativePath) return { error: "Indica el nombre del archivo." };
+    const isCreate = name === "create_screen_resource";
+    const allFiles = compactScreenResourceList(screens.folder);
+    const fullPath = resolveScreenResource(screens.folder, relativePath);
+    const exists = fs.existsSync(fullPath);
+    if (isCreate && exists) return { error: `${relativePath} ya existe. Usa write_screen_resource para modificarlo.` };
+    if (!isCreate && !exists) return { error: `${relativePath} no existe. Usa create_screen_resource para crearlo.` };
+    if (isCreate) {
+      const similarTerm = relativePath.replace(/\.\w+$/, "").toLowerCase();
+      const similar = allFiles.filter((f) => f.toLowerCase().includes(similarTerm));
+      if (similar.length) return { warning: true, similar: similar.slice(0, 10), message: `Archivos similares: ${similar.join(", ")}. Confirma con el usuario si desea crear ${relativePath} o usar uno existente.` };
+    }
+    const historyDir = path.join(screens.folder, ".eva-history");
+    fs.mkdirSync(historyDir, { recursive: true });
+    if (exists) {
+      const prev = fs.readFileSync(fullPath, "utf-8");
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const backupName = `${relativePath.replace(/\//g, "_")}_${stamp}`;
+      fs.writeFileSync(path.join(historyDir, backupName), prev, "utf-8");
+    }
+    if (isCreate) fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+    fs.writeFileSync(fullPath, String(args.content || ""), "utf-8");
+    const historyLog = path.join(historyDir, "changes.json");
+    let entries = [];
+    try { entries = JSON.parse(fs.readFileSync(historyLog, "utf-8")); } catch { /* new log */ }
+    entries.push({ time: new Date().toISOString(), action: isCreate ? "create" : "write", path: relativePath });
+    fs.writeFileSync(historyLog, JSON.stringify(entries.slice(-100), null, 2), "utf-8");
+    return { [isCreate ? "created" : "written"]: true, path: relativePath, _action: "open_resource", message: `${relativePath} ${isCreate ? "creado" : "actualizado"}.` };
+  }
+  if (name === "restore_screen_resource") {
+    if (!canUseScreens) return { error: "El contexto PANTALLAS no esta disponible." };
+    const relativePath = String(args.path || "").replace(/\\/g, "/");
+    if (!relativePath) return { error: "Indica la ruta del archivo a restaurar." };
+    const historyDir = path.join(screens.folder, ".eva-history");
+    if (!fs.existsSync(historyDir)) return { error: "No hay historial de cambios." };
+    const prefix = relativePath.replace(/\//g, "_") + "_";
+    const backups = fs.readdirSync(historyDir).filter((f) => f.startsWith(prefix)).sort().reverse();
+    if (!backups.length) return { error: `No hay backup para ${relativePath}.` };
+    const backupContent = fs.readFileSync(path.join(historyDir, backups[0]), "utf-8");
+    const fullPath = resolveScreenResource(screens.folder, relativePath);
+    fs.writeFileSync(fullPath, backupContent, "utf-8");
+    return { restored: true, path: relativePath, from: backups[0], _action: "open_resource", message: `${relativePath} restaurado a la version anterior.` };
+  }
+  if (name === "get_xml_overview") {
+    if (!canUseXml) return { error: "No hay XML cargado." };
+    return { overview: String(xml.overview || "Sin resumen disponible.").slice(0, 9000) };
+  }
+  if (name === "read_xml_fragment") {
+    if (!canUseXml) return { error: "No hay XML cargado." };
+    const source = String(xml.content);
+    const term = String(args.query || "").trim();
+    const index = source.toLowerCase().indexOf(term.toLowerCase());
+    if (index === -1) return { found: false, query: term };
+    const start = Math.max(0, index - 2500);
+    const end = Math.min(source.length, index + Math.max(term.length, 1) + 4500);
+    return { found: true, query: term, content: source.slice(start, end) };
+  }
+  return { error: "Herramienta no disponible." };
 }
 
 function compareVersions(left, right) {
@@ -1219,6 +1594,291 @@ ipcMain.handle("load-app-state", async (event) => {
     };
   } catch (error) {
     return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-eva-ai-settings", () => {
+  try {
+    evaAiLog("Se leyo la configuracion de EVA.");
+    return { success: true, settings: getEvaAiConfig() };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("save-eva-ai-settings", (_event, input) => {
+  try {
+    const settings = normalizeEvaAiConfig(input);
+    const configPath = path.join(app.getPath("userData"), EVA_AI_CONFIG_FILE);
+    writeJsonFile(configPath, settings);
+    evaAiLog(`Configuracion guardada. Modelo="${settings.model || "sin modelo"}" clave=${settings.apiKey ? "configurada" : "vacia"}.`);
+    return { success: true, settings: getEvaAiConfig() };
+  } catch (error) {
+    return { success: false, error: error.message || "No se pudo guardar la configuracion de EVA AI." };
+  }
+});
+
+ipcMain.handle("get-eva-ai-logs", () => {
+  try {
+    const content = fs.existsSync(EVA_AI_LOG_FILE)
+      ? fs.readFileSync(EVA_AI_LOG_FILE, "utf-8")
+      : "Aun no hay registros de EVA.";
+    return { success: true, content: content.slice(-18000) };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("show-confirm-dialog", async (event, message) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const { response } = await dialog.showMessageBox(win, {
+    type: "question",
+    buttons: ["Aceptar", "Cancelar"],
+    defaultId: 0,
+    cancelId: 1,
+    message: String(message),
+    noLink: true,
+  });
+  if (win && !win.isDestroyed()) win.webContents.focus();
+  return response === 0;
+});
+
+ipcMain.handle("show-alert-dialog", async (event, message) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  await dialog.showMessageBox(win, {
+    type: "info",
+    buttons: ["OK"],
+    message: String(message),
+    noLink: true,
+  });
+  if (win && !win.isDestroyed()) win.webContents.focus();
+});
+
+ipcMain.handle("clear-eva-ai-logs", () => {
+  try {
+    if (fs.existsSync(EVA_AI_LOG_FILE)) fs.writeFileSync(EVA_AI_LOG_FILE, "", "utf-8");
+    evaAiLog("Registro limpiado por el usuario.");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-eva-ai-history", (_event, folder) => {
+  try {
+    const historyLog = path.join(String(folder), ".eva-history", "changes.json");
+    if (!fs.existsSync(historyLog)) return { success: true, entries: [] };
+    const entries = JSON.parse(fs.readFileSync(historyLog, "utf-8"));
+    return { success: true, entries: Array.isArray(entries) ? entries.slice(-30) : [] };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("restore-eva-ai-file", (_event, folder, relativePath) => {
+  try {
+    const historyDir = path.join(String(folder), ".eva-history");
+    const prefix = String(relativePath).replace(/\//g, "_") + "_";
+    if (!fs.existsSync(historyDir)) return { success: false, error: "No hay historial." };
+    const backups = fs.readdirSync(historyDir).filter((f) => f.startsWith(prefix)).sort().reverse();
+    if (!backups.length) return { success: false, error: "No hay backup para este archivo." };
+    const backupContent = fs.readFileSync(path.join(historyDir, backups[0]), "utf-8");
+    const fullPath = resolveScreenResource(folder, relativePath);
+    fs.writeFileSync(fullPath, backupContent, "utf-8");
+    return { success: true, restored: relativePath, from: backups[0] };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("chat-with-eva-ai", async (_event, input) => {
+  try {
+    const settings = getEvaAiConfig();
+    if (!settings.endpoint || !settings.model || !settings.apiKey) {
+      evaAiLog("Solicitud rechazada: falta modelo o clave.");
+      return {
+        success: false,
+        error: "Configura el modelo y la clave del API de EVA.",
+      };
+    }
+
+    const sourceMessages = Array.isArray(input?.messages) ? input.messages : [];
+    const messages = sourceMessages
+      .slice(-6)
+      .map((message) => ({
+        role: message?.role === "assistant" ? "assistant" : "user",
+        content: String(message?.content || "").slice(0, 2400),
+      }))
+      .filter((message) => message.content.trim());
+
+    if (!messages.length) {
+      return { success: false, error: "Escribe una consulta para EVA AI." };
+    }
+
+    const context = input?.context || {};
+    const mode = String(context.mode || "XML").toUpperCase();
+    const tools = getEvaAiTools(mode, context);
+    const summary = buildEvaContextSummary(context);
+    const systemPrompt = buildEvaSystemPrompt(settings.systemPrompt, mode);
+    const fullSystem = summary.length > 30 ? `${systemPrompt}\n\n${summary}` : systemPrompt;
+    const isAnthropic = settings.endpoint.includes("anthropic.com");
+    const isOpenAI = settings.endpoint.includes("api.openai.com");
+    const lastUserMsg = String(messages[messages.length - 1]?.content || "").toLowerCase();
+    const needsLargeOutput = /crea|crear|modifica|escribe|escribir|archivo|pantalla nueva|genera|reemplaza/.test(lastUserMsg);
+    const maxTokens = needsLargeOutput ? 8192 : lastUserMsg.length < 80 ? 1024 : 2048;
+    const conversation = isAnthropic
+      ? [...messages]
+      : [{ role: "system", content: systemPrompt }, ...(summary.length > 30 ? [{ role: "system", content: summary }] : []), ...messages];
+    const actions = [];
+    const stats = { startTime: Date.now(), promptTokens: 0, completionTokens: 0, requests: 0 };
+    evaAiLog(`[INICIO] modelo=${settings.model} msgs=${messages.length} modo=${mode} tools=${tools.length} max=${maxTokens}`);
+
+    async function apiRequest(requestBody) {
+      const t0 = Date.now();
+      lastGeminiRequestTime = t0;
+      const headers = { "Content-Type": "application/json" };
+      if (isAnthropic) {
+        headers["x-api-key"] = settings.apiKey;
+        headers["anthropic-version"] = "2023-06-01";
+      } else {
+        headers["Authorization"] = `Bearer ${settings.apiKey}`;
+      }
+      const response = await fetch(settings.endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(30000),
+      });
+      const raw = await response.text();
+      evaAiLog(`  [HTTP] ${response.status} ${Date.now() - t0}ms ${raw.length}B`);
+      return { response, raw };
+    }
+
+    async function roundtrip(requestBody) {
+      let response, raw;
+      for (let retry = 0; retry <= 2; retry += 1) {
+        ({ response, raw } = await apiRequest(requestBody));
+        if (![429, 503].includes(response.status) || retry === 2) break;
+        const retryAfterHeader = response.headers.get("retry-after");
+        const backoff = retryAfterHeader ? Math.min(parseInt(retryAfterHeader, 10) * 1000 || 3000, 15000) : 2000 * (retry + 1);
+        evaAiLog(`  [REINTENTO ${retry + 1}/2] HTTP ${response.status} espera=${backoff}ms`);
+        await new Promise((resolve) => setTimeout(resolve, backoff));
+      }
+      let payload = null;
+      try { payload = JSON.parse(raw); } catch { /* handled below */ }
+      if (!response?.ok) {
+        const detail = payload?.error?.message || payload?.message || `HTTP ${response?.status || 0}`;
+        const status = response?.status || 0;
+        const userMessage = status === 429
+          ? "Limite de tasa alcanzado. Espera unos segundos e intenta de nuevo."
+          : status === 503
+            ? "El servidor no esta disponible. Intenta en unos momentos."
+            : `Error del API: ${String(detail).slice(0, 200)}`;
+        evaAiLog(`[ERROR] HTTP ${status}: ${String(detail).slice(0, 400)}`);
+        return { error: userMessage };
+      }
+      return { payload };
+    }
+
+    function buildRequestBody(includeTools) {
+      if (isAnthropic) {
+        const body = { model: settings.model, system: fullSystem, messages: conversation, max_tokens: maxTokens, stream: false };
+        if (includeTools && tools.length) {
+          body.tools = tools.map((t) => ({ name: t.function.name, description: t.function.description, input_schema: t.function.parameters }));
+        }
+        return body;
+      }
+      const tokenKey = isOpenAI ? "max_completion_tokens" : "max_tokens";
+      const body = { model: settings.model, messages: conversation, temperature: 0.15, [tokenKey]: maxTokens, stream: false };
+      if (includeTools && tools.length) { body.tools = tools; body.tool_choice = "auto"; }
+      return body;
+    }
+
+    function parseResponse(payload) {
+      stats.requests += 1;
+      const usage = payload?.usage || {};
+      stats.promptTokens += usage.prompt_tokens || usage.input_tokens || 0;
+      stats.completionTokens += usage.completion_tokens || usage.output_tokens || 0;
+      if (isAnthropic) {
+        const content = payload?.content || [];
+        const textParts = content.filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+        const toolUses = content.filter((b) => b.type === "tool_use");
+        const toolCalls = toolUses.map((tu) => ({ id: tu.id, function: { name: tu.name, arguments: JSON.stringify(tu.input || {}) } }));
+        return { text: textParts, toolCalls, rawAssistantContent: content };
+      }
+      const msg = payload?.choices?.[0]?.message;
+      const text = extractEvaAiText(payload);
+      const toolCalls = Array.isArray(msg?.tool_calls) ? msg.tool_calls : [];
+      return { text, toolCalls, rawAssistantContent: msg?.content || "" };
+    }
+
+    function pushToolResult(toolCallId, resultJson) {
+      if (isAnthropic) {
+        conversation.push({ role: "user", content: [{ type: "tool_result", tool_use_id: toolCallId, content: resultJson }] });
+      } else {
+        conversation.push({ role: "tool", tool_call_id: toolCallId, content: resultJson });
+      }
+    }
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      if (attempt > 0) evaAiLog(`  [TOOL LOOP] ronda ${attempt + 1}/5`);
+
+      const round = await roundtrip(buildRequestBody(true));
+      if (round.error) return { success: false, error: round.error };
+
+      const parsed = parseResponse(round.payload);
+      if (!parsed.toolCalls.length) {
+        if (!parsed.text) {
+          evaAiLog("[ERROR] Respuesta sin texto compatible.");
+          return { success: false, error: "El modelo respondio en un formato no compatible." };
+        }
+        evaAiLog(`[OK] ${parsed.text.length} caracteres.`);
+        return { success: true, content: parsed.text, actions: actions.length ? actions : undefined, stats: { ms: Date.now() - stats.startTime, tokensIn: stats.promptTokens, tokensOut: stats.completionTokens, requests: stats.requests } };
+      }
+
+      evaAiLog(`  [TOOLS] ${parsed.toolCalls.map((tc) => tc.function?.name).join(", ")}`);
+      if (isAnthropic) {
+        conversation.push({ role: "assistant", content: parsed.rawAssistantContent });
+      } else {
+        conversation.push({ role: "assistant", content: parsed.rawAssistantContent, tool_calls: parsed.toolCalls });
+      }
+      for (let ti = 0; ti < parsed.toolCalls.length; ti += 1) {
+        const toolCall = parsed.toolCalls[ti];
+        if (ti >= 3) {
+          pushToolResult(toolCall.id, JSON.stringify({ error: "Limite de herramientas por ronda. Reintenta con menos consultas." }));
+          continue;
+        }
+        let args = {};
+        try { const p = JSON.parse(toolCall.function?.arguments || "{}"); if (p && typeof p === "object") args = p; } catch { /* use empty */ }
+        const name = toolCall.function?.name || "";
+        let result;
+        try {
+          result = runEvaAiTool(name, args, context);
+        } catch (error) {
+          result = { error: error.message || "No se pudo consultar el recurso." };
+        }
+        if (result?._action === "open_resource") {
+          actions.push({ type: "open_resource", path: result.path });
+        }
+        const resultSize = JSON.stringify(result).length;
+        evaAiLog(`  [TOOL] ${name}(${Object.keys(args).length ? JSON.stringify(args).slice(0, 80) : ""}) => ${result?.error ? "ERROR: " + result.error : resultSize + "B"}`);
+        pushToolResult(toolCall.id, JSON.stringify(result).slice(0, 19000));
+      }
+    }
+
+    evaAiLog("  [FINAL] Forzando respuesta de texto.");
+    const finalRound = await roundtrip(buildRequestBody(false));
+    if (finalRound.error) return { success: false, error: finalRound.error };
+    const finalParsed = parseResponse(finalRound.payload);
+    if (finalParsed.text) {
+      evaAiLog(`[OK] ${finalParsed.text.length} caracteres (forzado).`);
+      return { success: true, content: finalParsed.text, actions: actions.length ? actions : undefined, stats: { ms: Date.now() - stats.startTime, tokensIn: stats.promptTokens, tokensOut: stats.completionTokens, requests: stats.requests } };
+    }
+    evaAiLog("[ERROR] No se obtuvo respuesta final.");
+    return { success: false, error: "EVA no pudo generar una respuesta. Intenta reformular la pregunta." };
+  } catch (error) {
+    evaAiLog(`[ERROR] Excepcion: ${error.message || "error desconocido"}`);
+    return { success: false, error: error.message || "No se pudo conectar con EVA AI." };
   }
 });
 

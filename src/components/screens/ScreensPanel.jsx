@@ -13,7 +13,6 @@ import ScreenResourceEditor, {
 } from "./ScreenResourceEditor";
 import "./screens.css";
 import {
-  FaAlignLeft,
   FaChevronDown,
   FaChevronRight,
   FaFolderOpen,
@@ -108,6 +107,8 @@ export default function ScreensPanel({
   onScreensViewStateChange,
   setScreensList,
   theme,
+  onAiContextChange,
+  refreshToken,
 }) {
   const saved = useRef(loadPersistedState());
 
@@ -151,7 +152,6 @@ export default function ScreensPanel({
   const inlineRenameIdRef = useRef(0);
   const [treeRevealTarget, setTreeRevealTarget] = useState(null);
   const [selectedPaths, setSelectedPaths] = useState(() => new Set());
-  const [undoNotification, setUndoNotification] = useState(null);
   const [clipboardPaths, setClipboardPaths] = useState([]);
   const [clipboardSourceFolder, setClipboardSourceFolder] = useState(null);
   const [clipboardCut, setClipboardCut] = useState(false);
@@ -281,6 +281,23 @@ export default function ScreensPanel({
       null,
     [openTabs, selectedResource?.path],
   );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!screensFolder) {
+        onAiContextChange?.(null);
+        return;
+      }
+      onAiContextChange?.({
+        folder: screensFolder,
+        resourceCount: resources.filter((resource) => resource.type === "file").length,
+        name: activeTab?.name || "",
+        path: activeTab?.path || "",
+        code: activeTab?.editable ? activeTab.code : "",
+      });
+    }, 260);
+    return () => clearTimeout(timer);
+  }, [activeTab?.code, activeTab?.editable, activeTab?.name, activeTab?.path, onAiContextChange, resources, screensFolder]);
 
   const contentResultsGrouped = useMemo(() => {
     const groups = new Map();
@@ -422,6 +439,20 @@ export default function ScreensPanel({
     loadResources(screensFolder);
   }, [screensFolder, loadResources]);
 
+  useEffect(() => {
+    if (!refreshToken || !screensFolder) return;
+    loadResources(screensFolder);
+    setOpenTabs((tabs) => {
+      for (const tab of tabs) {
+        window.electronAPI.readScreenResource(screensFolder, tab.path).then((result) => {
+          if (!result?.success) return;
+          setOpenTabs((current) => current.map((t) => t.path === tab.path ? { ...t, code: result.data || "", originalCode: result.data || "", dirty: false, status: "" } : t));
+        });
+      }
+      return tabs;
+    });
+  }, [refreshToken, screensFolder, loadResources]);
+
   // Restore tabs after resources load
   useEffect(() => {
     if (tabsRestoredRef.current || !resources.length || !screensFolder) return;
@@ -536,11 +567,15 @@ export default function ScreensPanel({
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("pointermove", handleMouseMove);
+    window.addEventListener("pointerup", handleMouseUp);
+    window.addEventListener("pointercancel", handleMouseUp);
+    window.addEventListener("blur", handleMouseUp);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handleMouseMove);
+      window.removeEventListener("pointerup", handleMouseUp);
+      window.removeEventListener("pointercancel", handleMouseUp);
+      window.removeEventListener("blur", handleMouseUp);
     };
   }, []);
 
@@ -678,7 +713,7 @@ export default function ScreensPanel({
     if (!screensFolder || folderActionBusy) return;
     if (
       openTabs.some((t) => t.dirty) &&
-      !window.confirm("Hay cambios sin guardar. ¿Deseas cerrar la carpeta?")
+      !(await window.electronAPI.showConfirm("Hay cambios sin guardar. ¿Deseas cerrar la carpeta?"))
     )
       return;
     setFolderActionBusy(true);
@@ -758,7 +793,6 @@ export default function ScreensPanel({
       : showEditorPane
         ? "code-only"
         : "preview-only";
-  const canFormatSelectedResource = canFormatResource(activeTab?.extension);
   const dirtyPaths = useMemo(
     () => new Set(openTabs.filter((t) => t.dirty).map((t) => t.path)),
     [openTabs],
@@ -830,14 +864,12 @@ export default function ScreensPanel({
     });
   };
 
-  const closeTabs = (paths) => {
+  const closeTabs = async (paths) => {
     const pathSet = new Set(paths);
     const hasPending = openTabs.some((t) => pathSet.has(t.path) && t.dirty);
     if (
       hasPending &&
-      !window.confirm(
-        "Hay cambios sin guardar. ¿Deseas cerrar los archivos seleccionados?",
-      )
+      !(await window.electronAPI.showConfirm("Hay cambios sin guardar. ¿Deseas cerrar los archivos seleccionados?"))
     )
       return;
     const remaining = openTabs.filter((t) => !pathSet.has(t.path));
@@ -919,7 +951,7 @@ export default function ScreensPanel({
       name.trim(),
     );
     if (!result?.success || !result.path) {
-      window.alert(result?.error || "No se pudo renombrar el recurso.");
+      await window.electronAPI.showAlert(result?.error || "No se pudo renombrar el recurso.");
       return;
     }
 
@@ -998,7 +1030,7 @@ export default function ScreensPanel({
       creation.type,
     );
     if (!result?.success) {
-      setUndoNotification({ message: result?.error || "No se pudo crear el recurso.", timestamp: Date.now() });
+      console.warn("No se pudo crear el recurso:", result?.error);
       return;
     }
     const refreshed = await loadResources(screensFolder);
@@ -1015,7 +1047,7 @@ export default function ScreensPanel({
   const deleteResources = async (paths) => {
     closeContextMenu();
     const label = paths.length === 1 ? paths[0] : `${paths.length} elementos`;
-    if (!window.confirm(`¿Enviar "${label}" a la papelera de reciclaje?`))
+    if (!(await window.electronAPI.showConfirm(`¿Enviar "${label}" a la papelera de reciclaje?`)))
       return;
     const failed = [];
     for (const p of paths) {
@@ -1026,14 +1058,10 @@ export default function ScreensPanel({
       if (!result?.success) failed.push(p);
     }
     if (failed.length) {
-      window.alert(`No se pudieron eliminar: ${failed.join(", ")}`);
+      await window.electronAPI.showAlert(`No se pudieron eliminar: ${failed.join(", ")}`);
     }
     closeTabs(paths);
     setSelectedPaths(new Set());
-    setUndoNotification({
-      message: `"${label}" enviado a la papelera`,
-      timestamp: Date.now(),
-    });
     await refreshResources();
   };
 
@@ -1116,10 +1144,7 @@ export default function ScreensPanel({
       setClipboardCut(false);
     }
     if (failedPaths.length) {
-      setUndoNotification({
-        message: `No se pudieron pegar: ${failedPaths.join(", ")}`,
-        timestamp: Date.now(),
-      });
+      console.warn("No se pudieron pegar:", failedPaths.join(", "));
     }
     await refreshResources();
   }, [
@@ -1325,12 +1350,6 @@ export default function ScreensPanel({
     });
     return () => cancelAnimationFrame(frame);
   }, [contextMenu]);
-
-  useEffect(() => {
-    if (!undoNotification) return;
-    const timer = setTimeout(() => setUndoNotification(null), 6000);
-    return () => clearTimeout(timer);
-  }, [undoNotification]);
 
   const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
@@ -1684,7 +1703,8 @@ export default function ScreensPanel({
 
         <div
           className="screens-sidebar-resizer"
-          onMouseDown={(event) => {
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
             resizeRef.current = {
               left:
                 event.currentTarget.parentElement?.getBoundingClientRect()
@@ -1692,6 +1712,7 @@ export default function ScreensPanel({
             };
             document.body.style.cursor = "col-resize";
             document.body.style.userSelect = "none";
+            event.currentTarget.setPointerCapture?.(event.pointerId);
             event.preventDefault();
           }}
           onDoubleClick={() => setSidebarWidth(300)}
@@ -1777,16 +1798,6 @@ export default function ScreensPanel({
                       ))}
                     </div>
                     <div className="screen-editor-actions">
-                      {canFormatSelectedResource ? (
-                        <button
-                          type="button"
-                          className="screen-editor-format"
-                          onClick={handleFormatResource}
-                          title={`Formatear ${(activeTab?.extension || "archivo").toUpperCase()}`}
-                        >
-                          <FaAlignLeft />
-                        </button>
-                      ) : null}
                       <button
                         type="button"
                         className="screen-editor-save"
@@ -1856,13 +1867,15 @@ export default function ScreensPanel({
               {showEditorPane && showPreviewPane ? (
                 <div
                   className="screens-editor-resizer"
-                  onMouseDown={(e) => {
+                  onPointerDown={(event) => {
+                    if (event.button !== 0) return;
                     editorResizeRef.current = {
-                      container: e.currentTarget.parentElement,
+                      container: event.currentTarget.parentElement,
                     };
                     document.body.style.cursor = "col-resize";
                     document.body.style.userSelect = "none";
-                    e.preventDefault();
+                    event.currentTarget.setPointerCapture?.(event.pointerId);
+                    event.preventDefault();
                   }}
                   onDoubleClick={() => setEditorWidth(null)}
                 />
@@ -2099,16 +2112,6 @@ export default function ScreensPanel({
             }}
           >
             Cerrar todas las carpetas
-          </button>
-        </div>
-      ) : null}
-
-      {undoNotification ? (
-        <div className="screens-undo-toast">
-          <FaUndo />
-          <span>{undoNotification.message}</span>
-          <button type="button" onClick={() => setUndoNotification(null)}>
-            <FiX />
           </button>
         </div>
       ) : null}

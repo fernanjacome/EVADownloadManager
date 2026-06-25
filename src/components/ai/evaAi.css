@@ -1,0 +1,587 @@
+.eva-ai {
+  display: flex;
+  position: fixed;
+  right: 20px;
+  bottom: 57px;
+  z-index: 1800;
+  color: var(--txt-normal);
+  flex-direction: column;
+  align-items: flex-end;
+  position: fixed;
+  right: 20px;
+  bottom: 57px;
+  z-index: 1800;
+  color: var(--txt-normal);
+}
+
+.eva-ai-fab {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--border-general) 72%, transparent 28%);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--c-fondo) 92%, var(--c-principal) 8%);
+  color: var(--c-principal);
+  box-shadow: 0 8px 22px rgba(8, 26, 19, 0.18);
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.eva-ai-fab svg {
+  font-size: 18px;
+}
+
+.eva-ai-fab:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--c-principal) 62%, transparent 38%);
+  background: color-mix(in srgb, var(--c-principal) 12%, var(--c-fondo) 88%);
+  box-shadow: 0 12px 26px rgba(8, 26, 19, 0.22);
+}
+
+.eva-ai-panel {
+  width: 390px;
+  height: 560px;
+  min-width: 340px;
+  min-height: 360px;
+  max-width: min(720px, calc(100vw - 32px));
+  max-height: min(760px, calc(100vh - 98px));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  margin-bottom: 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-general) 82%, transparent 18%);
+  border-radius: 14px;
+  background: var(--c-fondo);
+  box-shadow: 0 18px 48px rgba(8, 20, 16, 0.26);
+}
+
+.eva-ai-resize-handle {
+  position: absolute;
+  z-index: 5;
+}
+
+.eva-ai-resize-handle.horizontal {
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.eva-ai-resize-handle.vertical {
+  top: 0;
+  right: 10px;
+  left: 10px;
+  height: 7px;
+  cursor: ns-resize;
+}
+
+.eva-ai-resize-handle.diagonal {
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+}
+
+.eva-ai-resize-handle:hover::after {
+  content: "";
+  position: absolute;
+  background: color-mix(in srgb, var(--c-principal) 55%, transparent 45%);
+}
+
+.eva-ai-resize-handle.horizontal:hover::after {
+  top: 12px;
+  bottom: 12px;
+  left: 2px;
+  width: 1px;
+}
+
+.eva-ai-resize-handle.vertical:hover::after {
+  top: 2px;
+  right: 12px;
+  left: 12px;
+  height: 1px;
+}
+
+.eva-ai-header,
+.eva-ai-context-row,
+.eva-ai-composer {
+  padding: 10px 12px;
+}
+
+.eva-ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-general) 56%, transparent 44%);
+}
+
+.eva-ai-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eva-ai-title-icon {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--c-principal);
+  background: color-mix(in srgb, var(--c-principal) 12%, transparent 88%);
+}
+
+.eva-ai-title strong,
+.eva-ai-title small {
+  display: block;
+}
+
+.eva-ai-title strong {
+  font-size: 12px;
+}
+
+.eva-ai-title small {
+  max-width: 205px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+  color: var(--txt-secondary);
+  font-size: 10px;
+}
+
+.eva-ai-header-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.eva-ai-header-actions button,
+.eva-ai-clear {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--txt-normalf);
+  cursor: pointer;
+}
+
+.eva-ai-header-actions button:hover,
+.eva-ai-clear:hover {
+  color: var(--c-principal);
+  background: color-mix(in srgb, var(--c-principal) 10%, transparent 90%);
+}
+
+.eva-ai-context-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-general) 50%, transparent 50%);
+}
+
+.eva-ai-context-pills {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.eva-ai-context-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--txt-secondary);
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: .03em;
+  transition: background 0.12s, color 0.12s;
+}
+
+.eva-ai-context-pill svg {
+  font-size: 10px;
+}
+
+.eva-ai-context-pill:hover:not(:disabled) {
+  color: var(--txt-normal);
+  background: color-mix(in srgb, var(--c-principal) 6%, transparent 94%);
+}
+
+.eva-ai-context-pill.active {
+  color: var(--c-principal);
+  background: color-mix(in srgb, var(--c-principal) 13%, transparent 87%);
+}
+
+.eva-ai-context-pill:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.eva-ai-active-resource {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--c-principal);
+  font-size: 9px;
+  opacity: .7;
+}
+
+.eva-ai-messages {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.eva-ai-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 92%;
+  color: var(--txt-normal);
+}
+
+.eva-ai-message svg {
+  flex: 0 0 auto;
+  margin-top: 5px;
+  color: var(--c-principal);
+}
+
+.eva-ai-message-content {
+  position: relative;
+  min-width: 0;
+  padding: 8px 9px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c-fondo-code) 46%, transparent 54%);
+  user-select: text;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.eva-ai-copy-message {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--txt-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  font-size: 11px;
+}
+
+.eva-ai-message-content:hover .eva-ai-copy-message {
+  opacity: 1;
+}
+
+.eva-ai-copy-message:hover {
+  color: var(--c-principal);
+  background: color-mix(in srgb, var(--c-principal) 12%, transparent 88%);
+}
+
+.eva-ai-msg-stats {
+  display: block;
+  margin-top: 4px;
+  color: var(--txt-secondary);
+  font-size: 9px;
+  opacity: .5;
+}
+
+.eva-ai-message-text {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.eva-ai-message-text strong {
+  font-weight: 700;
+  color: var(--txt-normal);
+}
+
+.eva-ai-message-text em {
+  font-style: italic;
+  color: var(--txt-normalf);
+}
+
+.eva-ai-inline-code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #ffffff;
+  background:
+    color-mix(in srgb, var(--c-fondo-code) 50%, black 50%);
+  font: 10.5px Consolas, "Fira Code", monospace;
+}
+
+.eva-ai-list {
+  margin: 4px 0;
+  padding-left: 16px;
+  list-style: disc;
+}
+
+.eva-ai-list li {
+  margin: 2px 0;
+  line-height: 1.5;
+}
+
+.eva-ai-list li::marker {
+  color: var(--c-principal);
+}
+
+.eva-ai-message.user {
+  align-self: flex-end;
+  max-width: 84%;
+}
+
+.eva-ai-message.user .eva-ai-message-content {
+  background: color-mix(in srgb, var(--c-principal) 13%, var(--c-fondo) 87%);
+}
+
+.eva-ai-message.error .eva-ai-message-content {
+  color: #c65353;
+  background: rgba(198, 83, 83, .08);
+}
+
+.eva-ai-code-block {
+  min-width: 0;
+  margin: 7px 0 2px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-general) 68%, transparent 32%);
+  border-radius: 7px;
+  color: var(--txt-normal);
+  user-select: text;
+}
+
+.eva-ai-code-block header {
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 0 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-general) 62%, transparent 38%);
+  color: var(--txt-secondary);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.eva-ai-code-block header button {
+  width: 23px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--txt-normalf);
+  cursor: pointer;
+}
+
+.eva-ai-code-block header button:hover {
+  color: var(--c-principal);
+  background: color-mix(in srgb, var(--c-principal) 11%, transparent 89%);
+}
+
+.eva-ai-code-block pre {
+  max-height: 260px;
+  margin: 0;
+  overflow: auto;
+  padding: 8px;
+  font: 10.5px/1.45 Consolas, "Fira Code", monospace;
+  white-space: pre;
+}
+
+.eva-ai-code-block code {
+  font: inherit;
+}
+
+.eva-ai-code-block .hl-tag {
+  color: #e06c75;
+}
+
+.eva-ai-code-block .hl-attr {
+  color: #d19a66;
+}
+
+.eva-ai-code-block .hl-string {
+  color: #98c379;
+}
+
+.eva-ai-code-block .hl-keyword {
+  color: #c678dd;
+}
+
+.eva-ai-code-block .hl-comment {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.eva-ai-code-block .hl-number {
+  color: #d19a66;
+}
+
+.eva-ai-context-warn {
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #c6a353;
+  font: 600 9px inherit;
+  cursor: pointer;
+  text-align: center;
+  opacity: .7;
+  transition: opacity 0.12s;
+}
+
+.eva-ai-context-warn:hover {
+  opacity: 1;
+}
+
+.eva-ai-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--txt-secondary);
+  font-size: 11px;
+}
+
+.eva-ai-thinking svg {
+  animation: eva-ai-pulse 1s ease-in-out infinite;
+}
+
+@keyframes eva-ai-pulse {
+  50% {
+    opacity: .3;
+    transform: translateY(2px);
+  }
+}
+
+.eva-ai-setup-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 9px;
+  padding: 10px;
+  border: 1px dashed color-mix(in srgb, var(--border-general) 80%, transparent 20%);
+  border-radius: 9px;
+  color: var(--txt-normalf);
+}
+
+.eva-ai-setup-card>svg {
+  margin-top: 2px;
+  color: var(--c-principal);
+}
+
+.eva-ai-setup-card strong {
+  font-size: 11.5px;
+}
+
+.eva-ai-setup-card p {
+  margin: 2px 0 0;
+  color: var(--txt-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.eva-ai-setup-card button {
+  grid-column: 2;
+  justify-self: start;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--c-principal);
+  cursor: pointer;
+  font: 700 11px inherit;
+}
+
+.eva-ai-composer {
+  border-top: 1px solid color-mix(in srgb, var(--border-general) 56%, transparent 44%);
+}
+
+.eva-ai-composer textarea {
+  width: 100%;
+  min-height: 43px;
+  resize: none;
+  box-sizing: border-box;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--txt-normal);
+  font: 12px/1.45 inherit;
+  user-select: text;
+}
+
+.eva-ai-composer textarea::placeholder {
+  color: var(--txt-secondary);
+}
+
+.eva-ai-composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.eva-ai-composer-actions span {
+  flex: 1;
+  color: var(--txt-secondary);
+  font-size: 9.5px;
+}
+
+.eva-ai-send {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: var(--c-principal);
+  color: #06231b;
+  cursor: pointer;
+}
+
+.eva-ai-send:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+body:not(.light-theme) .eva-ai-panel {
+  background: #1a201f;
+  border-color: rgba(121, 155, 140, .38);
+}
+
+@media (max-width: 650px) {
+  .eva-ai {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .eva-ai-panel {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px);
+  }
+
+  .eva-ai-resize-handle {
+    display: none;
+  }
+}

@@ -88,4 +88,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
   saveAppState: (state) => ipcRenderer.invoke("save-app-state", state),
   saveAppStateSync: (state) => ipcRenderer.sendSync("save-app-state-sync", state),
   loadAppState: () => ipcRenderer.invoke("load-app-state"),
+  showConfirm: (message) => ipcRenderer.invoke("show-confirm-dialog", message),
+  showAlert: (message) => ipcRenderer.invoke("show-alert-dialog", message),
+  getEvaAiSettings: () => ipcRenderer.invoke("get-eva-ai-settings"),
+  saveEvaAiSettings: (settings) => ipcRenderer.invoke("save-eva-ai-settings", settings),
+  getEvaAiLogs: () => ipcRenderer.invoke("get-eva-ai-logs"),
+  clearEvaAiLogs: () => ipcRenderer.invoke("clear-eva-ai-logs"),
+  getEvaAiHistory: (folder) => ipcRenderer.invoke("get-eva-ai-history", folder),
+  restoreEvaAiFile: (folder, path) => ipcRenderer.invoke("restore-eva-ai-file", folder, path),
+  chatWithEvaAi: (payload) => ipcRenderer.invoke("chat-with-eva-ai", payload),
 });

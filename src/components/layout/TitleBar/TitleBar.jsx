@@ -19,6 +19,7 @@ import {
   FiMonitor,
   FiTerminal,
   FiWifi,
+  FiSettings,
 } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import {
@@ -51,6 +52,9 @@ export default function TitleBar({
   onResetApp,
   visibleModules,
   setVisibleModules,
+  evaAiEnabled,
+  setEvaAiEnabled,
+  onOpenEvaAiSettings,
 }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [showModal, setShowModal] = useState(null);
@@ -81,6 +85,7 @@ export default function TitleBar({
     { key: "compiler", label: "Compilador" },
     { key: "remote", label: "Remoto" },
     { key: "logs", label: "Logs" },
+    { key: "eva-ai", label: "EVA AI", isEvaAi: true },
   ];
 
   useEffect(() => {
@@ -142,6 +147,16 @@ export default function TitleBar({
                     <span>Gestionar snippets</span>
                     <MdOutlineTextSnippet />
                   </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
+                      onOpenEvaAiSettings?.();
+                      closeMenus();
+                    }}
+                  >
+                    <span>Configurar EVA AI</span>
+                    <FiSettings />
+                  </div>
                   <div className="dropdown-separator" />
                   <div
                     className="dropdown-item"
@@ -192,7 +207,9 @@ export default function TitleBar({
                   onClick={(event) => event.stopPropagation()}
                 >
                   {moduleOptions.map((module) => {
-                    const enabled = visibleModules?.[module.key] !== false;
+                    const enabled = module.isEvaAi
+                      ? evaAiEnabled !== false
+                      : visibleModules?.[module.key] !== false;
                     const enabledCount = Object.values(
                       visibleModules || {},
                     ).filter(Boolean).length;
@@ -200,11 +217,15 @@ export default function TitleBar({
                       <div
                         key={module.key}
                         className={`dropdown-item module-toggle ${
-                          !enabled && enabledCount === 1 ? "disabled" : ""
+                          !module.isEvaAi && !enabled && enabledCount === 1 ? "disabled" : ""
                         }`}
                         onClick={() => {
-                          if (enabled && enabledCount === 1) return;
+                          if (!module.isEvaAi && enabled && enabledCount === 1) return;
                           setActiveMenu("modules");
+                          if (module.isEvaAi) {
+                            setEvaAiEnabled?.((current) => !current);
+                            return;
+                          }
                           setVisibleModules((prev) => ({
                             ...prev,
                             [module.key]: !enabled,

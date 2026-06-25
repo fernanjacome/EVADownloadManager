@@ -26,7 +26,7 @@ export default function Header({
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [draggingModule, setDraggingModule] = useState(null);
   const modeSwitchRef = useRef(null);
-  console.log(fileInfo);
+
 
   const moduleButtons = [
     { key: "code", label: "XML", icon: <IoCodeSlash /> },

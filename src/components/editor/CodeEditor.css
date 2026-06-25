@@ -73,7 +73,7 @@
   height: 100%;
   min-width: 0;
   min-height: 0;
-  max-height: 87px;
+  max-height: 87vh;
 }
 
 .editor-wrapper.full {

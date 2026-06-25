@@ -1,0 +1,64 @@
+.eva-ai-config-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 14, 16, .48);
+}
+
+.eva-ai-config-modal {
+  width: min(470px, 100%);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-general) 80%, transparent 20%);
+  border-radius: 14px;
+  background: var(--c-fondo);
+  color: var(--txt-normal);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, .28);
+}
+.eva-ai-config-modal header, .eva-ai-config-modal footer { display: flex; align-items: center; justify-content: space-between; padding: 13px 15px; }
+.eva-ai-config-modal header { border-bottom: 1px solid color-mix(in srgb, var(--border-general) 58%, transparent 42%); }
+.eva-ai-config-heading { display: flex; align-items: center; gap: 9px; }
+.eva-ai-config-heading > span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: color-mix(in srgb, var(--c-principal) 12%, transparent 88%); color: var(--c-principal); }
+.eva-ai-config-heading h2, .eva-ai-config-heading p { margin: 0; }
+.eva-ai-config-heading h2 { font-size: 14px; }
+.eva-ai-config-heading p { margin-top: 1px; color: var(--txt-secondary); font-size: 11px; }
+.eva-ai-config-header-actions { display: flex; gap: 2px; }
+.eva-ai-config-modal header button { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--txt-normalf); cursor: pointer; }
+.eva-ai-config-modal header button:hover { color: var(--c-principal); background: color-mix(in srgb, var(--c-principal) 10%, transparent 90%); }
+.eva-ai-config-log-button { color: var(--c-principal) !important; }
+.eva-ai-config-body { display: grid; gap: 11px; padding: 15px; }
+.eva-ai-config-intro { margin: 0 0 2px; color: var(--txt-secondary); font-size: 11.5px; line-height: 1.45; }
+.eva-ai-config-intro code { color: var(--c-principal); font: 10.5px Consolas, monospace; }
+.eva-ai-config-body label { display: grid; gap: 5px; color: var(--txt-normalf); font-size: 11px; font-weight: 700; }
+.eva-ai-config-body label em { color: var(--txt-secondary); font-style: normal; font-weight: 400; }
+.eva-ai-config-body select { width: 100%; height: 33px; box-sizing: border-box; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--border-general) 80%, transparent 20%); border-radius: 7px; outline: 0; background: var(--c-fondo-code); color: var(--txt-normal); font: 11.5px inherit; cursor: pointer; }
+.eva-ai-config-body select:focus { border-color: var(--c-principal); box-shadow: 0 0 0 3px rgba(0, 200, 150, .1); }
+.eva-ai-config-warn { color: #c6a353 !important; }
+.eva-ai-config-link { color: var(--c-principal); text-decoration: none; }
+.eva-ai-config-link:hover { text-decoration: underline; }
+.eva-ai-config-body label small { color: var(--txt-secondary); font-size: 10px; font-weight: 400; line-height: 1.35; }
+.eva-ai-config-body input, .eva-ai-config-body textarea { width: 100%; box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--border-general) 80%, transparent 20%); border-radius: 7px; outline: 0; background: var(--c-fondo-code); color: var(--txt-normal); font: 11.5px Consolas, "Fira Code", monospace; }
+.eva-ai-config-body input { height: 33px; padding: 0 9px; }
+.eva-ai-config-body textarea { padding: 8px 9px; resize: vertical; min-height: 64px; }
+.eva-ai-config-body input:focus, .eva-ai-config-body textarea:focus { border-color: var(--c-principal); box-shadow: 0 0 0 3px rgba(0, 200, 150, .1); }
+.eva-ai-key-input { display: flex; align-items: center; border: 1px solid color-mix(in srgb, var(--border-general) 80%, transparent 20%); border-radius: 7px; background: var(--c-fondo-code); }
+.eva-ai-key-input:focus-within { border-color: var(--c-principal); box-shadow: 0 0 0 3px rgba(0, 200, 150, .1); }
+.eva-ai-key-input > svg { flex: 0 0 auto; margin-left: 9px; color: var(--txt-secondary); }
+.eva-ai-key-input input { border: 0; box-shadow: none !important; background: transparent; }
+.eva-ai-key-input button { width: 32px; height: 32px; display: grid; place-items: center; flex: 0 0 auto; border: 0; background: transparent; color: var(--txt-secondary); cursor: pointer; }
+.eva-ai-config-error { margin: 0; color: #c65353; font-size: 11px; }
+.eva-ai-config-logs { display: grid; gap: 6px; padding: 8px; border: 1px solid color-mix(in srgb, var(--border-general) 72%, transparent 28%); border-radius: 8px; background: color-mix(in srgb, var(--c-fondo-code) 48%, transparent 52%); }
+.eva-ai-config-logs > div { display: flex; align-items: center; justify-content: space-between; color: var(--txt-normalf); font-size: 10.5px; }
+.eva-ai-config-logs-actions { display: flex; align-items: center; gap: 2px; }
+.eva-ai-config-logs-actions button { width: 24px; height: 24px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--txt-secondary); cursor: pointer; font-size: 12px; }
+.eva-ai-config-logs-actions button:last-child { width: auto; padding: 0 6px; color: var(--c-principal); font: 700 10px inherit; }
+.eva-ai-config-logs-actions button:hover { color: var(--c-principal); background: color-mix(in srgb, var(--c-principal) 10%, transparent 90%); }
+.eva-ai-config-logs pre { max-height: 150px; margin: 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--txt-secondary); font: 9.5px/1.45 Consolas, "Fira Code", monospace; user-select: text; }
+.eva-ai-config-modal footer { gap: 8px; justify-content: flex-end; border-top: 1px solid color-mix(in srgb, var(--border-general) 58%, transparent 42%); }
+.eva-ai-config-modal footer button { min-height: 31px; padding: 0 10px; border-radius: 7px; cursor: pointer; font: 700 11px inherit; }
+.eva-ai-config-cancel { border: 1px solid color-mix(in srgb, var(--border-general) 80%, transparent 20%); background: transparent; color: var(--txt-normalf); }
+.eva-ai-config-save { display: inline-flex; align-items: center; gap: 5px; border: 1px solid color-mix(in srgb, var(--c-principal) 45%, transparent 55%); background: color-mix(in srgb, var(--c-principal) 15%, transparent 85%); color: var(--c-principal); }
+.eva-ai-config-save:disabled { opacity: .55; cursor: default; }
+body:not(.light-theme) .eva-ai-config-modal { background: #1a201f; border-color: rgba(121, 155, 140, .38); }

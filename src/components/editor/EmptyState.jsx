@@ -54,7 +54,13 @@ export default function EmptyState({ onLoadClick, onNewClick, onFileDrop }) {
   );
 
   return (
-    <div className={`empty-state drop-zone`}>
+    <div
+      className={`empty-state drop-zone${isDragging ? " dragging" : ""}`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="120"
